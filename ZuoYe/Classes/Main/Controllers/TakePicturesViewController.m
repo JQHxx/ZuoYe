@@ -1,18 +1,18 @@
 //
-//  MainViewController.m
+//  TakePicturesViewController.m
 //  ZuoYe
 //
 //  Created by vision on 2018/8/3.
 //  Copyright © 2018年 vision. All rights reserved.
 //
 
-#import "MainViewController.h"
+#import "TakePicturesViewController.h"
 
-@interface MainViewController ()
+@interface TakePicturesViewController ()
 
 @end
 
-@implementation MainViewController
+@implementation TakePicturesViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
