@@ -10,4 +10,8 @@
 
 @interface ZYHelper : NSObject
 
+singleton_interface(ZYHelper)
+
+@property (nonatomic ,assign) BOOL isLogin;
+
 @end

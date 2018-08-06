@@ -10,4 +10,8 @@
 
 @implementation ZYHelper
 
+singleton_implementation(ZYHelper)
+
+
+
 @end

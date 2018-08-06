@@ -10,4 +10,15 @@
 
 @interface BaseViewController : UIViewController
 
+@property (nonatomic ,assign)BOOL      isHiddenBackBtn;       //隐藏返回按钮
+@property (nonatomic ,assign)BOOL      isHiddenNavBar;       //隐藏导航栏
+@property (nonatomic ,copy)NSString    *baseTitle;           //标题
+@property (nonatomic ,copy)NSString    *leftImageName;       //导航栏左侧图片名称
+@property (nonatomic ,copy)NSString    *leftTitleName;       //导航栏左侧标题名称
+@property (nonatomic ,copy)NSString    *rightImageName;      //导航栏右侧图片名称
+@property (nonatomic ,copy)NSString    *rigthTitleName;      //导航栏右侧标题名称
+
+-(void)leftNavigationItemAction;
+-(void)rightNavigationItemAction;
+
 @end

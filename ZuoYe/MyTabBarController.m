@@ -7,6 +7,10 @@
 //
 
 #import "MyTabBarController.h"
+#import "MainViewController.h"
+#import "TeacherViewController.h"
+#import "MineViewController.h"
+#import "BaseNavigationController.h"
 
 @interface MyTabBarController ()
 
@@ -17,6 +21,29 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self initMyTabBar];
+    
+}
+
+
+#pragma mark -- Private Methods
+- (void)initMyTabBar{
+    MainViewController *mainVC = [[MainViewController alloc] init];
+    BaseNavigationController * nav1 = [[BaseNavigationController alloc] initWithRootViewController:mainVC];
+    UITabBarItem * mainItem = [[UITabBarItem alloc] initWithTitle:@"首页" image:[[UIImage imageNamed:@"ic_btn_h_nor"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"ic_btn_h_sel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
+    nav1.tabBarItem = mainItem;
+    
+    MainViewController *teacherVC = [[MainViewController alloc] init];
+    BaseNavigationController * nav2 = [[BaseNavigationController alloc] initWithRootViewController:teacherVC];
+    UITabBarItem * teacherItem = [[UITabBarItem alloc] initWithTitle:@"老师" image:[[UIImage imageNamed:@"ic_btn_h_nor"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"ic_btn_h_sel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
+    nav2.tabBarItem = teacherItem;
+    
+    MainViewController *mineVC = [[MainViewController alloc] init];
+    BaseNavigationController * nav3 = [[BaseNavigationController alloc] initWithRootViewController:mineVC];
+    UITabBarItem * mineItem = [[UITabBarItem alloc] initWithTitle:@"我的" image:[[UIImage imageNamed:@"ic_btn_h_nor"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"ic_btn_h_sel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
+    nav3.tabBarItem = mineItem;
+    
+    self.viewControllers = @[nav1,nav2,nav3];
 }
 
 

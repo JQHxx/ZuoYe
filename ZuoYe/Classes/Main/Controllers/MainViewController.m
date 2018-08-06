@@ -7,13 +7,16 @@
 //
 
 #import "MainViewController.h"
+#import "TakePicturesViewController.h"
 
-@interface MainViewController ()
+#import "ReleaseView.h"
+
+@interface MainViewController ()<ReleaseViewDelegate>
 
 @property (nonatomic , strong) UIScrollView *rootScrollView;
 @property (nonatomic , strong) UIView       *bannerView;        //广告位
 @property (nonatomic , strong) UITableView  *orderTableView;    //需求订单列表
-@property (nonatomic , strong) UIView       *releaseView;       //发布辅导需求
+@property (nonatomic , strong) ReleaseView  *releaseView;       //发布辅导需求
 @property (nonatomic , strong) UITableView  *teacherTableView;  //老师列表
 
 @end
@@ -22,17 +25,30 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"作业1对1";
     
-    [self.view addSubview:self.rootScrollView];
-    [self.view addSubview:self.bannerView];
-    [self.view addSubview:self.releaseView];
+    self.isHiddenBackBtn = YES;
+    self.baseTitle = @"作业1对1";
     
-    
-    
+    [self initMainView];
 }
 
+
+#pragma mark -- Custom Delegate
+#pragma mark ReleaseViewDelegate
+-(void)releaseViewDidReleasedHomeworkRecomandWithTag:(NSInteger)tag{
+    MyLog(@"辅导类型：%@",tag==0?@"作业检查":@"作业辅导");
+    TakePicturesViewController *takePicturesVC = [[TakePicturesViewController alloc] init];
+    takePicturesVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:takePicturesVC animated:YES];
+}
+
+
 #pragma mark -- Private Methods
+-(void)initMainView{
+    [self.view addSubview:self.rootScrollView];
+    [self.rootScrollView addSubview:self.bannerView];
+    [self.rootScrollView addSubview:self.releaseView];
+}
 
 
 
@@ -57,9 +73,14 @@
 }
 
 #pragma mark 发布辅导需求
--(UIView *)releaseView{
-    
+-(ReleaseView *)releaseView{
+    if (!_releaseView) {
+        _releaseView = [[ReleaseView alloc] initWithFrame:CGRectMake(0, self.bannerView.bottom+10, kScreenWidth, 150)];
+        _releaseView.delegate = self;
+    }
+    return _releaseView;
 }
+
 
 
 

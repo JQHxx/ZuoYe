@@ -15,12 +15,28 @@
 		A26A07262114219E00AF3CCB /* BaseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07252114219E00AF3CCB /* BaseViewController.m */; };
 		A26A0729211421CB00AF3CCB /* MyTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A0728211421CB00AF3CCB /* MyTabBarController.m */; };
 		A26A07312114261400AF3CCB /* UIView+Toast.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07302114261300AF3CCB /* UIView+Toast.m */; };
-		A26A07352114263700AF3CCB /* UIViewExt.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07342114263700AF3CCB /* UIViewExt.m */; };
 		A26A073B2114272400AF3CCB /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A073A2114272400AF3CCB /* MainViewController.m */; };
 		A26A073E2114273200AF3CCB /* TeacherViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A073D2114273200AF3CCB /* TeacherViewController.m */; };
 		A26A07412114274100AF3CCB /* MineViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07402114274100AF3CCB /* MineViewController.m */; };
 		A26A0746211427F400AF3CCB /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A0745211427F400AF3CCB /* LoginViewController.m */; };
 		A26A07492114280600AF3CCB /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07482114280600AF3CCB /* SettingViewController.m */; };
+		A26A074E21142E2700AF3CCB /* UIImage+Extend.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A074C21142E2700AF3CCB /* UIImage+Extend.m */; };
+		A26A075121142EA300AF3CCB /* UIColor+Extend.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A074F21142EA300AF3CCB /* UIColor+Extend.m */; };
+		A26A07542114329200AF3CCB /* ZYHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07532114329200AF3CCB /* ZYHelper.m */; };
+		A26A075A21143F6400AF3CCB /* ReleaseView.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A075921143F6400AF3CCB /* ReleaseView.m */; };
+		A26A075D2114476A00AF3CCB /* TakePicturesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A075C2114476900AF3CCB /* TakePicturesViewController.m */; };
+		A26A076021144E7500AF3CCB /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A26A075F21144E7500AF3CCB /* AVFoundation.framework */; };
+		A26A07642114657300AF3CCB /* back@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A26A07622114657300AF3CCB /* back@3x.png */; };
+		A26A07652114657300AF3CCB /* back@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A26A07632114657300AF3CCB /* back@2x.png */; };
+		A26A0768211469DB00AF3CCB /* NSString+Extend.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A0767211469DB00AF3CCB /* NSString+Extend.m */; };
+		A27FC132211535BF00BAFA19 /* UIView+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC131211535BF00BAFA19 /* UIView+Extension.m */; };
+		A27FC13D2115426300BAFA19 /* PECropRectView.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC1352115426300BAFA19 /* PECropRectView.m */; };
+		A27FC13E2115426300BAFA19 /* PEResizeControl.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC1372115426300BAFA19 /* PEResizeControl.m */; };
+		A27FC13F2115426300BAFA19 /* PECropView.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC1392115426300BAFA19 /* PECropView.m */; };
+		A27FC14221154F1A00BAFA19 /* PEPhotoCropEditor.bundle in Resources */ = {isa = PBXBuildFile; fileRef = A27FC14121154F1A00BAFA19 /* PEPhotoCropEditor.bundle */; };
+		A27FC1482115745B00BAFA19 /* PhotoClipView.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC1472115745B00BAFA19 /* PhotoClipView.m */; };
+		A27FC14B2115800F00BAFA19 /* PhotoFrameView.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC14A2115800F00BAFA19 /* PhotoFrameView.m */; };
+		A27FC14E2115886C00BAFA19 /* ImageCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A27FC14D2115886C00BAFA19 /* ImageCollectionViewCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,8 +58,6 @@
 		A26A072A2114249800AF3CCB /* Interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Interface.h; sourceTree = "<group>"; };
 		A26A072F2114261300AF3CCB /* UIView+Toast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Toast.h"; sourceTree = "<group>"; };
 		A26A07302114261300AF3CCB /* UIView+Toast.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Toast.m"; sourceTree = "<group>"; };
-		A26A07332114263700AF3CCB /* UIViewExt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIViewExt.h; sourceTree = "<group>"; };
-		A26A07342114263700AF3CCB /* UIViewExt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIViewExt.m; sourceTree = "<group>"; };
 		A26A07392114272400AF3CCB /* MainViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
 		A26A073A2114272400AF3CCB /* MainViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
 		A26A073C2114273200AF3CCB /* TeacherViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TeacherViewController.h; sourceTree = "<group>"; };
@@ -55,6 +69,36 @@
 		A26A07472114280600AF3CCB /* SettingViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingViewController.h; sourceTree = "<group>"; };
 		A26A07482114280600AF3CCB /* SettingViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingViewController.m; sourceTree = "<group>"; };
 		A26A074A2114283500AF3CCB /* Singleton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Singleton.h; sourceTree = "<group>"; };
+		A26A074C21142E2700AF3CCB /* UIImage+Extend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Extend.m"; sourceTree = "<group>"; };
+		A26A074D21142E2700AF3CCB /* UIImage+Extend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+Extend.h"; sourceTree = "<group>"; };
+		A26A074F21142EA300AF3CCB /* UIColor+Extend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+Extend.m"; sourceTree = "<group>"; };
+		A26A075021142EA300AF3CCB /* UIColor+Extend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+Extend.h"; sourceTree = "<group>"; };
+		A26A07522114329200AF3CCB /* ZYHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZYHelper.h; sourceTree = "<group>"; };
+		A26A07532114329200AF3CCB /* ZYHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZYHelper.m; sourceTree = "<group>"; };
+		A26A075821143F6400AF3CCB /* ReleaseView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReleaseView.h; sourceTree = "<group>"; };
+		A26A075921143F6400AF3CCB /* ReleaseView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReleaseView.m; sourceTree = "<group>"; };
+		A26A075B2114476900AF3CCB /* TakePicturesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TakePicturesViewController.h; sourceTree = "<group>"; };
+		A26A075C2114476900AF3CCB /* TakePicturesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TakePicturesViewController.m; sourceTree = "<group>"; };
+		A26A075F21144E7500AF3CCB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		A26A07622114657300AF3CCB /* back@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "back@3x.png"; sourceTree = "<group>"; };
+		A26A07632114657300AF3CCB /* back@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "back@2x.png"; sourceTree = "<group>"; };
+		A26A0766211469DB00AF3CCB /* NSString+Extend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Extend.h"; sourceTree = "<group>"; };
+		A26A0767211469DB00AF3CCB /* NSString+Extend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Extend.m"; sourceTree = "<group>"; };
+		A27FC130211535BF00BAFA19 /* UIView+Extension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Extension.h"; sourceTree = "<group>"; };
+		A27FC131211535BF00BAFA19 /* UIView+Extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Extension.m"; sourceTree = "<group>"; };
+		A27FC1352115426300BAFA19 /* PECropRectView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PECropRectView.m; sourceTree = "<group>"; };
+		A27FC1362115426300BAFA19 /* PEResizeControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PEResizeControl.h; sourceTree = "<group>"; };
+		A27FC1372115426300BAFA19 /* PEResizeControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PEResizeControl.m; sourceTree = "<group>"; };
+		A27FC1382115426300BAFA19 /* PECropRectView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PECropRectView.h; sourceTree = "<group>"; };
+		A27FC1392115426300BAFA19 /* PECropView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PECropView.m; sourceTree = "<group>"; };
+		A27FC13C2115426300BAFA19 /* PECropView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PECropView.h; sourceTree = "<group>"; };
+		A27FC14121154F1A00BAFA19 /* PEPhotoCropEditor.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = PEPhotoCropEditor.bundle; sourceTree = "<group>"; };
+		A27FC1462115745B00BAFA19 /* PhotoClipView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PhotoClipView.h; sourceTree = "<group>"; };
+		A27FC1472115745B00BAFA19 /* PhotoClipView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PhotoClipView.m; sourceTree = "<group>"; };
+		A27FC1492115800F00BAFA19 /* PhotoFrameView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PhotoFrameView.h; sourceTree = "<group>"; };
+		A27FC14A2115800F00BAFA19 /* PhotoFrameView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PhotoFrameView.m; sourceTree = "<group>"; };
+		A27FC14C2115886C00BAFA19 /* ImageCollectionViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImageCollectionViewCell.h; sourceTree = "<group>"; };
+		A27FC14D2115886C00BAFA19 /* ImageCollectionViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ImageCollectionViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A26A076021144E7500AF3CCB /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,6 +118,7 @@
 			children = (
 				A26A07062114033B00AF3CCB /* ZuoYe */,
 				A26A07052114033B00AF3CCB /* Products */,
+				A26A075E21144E7400AF3CCB /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -91,9 +137,9 @@
 				A26A07082114033B00AF3CCB /* AppDelegate.m */,
 				A26A0727211421CB00AF3CCB /* MyTabBarController.h */,
 				A26A0728211421CB00AF3CCB /* MyTabBarController.m */,
-				A26A072D2114250200AF3CCB /* Libs */,
 				A26A072C211424D800AF3CCB /* Classes */,
 				A26A07202114213300AF3CCB /* Base */,
+				A26A072D2114250200AF3CCB /* Libs */,
 				A26A071E2114040000AF3CCB /* Config */,
 				A26A072B211424BB00AF3CCB /* Resources */,
 				A26A07102114033C00AF3CCB /* Assets.xcassets */,
@@ -128,6 +174,7 @@
 		A26A072B211424BB00AF3CCB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				A26A07612114656800AF3CCB /* Images */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -147,6 +194,7 @@
 		A26A072D2114250200AF3CCB /* Libs */ = {
 			isa = PBXGroup;
 			children = (
+				A27FC133211541C000BAFA19 /* ThirdLibs */,
 				A26A074B2114284100AF3CCB /* Custom */,
 				A26A07322114262800AF3CCB /* Tools */,
 				A26A072E211425DB00AF3CCB /* Category */,
@@ -159,6 +207,14 @@
 			children = (
 				A26A072F2114261300AF3CCB /* UIView+Toast.h */,
 				A26A07302114261300AF3CCB /* UIView+Toast.m */,
+				A26A074D21142E2700AF3CCB /* UIImage+Extend.h */,
+				A26A074C21142E2700AF3CCB /* UIImage+Extend.m */,
+				A26A075021142EA300AF3CCB /* UIColor+Extend.h */,
+				A26A074F21142EA300AF3CCB /* UIColor+Extend.m */,
+				A26A0766211469DB00AF3CCB /* NSString+Extend.h */,
+				A26A0767211469DB00AF3CCB /* NSString+Extend.m */,
+				A27FC130211535BF00BAFA19 /* UIView+Extension.h */,
+				A27FC131211535BF00BAFA19 /* UIView+Extension.m */,
 			);
 			path = Category;
 			sourceTree = "<group>";
@@ -167,8 +223,6 @@
 			isa = PBXGroup;
 			children = (
 				A26A074A2114283500AF3CCB /* Singleton.h */,
-				A26A07332114263700AF3CCB /* UIViewExt.h */,
-				A26A07342114263700AF3CCB /* UIViewExt.m */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -176,8 +230,9 @@
 		A26A0736211426E800AF3CCB /* Main */ = {
 			isa = PBXGroup;
 			children = (
-				A26A07392114272400AF3CCB /* MainViewController.h */,
-				A26A073A2114272400AF3CCB /* MainViewController.m */,
+				A26A075721143F4700AF3CCB /* Models */,
+				A26A075621143F4200AF3CCB /* Views */,
+				A26A075521143F3900AF3CCB /* Controllers */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -221,8 +276,82 @@
 		A26A074B2114284100AF3CCB /* Custom */ = {
 			isa = PBXGroup;
 			children = (
+				A26A07522114329200AF3CCB /* ZYHelper.h */,
+				A26A07532114329200AF3CCB /* ZYHelper.m */,
 			);
 			path = Custom;
+			sourceTree = "<group>";
+		};
+		A26A075521143F3900AF3CCB /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				A26A07392114272400AF3CCB /* MainViewController.h */,
+				A26A073A2114272400AF3CCB /* MainViewController.m */,
+				A26A075B2114476900AF3CCB /* TakePicturesViewController.h */,
+				A26A075C2114476900AF3CCB /* TakePicturesViewController.m */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		A26A075621143F4200AF3CCB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A26A075821143F6400AF3CCB /* ReleaseView.h */,
+				A26A075921143F6400AF3CCB /* ReleaseView.m */,
+				A27FC1462115745B00BAFA19 /* PhotoClipView.h */,
+				A27FC1472115745B00BAFA19 /* PhotoClipView.m */,
+				A27FC14C2115886C00BAFA19 /* ImageCollectionViewCell.h */,
+				A27FC14D2115886C00BAFA19 /* ImageCollectionViewCell.m */,
+				A27FC1492115800F00BAFA19 /* PhotoFrameView.h */,
+				A27FC14A2115800F00BAFA19 /* PhotoFrameView.m */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A26A075721143F4700AF3CCB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A26A075E21144E7400AF3CCB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A26A075F21144E7500AF3CCB /* AVFoundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A26A07612114656800AF3CCB /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				A26A07632114657300AF3CCB /* back@2x.png */,
+				A26A07622114657300AF3CCB /* back@3x.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
+		A27FC133211541C000BAFA19 /* ThirdLibs */ = {
+			isa = PBXGroup;
+			children = (
+				A27FC1342115425500BAFA19 /* PECrop */,
+			);
+			path = ThirdLibs;
+			sourceTree = "<group>";
+		};
+		A27FC1342115425500BAFA19 /* PECrop */ = {
+			isa = PBXGroup;
+			children = (
+				A27FC14121154F1A00BAFA19 /* PEPhotoCropEditor.bundle */,
+				A27FC1382115426300BAFA19 /* PECropRectView.h */,
+				A27FC1352115426300BAFA19 /* PECropRectView.m */,
+				A27FC13C2115426300BAFA19 /* PECropView.h */,
+				A27FC1392115426300BAFA19 /* PECropView.m */,
+				A27FC1362115426300BAFA19 /* PEResizeControl.h */,
+				A27FC1372115426300BAFA19 /* PEResizeControl.m */,
+			);
+			path = PECrop;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -283,7 +412,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				A26A07142114033C00AF3CCB /* LaunchScreen.storyboard in Resources */,
+				A26A07652114657300AF3CCB /* back@2x.png in Resources */,
 				A26A07112114033C00AF3CCB /* Assets.xcassets in Resources */,
+				A26A07642114657300AF3CCB /* back@3x.png in Resources */,
+				A27FC14221154F1A00BAFA19 /* PEPhotoCropEditor.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,18 +426,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A26A07352114263700AF3CCB /* UIViewExt.m in Sources */,
 				A26A07312114261400AF3CCB /* UIView+Toast.m in Sources */,
+				A27FC1482115745B00BAFA19 /* PhotoClipView.m in Sources */,
+				A26A074E21142E2700AF3CCB /* UIImage+Extend.m in Sources */,
+				A26A075D2114476A00AF3CCB /* TakePicturesViewController.m in Sources */,
 				A26A07232114218500AF3CCB /* BaseNavigationController.m in Sources */,
+				A26A075A21143F6400AF3CCB /* ReleaseView.m in Sources */,
 				A26A073B2114272400AF3CCB /* MainViewController.m in Sources */,
 				A26A07262114219E00AF3CCB /* BaseViewController.m in Sources */,
 				A26A073E2114273200AF3CCB /* TeacherViewController.m in Sources */,
+				A27FC13F2115426300BAFA19 /* PECropView.m in Sources */,
 				A26A07172114033C00AF3CCB /* main.m in Sources */,
 				A26A07412114274100AF3CCB /* MineViewController.m in Sources */,
+				A27FC13D2115426300BAFA19 /* PECropRectView.m in Sources */,
+				A27FC14B2115800F00BAFA19 /* PhotoFrameView.m in Sources */,
+				A27FC132211535BF00BAFA19 /* UIView+Extension.m in Sources */,
+				A27FC13E2115426300BAFA19 /* PEResizeControl.m in Sources */,
+				A26A0768211469DB00AF3CCB /* NSString+Extend.m in Sources */,
 				A26A07092114033B00AF3CCB /* AppDelegate.m in Sources */,
 				A26A0746211427F400AF3CCB /* LoginViewController.m in Sources */,
+				A26A075121142EA300AF3CCB /* UIColor+Extend.m in Sources */,
 				A26A0729211421CB00AF3CCB /* MyTabBarController.m in Sources */,
 				A26A07492114280600AF3CCB /* SettingViewController.m in Sources */,
+				A27FC14E2115886C00BAFA19 /* ImageCollectionViewCell.m in Sources */,
+				A26A07542114329200AF3CCB /* ZYHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,7 +586,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "/Users/vision/Desktop/一对一辅导平台/ZuoYe/ZuoYe/ZuoYePrefixHeader.pch";
 				INFOPLIST_FILE = ZuoYe/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -462,7 +606,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "/Users/vision/Desktop/一对一辅导平台/ZuoYe/ZuoYe/ZuoYePrefixHeader.pch";
 				INFOPLIST_FILE = ZuoYe/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

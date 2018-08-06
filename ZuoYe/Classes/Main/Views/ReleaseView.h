@@ -8,6 +8,14 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol ReleaseViewDelegate <NSObject>
+
+-(void)releaseViewDidReleasedHomeworkRecomandWithTag:(NSInteger)tag;
+
+@end
+
 @interface ReleaseView : UIView
+
+@property (nonatomic , weak)id<ReleaseViewDelegate>delegate;
 
 @end
