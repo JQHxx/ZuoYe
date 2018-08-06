@@ -8,8 +8,20 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol PhotoFrameViewDelegate <NSObject>
+
+//删除图片
+-(void)photoFrameViewDidDeleteImageWithIndex:(NSInteger)index;
+
+//点击图片或添加图片
+-(void)photoFrameViewDidClickForTag:(NSInteger)tag andCell:(NSInteger)cellRow;
+
+@end
+
 @interface PhotoFrameView : UIView
 
-@property (nonatomic ,strong)UIImage *aImage;
+@property (nonatomic, weak ) id<PhotoFrameViewDelegate>delegate;
+
+- (void)updateCollectViewWithPhotosArr:(NSMutableArray *)arr;
 
 @end

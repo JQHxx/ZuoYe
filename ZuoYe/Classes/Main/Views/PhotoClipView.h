@@ -10,8 +10,13 @@
 
 @protocol PhotoClipViewDelegate <NSObject>
 
+//取消
+-(void)photoClipViewCancelTakePhoto;
+
+//确定
 -(void)photoClipViewConfirmTakeImage:(UIImage *)image;
 
+//重拍
 -(void)photoClipViewRemakePhoto;
 
 @end

@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A201BEDC2117EA7500354F6E /* pub_ic_lite_del@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEDA2117EA7400354F6E /* pub_ic_lite_del@3x.png */; };
+		A201BEDD2117EA7500354F6E /* pub_ic_lite_del@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEDB2117EA7400354F6E /* pub_ic_lite_del@2x.png */; };
+		A201BEE02117EB3700354F6E /* ic_frame_add@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEDE2117EB3700354F6E /* ic_frame_add@2x.png */; };
+		A201BEE12117EB3700354F6E /* ic_frame_add@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEDF2117EB3700354F6E /* ic_frame_add@3x.png */; };
+		A201BEE421183E2B00354F6E /* TeacherTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A201BEE321183E2B00354F6E /* TeacherTableViewCell.m */; };
+		A201BEE72118502100354F6E /* PhoneText.m in Sources */ = {isa = PBXBuildFile; fileRef = A201BEE62118502100354F6E /* PhoneText.m */; };
+		A201BEED2118511100354F6E /* ic_login_code@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEE92118511000354F6E /* ic_login_code@2x.png */; };
+		A201BEEE2118511100354F6E /* ic_login_num@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEEA2118511100354F6E /* ic_login_num@2x.png */; };
+		A201BEEF2118511100354F6E /* ic_login_num@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEEB2118511100354F6E /* ic_login_num@3x.png */; };
+		A201BEF02118511100354F6E /* ic_login_code@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEEC2118511100354F6E /* ic_login_code@3x.png */; };
+		A201BEF321185A5900354F6E /* RegisterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A201BEF221185A5900354F6E /* RegisterViewController.m */; };
 		A26A07092114033B00AF3CCB /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07082114033B00AF3CCB /* AppDelegate.m */; };
 		A26A07112114033C00AF3CCB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A26A07102114033C00AF3CCB /* Assets.xcassets */; };
 		A26A07142114033C00AF3CCB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A26A07122114033C00AF3CCB /* LaunchScreen.storyboard */; };
@@ -40,6 +51,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A201BEDA2117EA7400354F6E /* pub_ic_lite_del@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "pub_ic_lite_del@3x.png"; sourceTree = "<group>"; };
+		A201BEDB2117EA7400354F6E /* pub_ic_lite_del@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "pub_ic_lite_del@2x.png"; sourceTree = "<group>"; };
+		A201BEDE2117EB3700354F6E /* ic_frame_add@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_frame_add@2x.png"; sourceTree = "<group>"; };
+		A201BEDF2117EB3700354F6E /* ic_frame_add@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_frame_add@3x.png"; sourceTree = "<group>"; };
+		A201BEE221183E2B00354F6E /* TeacherTableViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TeacherTableViewCell.h; sourceTree = "<group>"; };
+		A201BEE321183E2B00354F6E /* TeacherTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TeacherTableViewCell.m; sourceTree = "<group>"; };
+		A201BEE52118502100354F6E /* PhoneText.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PhoneText.h; sourceTree = "<group>"; };
+		A201BEE62118502100354F6E /* PhoneText.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PhoneText.m; sourceTree = "<group>"; };
+		A201BEE92118511000354F6E /* ic_login_code@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_code@2x.png"; sourceTree = "<group>"; };
+		A201BEEA2118511100354F6E /* ic_login_num@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_num@2x.png"; sourceTree = "<group>"; };
+		A201BEEB2118511100354F6E /* ic_login_num@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_num@3x.png"; sourceTree = "<group>"; };
+		A201BEEC2118511100354F6E /* ic_login_code@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_code@3x.png"; sourceTree = "<group>"; };
+		A201BEF121185A5900354F6E /* RegisterViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegisterViewController.h; sourceTree = "<group>"; };
+		A201BEF221185A5900354F6E /* RegisterViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RegisterViewController.m; sourceTree = "<group>"; };
 		A26A07042114033B00AF3CCB /* ZuoYe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZuoYe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A26A07072114033B00AF3CCB /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A26A07082114033B00AF3CCB /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -113,6 +138,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A201BED92117EA6400354F6E /* main */ = {
+			isa = PBXGroup;
+			children = (
+				A201BEDB2117EA7400354F6E /* pub_ic_lite_del@2x.png */,
+				A201BEDA2117EA7400354F6E /* pub_ic_lite_del@3x.png */,
+				A201BEDE2117EB3700354F6E /* ic_frame_add@2x.png */,
+				A201BEDF2117EB3700354F6E /* ic_frame_add@3x.png */,
+			);
+			path = main;
+			sourceTree = "<group>";
+		};
+		A201BEE82118510500354F6E /* Login */ = {
+			isa = PBXGroup;
+			children = (
+				A201BEE92118511000354F6E /* ic_login_code@2x.png */,
+				A201BEEC2118511100354F6E /* ic_login_code@3x.png */,
+				A201BEEA2118511100354F6E /* ic_login_num@2x.png */,
+				A201BEEB2118511100354F6E /* ic_login_num@3x.png */,
+			);
+			path = Login;
+			sourceTree = "<group>";
+		};
 		A26A06FB2114033B00AF3CCB = {
 			isa = PBXGroup;
 			children = (
@@ -260,6 +307,8 @@
 			children = (
 				A26A0744211427F400AF3CCB /* LoginViewController.h */,
 				A26A0745211427F400AF3CCB /* LoginViewController.m */,
+				A201BEF121185A5900354F6E /* RegisterViewController.h */,
+				A201BEF221185A5900354F6E /* RegisterViewController.m */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -278,6 +327,8 @@
 			children = (
 				A26A07522114329200AF3CCB /* ZYHelper.h */,
 				A26A07532114329200AF3CCB /* ZYHelper.m */,
+				A201BEE52118502100354F6E /* PhoneText.h */,
+				A201BEE62118502100354F6E /* PhoneText.m */,
 			);
 			path = Custom;
 			sourceTree = "<group>";
@@ -304,6 +355,8 @@
 				A27FC14D2115886C00BAFA19 /* ImageCollectionViewCell.m */,
 				A27FC1492115800F00BAFA19 /* PhotoFrameView.h */,
 				A27FC14A2115800F00BAFA19 /* PhotoFrameView.m */,
+				A201BEE221183E2B00354F6E /* TeacherTableViewCell.h */,
+				A201BEE321183E2B00354F6E /* TeacherTableViewCell.m */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -326,6 +379,8 @@
 		A26A07612114656800AF3CCB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				A201BEE82118510500354F6E /* Login */,
+				A201BED92117EA6400354F6E /* main */,
 				A26A07632114657300AF3CCB /* back@2x.png */,
 				A26A07622114657300AF3CCB /* back@3x.png */,
 			);
@@ -411,11 +466,19 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A201BEEF2118511100354F6E /* ic_login_num@3x.png in Resources */,
 				A26A07142114033C00AF3CCB /* LaunchScreen.storyboard in Resources */,
+				A201BEE12117EB3700354F6E /* ic_frame_add@3x.png in Resources */,
+				A201BEDC2117EA7500354F6E /* pub_ic_lite_del@3x.png in Resources */,
+				A201BEEE2118511100354F6E /* ic_login_num@2x.png in Resources */,
+				A201BEF02118511100354F6E /* ic_login_code@3x.png in Resources */,
+				A201BEED2118511100354F6E /* ic_login_code@2x.png in Resources */,
 				A26A07652114657300AF3CCB /* back@2x.png in Resources */,
 				A26A07112114033C00AF3CCB /* Assets.xcassets in Resources */,
 				A26A07642114657300AF3CCB /* back@3x.png in Resources */,
 				A27FC14221154F1A00BAFA19 /* PEPhotoCropEditor.bundle in Resources */,
+				A201BEE02117EB3700354F6E /* ic_frame_add@2x.png in Resources */,
+				A201BEDD2117EA7500354F6E /* pub_ic_lite_del@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,6 +493,7 @@
 				A27FC1482115745B00BAFA19 /* PhotoClipView.m in Sources */,
 				A26A074E21142E2700AF3CCB /* UIImage+Extend.m in Sources */,
 				A26A075D2114476A00AF3CCB /* TakePicturesViewController.m in Sources */,
+				A201BEF321185A5900354F6E /* RegisterViewController.m in Sources */,
 				A26A07232114218500AF3CCB /* BaseNavigationController.m in Sources */,
 				A26A075A21143F6400AF3CCB /* ReleaseView.m in Sources */,
 				A26A073B2114272400AF3CCB /* MainViewController.m in Sources */,
@@ -445,11 +509,13 @@
 				A26A0768211469DB00AF3CCB /* NSString+Extend.m in Sources */,
 				A26A07092114033B00AF3CCB /* AppDelegate.m in Sources */,
 				A26A0746211427F400AF3CCB /* LoginViewController.m in Sources */,
+				A201BEE72118502100354F6E /* PhoneText.m in Sources */,
 				A26A075121142EA300AF3CCB /* UIColor+Extend.m in Sources */,
 				A26A0729211421CB00AF3CCB /* MyTabBarController.m in Sources */,
 				A26A07492114280600AF3CCB /* SettingViewController.m in Sources */,
 				A27FC14E2115886C00BAFA19 /* ImageCollectionViewCell.m in Sources */,
 				A26A07542114329200AF3CCB /* ZYHelper.m in Sources */,
+				A201BEE421183E2B00354F6E /* TeacherTableViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

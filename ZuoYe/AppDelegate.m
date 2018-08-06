@@ -9,6 +9,7 @@
 #import "AppDelegate.h"
 #import "MyTabBarController.h"
 #import "LoginViewController.h"
+#import "BaseNavigationController.h"
 
 @interface AppDelegate ()
 
@@ -22,13 +23,14 @@
     self.window=[[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor=[UIColor whiteColor];
     
-    [ZYHelper sharedZYHelper].isLogin = YES;
+//    [ZYHelper sharedZYHelper].isLogin = YES;
     if ( [ZYHelper sharedZYHelper].isLogin) {
         MyTabBarController *myTabBar = [[MyTabBarController alloc] init];
         self.window.rootViewController = myTabBar;
     } else {
         LoginViewController *loginVC = [[LoginViewController alloc] init];
-        self.window.rootViewController = loginVC;
+        BaseNavigationController *nav = [[BaseNavigationController alloc] initWithRootViewController:loginVC];
+        self.window.rootViewController = nav;
     }
     
     [self.window makeKeyAndVisible];

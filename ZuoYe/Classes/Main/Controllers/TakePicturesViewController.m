@@ -12,9 +12,11 @@
 #import "PhotoFrameView.h"
 
 
-@interface TakePicturesViewController ()<AVCapturePhotoCaptureDelegate,PhotoClipViewDelegate>{
+@interface TakePicturesViewController ()<AVCapturePhotoCaptureDelegate,PhotoClipViewDelegate,PhotoFrameViewDelegate>{
     
     NSMutableArray   *imagesArray;
+    
+    BOOL             isChoosePhoto; //拍照中
 }
 
 @property (nonatomic, strong) AVCaptureSession           *captureSession; // 会话
@@ -30,9 +32,9 @@
 @property (nonatomic, strong) UIView *bottomView;
 
 /** 图片剪辑view */
-@property (strong, nonatomic) PhotoClipView *clipView;
+@property (strong, nonatomic) PhotoClipView  *clipView;
 
-@property (nonatomic, strong)UIScrollView *rootScrollView;
+@property (nonatomic, strong)PhotoFrameView  *photFrameView;
 
 @end
 
@@ -41,14 +43,13 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    imagesArray = [[NSMutableArray alloc] init];
     
-    
-    self.isHiddenNavBar = YES;
-    self.view.backgroundColor = [UIColor lightGrayColor];
-    
+    [self.view addSubview:self.photFrameView];
     [self.view addSubview:self.bottomView];
+
     [self setupCaptureSession];
-    
+    [self updateTaKePictureView];
 }
 
 
@@ -64,21 +65,41 @@
 }
 
 #pragma mark  PhotoClipViewDelegate
--(void)photoClipViewConfirmTakeImage:(UIImage *)image{
-    [self.clipView removeFromSuperview];
-    self.clipView = nil;
-    
-    self.isHiddenNavBar = NO;
-    self.baseTitle = @"选择图片";
-    
-    
+#pragma mark 取消拍照
+-(void)photoClipViewCancelTakePhoto{
     
 }
 
+#pragma mark 确认选择图片
+-(void)photoClipViewConfirmTakeImage:(UIImage *)image{
+    isChoosePhoto = YES;
+    [self updateTaKePictureView];
+    [imagesArray addObject:image];
+    [self.photFrameView updateCollectViewWithPhotosArr:imagesArray];
+}
+
+#pragma mark 重拍
 -(void)photoClipViewRemakePhoto{
     [self.clipView removeFromSuperview];
     self.clipView = nil;
     [self.captureSession startRunning];
+}
+
+#pragma mark PhotoFrameViewDelegate
+#pragma mark 删除图片
+-(void)photoFrameViewDidDeleteImageWithIndex:(NSInteger)index{
+    
+}
+
+#pragma mark 打开图片或添加图片
+-(void)photoFrameViewDidClickForTag:(NSInteger)tag andCell:(NSInteger)cellRow{
+    if (tag == 10000) {
+        
+    }else{
+        isChoosePhoto = NO;
+        [self updateTaKePictureView];
+        [self.captureSession startRunning];
+    }
 }
 
 #pragma mark -- Event Response
@@ -86,6 +107,12 @@
     self.photoSettings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey:AVVideoCodecTypeJPEG}];
     [self.photoSettings setFlashMode:self.mode];
     [self.photoOutput capturePhotoWithSettings:self.photoSettings delegate:self];
+}
+
+-(void)rightNavigationItemAction{
+    if (isChoosePhoto) {
+        
+    }
 }
 
 
@@ -114,27 +141,62 @@
     if ([self.captureSession canAddOutput:self.photoOutput]) {
         [self.captureSession addOutput:self.photoOutput];
     }
-    
-    //7.预览画面
-    self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
-    self.previewLayer.frame = CGRectMake(0, 0, kScreenWidth, kScreenHeight-80);
-    [self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
-    
-    [self.view.layer insertSublayer:self.previewLayer atIndex:0];
-    
-    [self.captureSession startRunning];
+   
+}
+
+#pragma mark
+-(void)updateTaKePictureView{
+    if (isChoosePhoto) {
+        self.baseTitle = @"选择图片";
+        self.rigthTitleName = @"";
+        
+        [self.clipView removeFromSuperview];
+        self.clipView = nil;
+        
+        [self.previewLayer removeFromSuperlayer];
+        self.previewLayer =nil;
+        
+        self.photFrameView.hidden = NO;
+        self.bottomView.hidden = YES;
+        
+        
+    }else{  //开始拍照
+        self.baseTitle = @"拍照";
+        self.rigthTitleName = @"相册";
+        
+        self.photFrameView.hidden = YES;
+        self.bottomView.hidden = NO;
+        
+        [UIView animateWithDuration:1.0 animations:^{
+            [self.view.layer insertSublayer:self.previewLayer atIndex:0];
+        } completion:^(BOOL finished) {
+            [self.captureSession startRunning];
+        }];
+        
+        
+    }
 }
 
 
 #pragma mark -- setters and getters
-#pragma mark
--(UIScrollView *)rootScrollView{
-    if (!_rootScrollView) {
-        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight)];
+#pragma mark 相册
+-(PhotoFrameView *)photFrameView{
+    if (!_photFrameView) {
+        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight, kScreenWidth, kScreenHeight-kNavHeight)];
+        _photFrameView.delegate = self;
     }
-    return _rootScrollView;
+    return _photFrameView;
 }
 
+#pragma mark 预览框
+-(AVCaptureVideoPreviewLayer *)previewLayer{
+    if (!_previewLayer) {
+        _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
+        _previewLayer.frame = CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-80-kNavHeight);
+        [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+    }
+    return _previewLayer;
+}
 
 #pragma mark 底部视图
 -(UIView *)bottomView{
@@ -157,11 +219,13 @@
 #pragma mark 图片裁剪视图
 -(PhotoClipView *)clipView{
     if (!_clipView) {
-        _clipView = [[PhotoClipView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
+        _clipView = [[PhotoClipView alloc] initWithFrame:CGRectMake(0,0, kScreenWidth, kScreenHeight)];
         _clipView.delegate = self;
     }
     return _clipView;
 }
+
+
 
 
 
