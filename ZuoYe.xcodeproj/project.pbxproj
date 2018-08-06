@@ -16,6 +16,8 @@
 		A201BEED2118511100354F6E /* ic_login_code@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEE92118511000354F6E /* ic_login_code@2x.png */; };
 		A201BEF02118511100354F6E /* ic_login_code@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEEC2118511100354F6E /* ic_login_code@3x.png */; };
 		A201BEF321185A5900354F6E /* RegisterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A201BEF221185A5900354F6E /* RegisterViewController.m */; };
+		A201BEF621185DAA00354F6E /* ic_login_num@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEF421185DAA00354F6E /* ic_login_num@2x.png */; };
+		A201BEF721185DAA00354F6E /* ic_login_num@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A201BEF521185DAA00354F6E /* ic_login_num@3x.png */; };
 		A26A07092114033B00AF3CCB /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A26A07082114033B00AF3CCB /* AppDelegate.m */; };
 		A26A07112114033C00AF3CCB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A26A07102114033C00AF3CCB /* Assets.xcassets */; };
 		A26A07142114033C00AF3CCB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A26A07122114033C00AF3CCB /* LaunchScreen.storyboard */; };
@@ -61,6 +63,8 @@
 		A201BEEC2118511100354F6E /* ic_login_code@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_code@3x.png"; sourceTree = "<group>"; };
 		A201BEF121185A5900354F6E /* RegisterViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegisterViewController.h; sourceTree = "<group>"; };
 		A201BEF221185A5900354F6E /* RegisterViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RegisterViewController.m; sourceTree = "<group>"; };
+		A201BEF421185DAA00354F6E /* ic_login_num@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_num@2x.png"; sourceTree = "<group>"; };
+		A201BEF521185DAA00354F6E /* ic_login_num@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_login_num@3x.png"; sourceTree = "<group>"; };
 		A26A07042114033B00AF3CCB /* ZuoYe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZuoYe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A26A07072114033B00AF3CCB /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A26A07082114033B00AF3CCB /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -148,6 +152,8 @@
 		A201BEE82118510500354F6E /* Login */ = {
 			isa = PBXGroup;
 			children = (
+				A201BEF421185DAA00354F6E /* ic_login_num@2x.png */,
+				A201BEF521185DAA00354F6E /* ic_login_num@3x.png */,
 				A201BEE92118511000354F6E /* ic_login_code@2x.png */,
 				A201BEEC2118511100354F6E /* ic_login_code@3x.png */,
 			);
@@ -460,9 +466,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A201BEF721185DAA00354F6E /* ic_login_num@3x.png in Resources */,
 				A26A07142114033C00AF3CCB /* LaunchScreen.storyboard in Resources */,
 				A201BEE12117EB3700354F6E /* ic_frame_add@3x.png in Resources */,
 				A201BEDC2117EA7500354F6E /* pub_ic_lite_del@3x.png in Resources */,
+				A201BEF621185DAA00354F6E /* ic_login_num@2x.png in Resources */,
 				A201BEF02118511100354F6E /* ic_login_code@3x.png in Resources */,
 				A201BEED2118511100354F6E /* ic_login_code@2x.png in Resources */,
 				A26A07652114657300AF3CCB /* back@2x.png in Resources */,
