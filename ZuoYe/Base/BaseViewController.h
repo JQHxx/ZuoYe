@@ -8,6 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
+//辅导类型
+typedef enum : NSUInteger {
+    TutoringTypeReview = 1,   //作业检查
+    TutoringTypeHelp = 2,     //作业辅导
+} TutoringType;
+
+
 @interface BaseViewController : UIViewController
 
 @property (nonatomic ,assign)BOOL      isHiddenBackBtn;       //隐藏返回按钮
@@ -17,6 +24,8 @@
 @property (nonatomic ,copy)NSString    *leftTitleName;       //导航栏左侧标题名称
 @property (nonatomic ,copy)NSString    *rightImageName;      //导航栏右侧图片名称
 @property (nonatomic ,copy)NSString    *rigthTitleName;      //导航栏右侧标题名称
+
+
 
 -(void)leftNavigationItemAction;
 -(void)rightNavigationItemAction;

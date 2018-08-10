@@ -33,12 +33,12 @@
     UITabBarItem * mainItem = [[UITabBarItem alloc] initWithTitle:@"首页" image:[[UIImage imageNamed:@"ic_btn_h_nor"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"ic_btn_h_sel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
     nav1.tabBarItem = mainItem;
     
-    MainViewController *teacherVC = [[MainViewController alloc] init];
+    TeacherViewController *teacherVC = [[TeacherViewController alloc] init];
     BaseNavigationController * nav2 = [[BaseNavigationController alloc] initWithRootViewController:teacherVC];
     UITabBarItem * teacherItem = [[UITabBarItem alloc] initWithTitle:@"老师" image:[[UIImage imageNamed:@"ic_btn_h_nor"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"ic_btn_h_sel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
     nav2.tabBarItem = teacherItem;
     
-    MainViewController *mineVC = [[MainViewController alloc] init];
+    MineViewController *mineVC = [[MineViewController alloc] init];
     BaseNavigationController * nav3 = [[BaseNavigationController alloc] initWithRootViewController:mineVC];
     UITabBarItem * mineItem = [[UITabBarItem alloc] initWithTitle:@"我的" image:[[UIImage imageNamed:@"ic_btn_h_nor"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"ic_btn_h_sel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
     nav3.tabBarItem = mineItem;

@@ -22,7 +22,7 @@
     if (self) {
         self.backgroundColor = [UIColor blackColor];
         
-        self.cropView = [[PECropView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height-80)];
+        self.cropView = [[PECropView alloc] initWithFrame:CGRectMake(10, KStatusHeight+10, self.width-20, self.height-80-KStatusHeight-30)];
         [self addSubview:self.cropView];
         
         UIView *bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, self.height-80, self.width, 80)];

@@ -91,7 +91,6 @@
     layout.sectionInset = UIEdgeInsetsMake(10, 10, 10, 10);
     
     self.collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height) collectionViewLayout:layout];
-    self.collectionView.scrollEnabled = NO;
     self.collectionView.backgroundColor  = [UIColor whiteColor];
     [self.collectionView registerClass:[ImageCollectionViewCell class] forCellWithReuseIdentifier:@"ImageCollectionViewCell"];
     self.collectionView.delegate = self;
