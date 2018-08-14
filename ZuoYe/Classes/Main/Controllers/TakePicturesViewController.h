@@ -10,9 +10,14 @@
 
 #import "BaseViewController.h"
 
+typedef void(^ReturnBackBLock)(NSMutableArray *photosArray);
+
 @interface TakePicturesViewController : BaseViewController
 
 @property (nonatomic, assign)TutoringType type; //辅导类型
 
+@property (nonatomic,assign) BOOL  isConnectionSetting;
+
+@property (nonatomic, copy ) ReturnBackBLock backBlock;
 
 @end

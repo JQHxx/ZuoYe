@@ -30,7 +30,7 @@
 
 -(void)layoutSubviews{
     [super layoutSubviews];
-    _imgView.frame = CGRectMake(0, 0, self.width, self.height);
+    _imgView.frame = CGRectMake(0, 0, self.width, self.height-10);
     _deleteBtn.frame = CGRectMake(self.width - 16, 0, 16, 16);
 }
 

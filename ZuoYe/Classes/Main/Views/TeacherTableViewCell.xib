@@ -71,9 +71,6 @@
                                 <integer key="value" value="5"/>
                             </userDefinedRuntimeAttribute>
                         </userDefinedRuntimeAttributes>
-                        <connections>
-                            <action selector="connectTeacherAction:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="zmY-nJ-1pT"/>
-                        </connections>
                     </button>
                 </subviews>
             </tableViewCellContentView>

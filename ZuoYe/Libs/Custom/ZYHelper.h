@@ -14,4 +14,18 @@ singleton_interface(ZYHelper)
 
 @property (nonatomic ,assign) BOOL isLogin;
 
+@property (nonatomic ,strong) NSArray *daysArray;
+@property (nonatomic ,strong) NSArray *hoursArray;       //小时
+@property (nonatomic ,strong) NSArray *minutesArray;     //分钟
+
+/*
+ *根据年级获取科目
+ *
+ * @param grade 年级
+ * @return 科目数组
+ *
+ */
+-(NSArray *)getCourseForGrade:(NSString *)grade;
+
+
 @end

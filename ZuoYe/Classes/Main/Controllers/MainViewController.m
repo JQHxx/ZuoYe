@@ -9,6 +9,8 @@
 #import "MainViewController.h"
 #import "TakePicturesViewController.h"
 #import "TeacherDetailsViewController.h"
+#import "ConnectionSettingViewController.h"
+#import "MessagesViewController.h"
 
 #import "ReleaseView.h"
 #import "TeacherTableViewCell.h"
@@ -39,6 +41,7 @@
     
     self.isHiddenBackBtn = YES;
     self.baseTitle = @"作业101";
+    self.rightImageName=@"h_ic_top_msg_nor";
     
     teachersArray = [[NSMutableArray alloc] init];
 //    titles = @[@"语文",@"数学",@"英语",@"物理",@"化学",@"生物"];
@@ -97,6 +100,7 @@
     MyLog(@"辅导类型：%@",tag==0?@"作业检查":@"作业辅导");
     
     TakePicturesViewController *takePicturesVC = [[TakePicturesViewController alloc] init];
+    takePicturesVC.isConnectionSetting = NO;
     takePicturesVC.hidesBottomBarWhenPushed = YES;
     takePicturesVC.type = tag==0 ?TutoringTypeReview:TutoringTypeHelp;
     [self.navigationController pushViewController:takePicturesVC animated:YES];
@@ -131,9 +135,18 @@
 }
 
 #pragma mark -- Event Response
+#pragma mark 消息
+-(void)rightNavigationItemAction{
+    MessagesViewController *messagesVC = [[MessagesViewController alloc] init];
+    messagesVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:messagesVC animated:YES];
+}
+
 #pragma mark 连线老师
 -(void)connectTeacherAction:(UIButton *)sender{
-    
+    ConnectionSettingViewController  *connectionSettingVC = [[ConnectionSettingViewController alloc] init];
+    connectionSettingVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:connectionSettingVC animated:YES];
 }
 
 #pragma mark 滑动切换菜单

@@ -7,7 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "LevelModel.h"
+
+typedef void(^DidSelectedLevelBlock)(LevelModel *model);
+
 
 @interface SelectTeacherView : UIView
+
+@property (nonatomic, strong) NSMutableArray        *levelsArray;
+@property (nonatomic, copy )DidSelectedLevelBlock   selLevelBlock;
+
 
 @end

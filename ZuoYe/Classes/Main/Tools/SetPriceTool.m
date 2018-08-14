@@ -20,7 +20,7 @@
 -(instancetype)initWithFrame:(CGRect)frame{
     self = [super initWithFrame:frame];
     if (self) {
-        CGFloat labWidth=frame.size.width/3.0;
+        CGFloat labWidth=frame.size.width/4.0;
         CGFloat labHeight=frame.size.height;
         //减
         subtractBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, labWidth, labHeight)];
@@ -29,9 +29,9 @@
         subtractBtn.tag=100;
         [self addSubview:subtractBtn];
         
-        quantityLab = [[UILabel alloc] initWithFrame:CGRectMake(subtractBtn.right - 1, 0, labWidth,labHeight)];
+        quantityLab = [[UILabel alloc] initWithFrame:CGRectMake(subtractBtn.right - 1, 0, labWidth*2,labHeight)];
         quantityLab.textAlignment = NSTextAlignmentCenter;
-        quantityLab.text=@"1";
+        quantityLab.text=@"0.1";
         quantityLab.userInteractionEnabled=YES;
         quantityLab.font=[UIFont systemFontOfSize:14];
         [self addSubview:quantityLab];
@@ -56,22 +56,16 @@
     if (sender.tag==100) {
         self.price-=0.1;
         if (self.price<0.1) {
-            self.price=1;
+            self.price=0.1;
         }
-        addBtn.enabled=YES;
     }else{
-        addBtn.enabled=YES;
         self.price+=0.1;
     }
     subtractBtn.enabled=self.price>0.1;
-    
-    if (addBtn.enabled) {
-        if ([self.delegate respondsToSelector:@selector(setPriceToolDidSetPrice:)]) {
-            [self.delegate setPriceToolDidSetPrice:self.price];
-        }
-    }
     quantityLab.text=[NSString stringWithFormat:@"%.1f",self.price];
-    
+    if ([self.delegate respondsToSelector:@selector(setPriceToolDidSetPrice:)]) {
+        [self.delegate setPriceToolDidSetPrice:self.price];
+    }
 }
 
 #pragma mark 点击数量

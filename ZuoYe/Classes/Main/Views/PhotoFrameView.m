@@ -10,11 +10,11 @@
 #import "ImageCollectionViewCell.h"
 
 
-#define kItemW  (kScreenWidth - 40)/3.0
-#define kItemH  ((kScreenHeight-80)/kScreenWidth)*kItemW
+
 
 @interface PhotoFrameView ()<UICollectionViewDelegate,UICollectionViewDataSource>{
     NSMutableArray  *photosArr;
+    BOOL            isEditingPhotos;
 }
 
 @property (nonatomic, strong)UICollectionView *collectionView;
@@ -24,9 +24,12 @@
 
 @implementation PhotoFrameView
 
--(instancetype)initWithFrame:(CGRect)frame{
+-(instancetype)initWithFrame:(CGRect)frame isEditing:(BOOL)isEditing{
     self = [super initWithFrame:frame];
     if (self) {
+        isEditingPhotos = isEditing;
+        
+        
         self.backgroundColor = [UIColor whiteColor];
         
         photosArr = [[NSMutableArray alloc] init];
@@ -37,7 +40,7 @@
 
 #pragma mark UICollectionViewDataSource
 -(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
-    return photosArr.count+1;
+    return isEditingPhotos?photosArr.count+1:photosArr.count;
 }
 
 -(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
@@ -50,7 +53,7 @@
         UIImage *photoImg = photosArr[indexPath.row];
         cell.imgView.image = photoImg;
         cell.imgView.contentMode = UIViewContentModeScaleToFill;
-        cell.deleteBtn.hidden = NO;
+        cell.deleteBtn.hidden = !isEditingPhotos;
     }
     cell.deleteBtn.tag = indexPath.row;
     [cell.deleteBtn addTarget:self action:@selector(deleteBtnClick:) forControlEvents:UIControlEventTouchUpInside];
@@ -95,6 +98,7 @@
     [self.collectionView registerClass:[ImageCollectionViewCell class] forCellWithReuseIdentifier:@"ImageCollectionViewCell"];
     self.collectionView.delegate = self;
     self.collectionView.dataSource = self;
+    self.collectionView.scrollEnabled = isEditingPhotos;
     [self addSubview:self.collectionView];
 }
 

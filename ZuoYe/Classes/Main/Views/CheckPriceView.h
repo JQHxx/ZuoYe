@@ -8,6 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
+typedef void(^GetpriceBlock)(double aPrice);
+
 @interface CheckPriceView : UIView
+
+@property (nonatomic, copy )GetpriceBlock getPriceBlock;
 
 @end

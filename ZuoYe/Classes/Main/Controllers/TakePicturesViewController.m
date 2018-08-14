@@ -159,12 +159,17 @@
 
 #pragma mark 确定
 -(void)confirmSelectedPhotosAction{
-    ReleaseDemandViewController *releaseDemandVC = [[ReleaseDemandViewController alloc] init];
-    releaseDemandVC.type = self.type;
-    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:releaseDemandVC];
-    popupVC.style = STPopupStyleBottomSheet;
-    popupVC.navigationBarHidden = YES;
-    [popupVC presentInViewController:self];
+    if (self.isConnectionSetting) {
+        [self.navigationController popViewControllerAnimated:YES];
+        self.backBlock(allSelectedPhotos);
+    }else{
+        ReleaseDemandViewController *releaseDemandVC = [[ReleaseDemandViewController alloc] init];
+        releaseDemandVC.type = self.type;
+        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:releaseDemandVC];
+        popupVC.style = STPopupStyleBottomSheet;
+        popupVC.navigationBarHidden = YES;
+        [popupVC presentInViewController:self];
+    }
 }
 
 
@@ -231,7 +236,7 @@
 #pragma mark 相册
 -(PhotoFrameView *)photFrameView{
     if (!_photFrameView) {
-        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight, kScreenWidth, kScreenHeight-kNavHeight-60)];
+        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight, kScreenWidth, kScreenHeight-kNavHeight-60) isEditing:YES];
         _photFrameView.delegate = self;
     }
     return _photFrameView;

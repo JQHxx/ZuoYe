@@ -67,6 +67,9 @@
 
 
 
+
+
+
 #import "Singleton.h"
 #import "UIView+Extension.h"
 #import "UIView+Toast.h"
@@ -74,6 +77,7 @@
 #import "UIColor+Extend.h"
 #import "NSString+Extend.h"
 #import "ZYHelper.h"
+#import "Interface.h"
 
 
 
