@@ -8,6 +8,7 @@
 
 #import "ConnectionSettingViewController.h"
 #import "TakePicturesViewController.h"
+#import "ConnecttingViewController.h"
 #import "TutoringTypeView.h"
 #import "AddPhotoView.h"
 #import "PhotoFrameView.h"
@@ -69,7 +70,9 @@
 
 #pragma mark 连线老师
 -(void)callTeacherForHelpAction{
-    
+    ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] init];
+    connecttingVC.type = tutoringType;
+    [self.navigationController pushViewController:connecttingVC animated:YES];
 }
 
 #pragma mark -- private Methods

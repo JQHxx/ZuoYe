@@ -14,9 +14,7 @@
 @property (nonatomic,assign)NSInteger   message_id;
 @property (nonatomic, copy )NSString    *title;
 @property (nonatomic, copy )NSString    *send_time;
-@property (nonatomic,strong)NSNumber    *is_read;
 @property (nonatomic,assign)BOOL        isRead;
 @property (nonatomic,assign)NSInteger   type;              //1、文章   2、系统消息
-@property (nonatomic, copy )NSString    *image_url;
 
 @end

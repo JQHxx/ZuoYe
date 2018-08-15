@@ -7,8 +7,11 @@
 //
 
 #import "MessagesViewController.h"
+#import "SystemNewsViewController.h"
+#import "ChatViewController.h"
 #import "ConversationTableViewCell.h"
 #import "SystemNewsModel.h"
+#import "ConversationModel.h"
 
 @interface MessagesViewController ()<UITableViewDelegate,UITableViewDataSource>{
     
@@ -27,11 +30,9 @@
     self.baseTitle = @"消息";
     
     systemNewsModel = [[SystemNewsModel alloc] init];
-    systemNewsModel.isRead = NO;
-    systemNewsModel.title = @"充值活动满100送10";
-    systemNewsModel.send_time = @"今天 16:00";
     
     [self.view addSubview:self.messagesTableView];
+    [self loadMessageData];
 }
 
 #pragma mark -- UITableViewDataSource
@@ -71,6 +72,13 @@
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    if (indexPath.section==0) {
+        SystemNewsViewController *newsVC = [[SystemNewsViewController alloc] init];
+        [self.navigationController pushViewController:newsVC animated:YES];
+    }else{
+        ChatViewController *chatVC = [[ChatViewController alloc] init];
+        [self.navigationController pushViewController:chatVC animated:YES];
+    }
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
@@ -91,6 +99,30 @@
     }else{
         return @"";
     }
+}
+
+#pragma mark -- Private Methods
+#pragma mark 加载数据
+-(void)loadMessageData{
+    systemNewsModel.isRead = NO;
+    systemNewsModel.title = @"充值活动满100送10";
+    systemNewsModel.send_time = @"今天 16:00";
+    
+    NSArray *teachers = @[@"小美老师",@"小芳老师",@"小明老师",@"张三"];
+    NSArray *timesArr = @[@"今天 09:00" ,@"2018/08/12 12:30",@"2018/08/11 15:30",@"2018/08/10 18:30"];
+    NSArray *msgArr = @[@"最近会话用于表示会话列表页的数据模型",@"当收到或者一条消息时，会自动生成这个消息对应的最近会话",@"获取最近会话，一般用于首页显示会话列表",@"在数据量过万的情况下会有一定的耗时"];
+    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+    for (NSInteger i=0; i<teachers.count; i++) {
+        ConversationModel *model = [[ConversationModel alloc] init];
+        model.lastMsgUserName = teachers[i];
+        model.lastMsgHeadPic = @"ic_m_head";
+        model.lastMsgTime = timesArr[i];
+        model.lastMsg = msgArr[i];
+        model.unreadCount = i*35+2;
+        [tempArr addObject:model];
+    }
+    self.conservationsArray = tempArr;
+    [self.messagesTableView reloadData];
 }
 
 #pragma mark -- 消息列表视图

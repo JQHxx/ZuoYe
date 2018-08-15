@@ -42,7 +42,6 @@
         self.gradeLabel.textColor = [UIColor lightGrayColor];
         self.gradeLabel.text = @"一年级/数学" ;
         [self addSubview:self.gradeLabel];
-        
     }
     return self;
 }

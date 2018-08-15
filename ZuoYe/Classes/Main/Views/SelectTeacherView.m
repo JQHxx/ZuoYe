@@ -7,13 +7,11 @@
 //
 
 #import "SelectTeacherView.h"
-#import "HorizontalFlowLayout.h"
 #import "TeacherCollectionViewCell.h"
 #import "LevelModel.h"
 
 @interface SelectTeacherView ()<UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
 
-@property (nonatomic, strong) HorizontalFlowLayout  *layout;
 @property (nonatomic, strong) UICollectionView      *myCollectionView;
 
 
@@ -24,10 +22,11 @@
 -(instancetype)initWithFrame:(CGRect)frame{
     self = [super initWithFrame:frame];
     if (self) {
+        UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+        layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
         
-        self.layout = [[HorizontalFlowLayout alloc] init];
         
-        self.myCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height) collectionViewLayout:self.layout];
+        self.myCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height) collectionViewLayout:layout];
         self.myCollectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.myCollectionView.showsHorizontalScrollIndicator = NO;
         self.myCollectionView.decelerationRate = UIScrollViewDecelerationRateNormal;

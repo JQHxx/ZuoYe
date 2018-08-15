@@ -166,12 +166,13 @@
     
     courseStr = @"数学";
     
-    NSArray *levels = @[@"大学生",@"普通教师",@"初级教师",@"中级教师",@"高级教师",@"特级教师"];
+    NSArray *levels = @[@"普通教师",@"初级教师",@"中级教师",@"高级教师",@"特级教师"];
+    NSArray *photos = @[@"chujijiaoshi",@"zhongjijiaoshi",@"gaojijiaoshi",@"zhongjijiaoshi",@"gaojijiaoshi"];
     NSMutableArray *tempArr = [[NSMutableArray alloc] init];
     for (NSInteger i=0; i<levels.count; i++) {
         LevelModel *level = [[LevelModel alloc] init];
         level.level = levels[i];
-        level.head_image = @"ic_m_head";
+        level.head_image = photos[i];
         level.price = 1.0 + 0.2*i;
         [tempArr addObject:level];
     }
