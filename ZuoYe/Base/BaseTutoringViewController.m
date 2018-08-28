@@ -11,6 +11,7 @@
 #import "ChatViewController.h"
 #import "PayViewController.h"
 #import "STPopupController.h"
+#import "CommentViewController.h"
 #import "YBPopupMenu.h"
 
 @interface BaseTutoringViewController ()<YBPopupMenuDelegate>
@@ -60,6 +61,16 @@
 -(void)endHomeworkCheckAction{
     PayViewController *payVC = [[PayViewController alloc] init];
     payVC.tutoringType = TutoringTypeReview;
+    payVC.backBlock = ^(id object) {
+        CommentViewController *commentVC = [[CommentViewController alloc] init];
+        commentVC.backBlock = ^(id object) {
+            [self.navigationController popToRootViewControllerAnimated:YES];
+        };
+        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:commentVC];
+        popupVC.style = STPopupStyleBottomSheet;
+        popupVC.navigationBarHidden = YES;
+        [popupVC presentInViewController:self];
+    };
     
     STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
     popupVC.style = STPopupStyleBottomSheet;

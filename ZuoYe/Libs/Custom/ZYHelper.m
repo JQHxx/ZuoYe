@@ -43,6 +43,26 @@ singleton_implementation(ZYHelper)
     return arr;
 }
 
+#pragma mark -- 辅导订单相关
+#pragma mark 获取订单状态
+-(NSString *)getStateStringWithIndex:(NSInteger)index{
+    NSString *state = @"";
+    if (index == 0) {
+        state = @"待接单";
+    }else if (index == 1){
+        state = @"已接单待辅导";
+    }else if (index == 2){
+        state = @"辅导中";
+    }else if (index == 3){
+        state = @"待付款";
+    }else if (index == 4){
+        state = @"已完成";
+    }else if (index == 5){
+        state = @"已取消";
+    }
+    return state;
+}
+
 
 
 

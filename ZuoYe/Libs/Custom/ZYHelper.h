@@ -27,5 +27,14 @@ singleton_interface(ZYHelper)
  */
 -(NSArray *)getCourseForGrade:(NSString *)grade;
 
+/*
+ *获取订单状态
+ *
+ * @param index 
+ * @return 订单状态
+ *
+ */
+-(NSString *)getStateStringWithIndex:(NSInteger)index;
+
 
 @end

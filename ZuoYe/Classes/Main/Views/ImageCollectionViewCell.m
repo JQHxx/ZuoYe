@@ -15,7 +15,7 @@
     if (self) {
         self.backgroundColor = [UIColor whiteColor];
         
-        _imgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height)];
+        _imgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height-10)];
         [self addSubview:_imgView];
         
         _deleteBtn = [UIButton buttonWithType:UIButtonTypeCustom];

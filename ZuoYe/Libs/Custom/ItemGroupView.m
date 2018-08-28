@@ -64,6 +64,8 @@
         line_lab=[[UILabel alloc] initWithFrame:CGRectMake(5.0,viewHeight-3, btnWidth-10.0, 2.0)];
         line_lab.backgroundColor = kLineColor;
         [self.rootScrollView addSubview:line_lab];
+        
+        
     }
     return self;
 }
@@ -75,10 +77,10 @@
         sender.selected=YES;
         selectBtn=sender;
         line_lab.frame=CGRectMake(index*btnWidth+5.0, 38, btnWidth-10.0, 2.0);
-        if (index>=2&&index<num-2) {
-            CGPoint position=CGPointMake((index-2)*btnWidth-10, 0);
-            [self.rootScrollView setContentOffset:position animated:YES];
-        }
+//        if (index>=2&&index<num-2) {
+//            CGPoint position=CGPointMake((index-2)*btnWidth-10, 0);
+//            [self.rootScrollView setContentOffset:position animated:YES];
+//        }
     }];
     
     if ([_viewDelegate respondsToSelector:@selector(itemGroupView:didClickActionWithIndex:)]) {

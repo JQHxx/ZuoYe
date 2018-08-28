@@ -27,8 +27,8 @@
         for (int i=0; i<titles.count; i++) {
             UIButton *btn=[[UIButton alloc] initWithFrame:CGRectMake(i*btnWidth, 0, btnWidth, frame.size.height)];
             [btn setTitle:titles[i] forState:UIControlStateNormal];
-            [btn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
-            [btn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
+            [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
             btn.titleLabel.font = [UIFont systemFontOfSize:16.0f];
             btn.tag=i;
             [btn addTarget:self action:@selector(didSelectedItemForClickAction:) forControlEvents:UIControlEventTouchUpInside];
@@ -41,7 +41,7 @@
         }
         
         line_lab=[[UILabel alloc] initWithFrame:CGRectMake(5.0,frame.size.height-3, btnWidth-10.0, 2.0)];
-        line_lab.backgroundColor = [UIColor redColor];
+        line_lab.backgroundColor = [UIColor whiteColor];
         [self addSubview:line_lab];
     }
     return self;

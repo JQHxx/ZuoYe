@@ -74,4 +74,12 @@
  */
 - (BOOL)isYesterday;
 
+/*
+ * 获取本月前几个月份
+ * @param numberMonth 几个月
+ * @param fromDate    开始时间
+ * @return  月份数组
+ */
++(NSMutableArray *)getDatesForNumberMonth:(NSInteger)numberMonth WithFromDate:(NSDate *)fromDate;
+
 @end

@@ -15,7 +15,10 @@
 #import "ReleaseView.h"
 #import "TeacherTableViewCell.h"
 #import "ItemGroupView.h"
+#import "DemandModel.h"
 #import "TeacherModel.h"
+
+#define kImgHeight  ((kScreenHeight-80)/kScreenWidth)*80
 
 @interface MainViewController ()<ReleaseViewDelegate,UITableViewDelegate,UITableViewDataSource,ItemGroupViewDelegate,UIScrollViewDelegate>{
     NSMutableArray   *teachersArray;
@@ -32,6 +35,7 @@
 @property (nonatomic , strong) ItemGroupView *subjectsView;   //科目
 @property (nonatomic , strong) ItemGroupView *subjectsCoverView;
 
+
 @end
 
 @implementation MainViewController
@@ -44,8 +48,8 @@
     self.rightImageName=@"h_ic_top_msg_nor";
     
     teachersArray = [[NSMutableArray alloc] init];
-//    titles = @[@"语文",@"数学",@"英语",@"物理",@"化学",@"生物"];
-    titles = @[@"语文",@"数学",@"英语"];
+    titles = @[@"语文",@"数学",@"英语",@"物理",@"化学",@"生物"];
+//    titles = @[@"语文",@"数学",@"英语"];
     selectIndex = 0;
     
     [self initMainView];
@@ -214,6 +218,7 @@
     self.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherTableView.top+self.teacherTableView.height+kTabHeight+kNavHeight);
 }
 
+#pragma mark 初始化界面
 -(void)initMainView{
     [self.view addSubview:self.rootScrollView];
     [self.rootScrollView addSubview:self.bannerView];
@@ -240,7 +245,7 @@
 #pragma mark 广告位
 -(UIView *)bannerView{
     if (!_bannerView) {
-        _bannerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, 100)];
+        _bannerView = [[UIView alloc] initWithFrame:CGRectMake(0,0, kScreenWidth, kScreenWidth/3.75)];
         _bannerView.backgroundColor = [UIColor whiteColor];
     }
     return _bannerView;
@@ -249,7 +254,7 @@
 #pragma mark 发布辅导需求
 -(ReleaseView *)releaseView{
     if (!_releaseView) {
-        _releaseView = [[ReleaseView alloc] initWithFrame:CGRectMake(0, self.bannerView.bottom+10, kScreenWidth, 150)];
+        _releaseView = [[ReleaseView alloc] initWithFrame:CGRectMake(0, self.bannerView.bottom+10, kScreenWidth, kScreenWidth/2.5)];
         _releaseView.delegate = self;
     }
     return _releaseView;

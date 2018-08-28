@@ -160,4 +160,32 @@
     && cmps.day == 1;
 }
 
+#pragma mark 获取本月前几个月份
++(NSMutableArray *)getDatesForNumberMonth:(NSInteger)numberMonth WithFromDate:(NSDate *)fromDate{
+    NSMutableArray *tempDateArr = [[NSMutableArray alloc] init];
+    
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    NSTimeZone* timeZone = [NSTimeZone timeZoneForSecondsFromGMT:8];//设置时区
+    [formatter setTimeZone:timeZone];
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    NSTimeInterval time1970 = [fromDate timeIntervalSince1970];
+    
+    NSUInteger numberOffDaysInMonth = 0;
+    //计算当月的所有的天数
+    for (NSInteger i= 0 ; i<numberMonth; i++) {
+        NSDate *dateTime = [NSDate dateWithTimeIntervalSince1970:time1970-(86400*numberOffDaysInMonth)];
+        [formatter stringFromDate:dateTime];
+        NSString *string = [NSString stringWithFormat:@"%@",dateTime];
+        NSString *year = [string substringToIndex:4];
+        NSString *month = [string substringWithRange:NSMakeRange(5, 2)];
+        NSString *tempstr = [NSString stringWithFormat:@"%@年%@月",year,month];
+        [tempDateArr addObject:tempstr];
+        //计算当月的所有的天数
+        NSRange range = [calendar rangeOfUnit:NSCalendarUnitDay inUnit:NSCalendarUnitMonth forDate:dateTime];
+        NSInteger  CuurentNumberOffDaysInMonth = range.length;
+        numberOffDaysInMonth += CuurentNumberOffDaysInMonth;
+    }
+    return tempDateArr;
+}
+
 @end

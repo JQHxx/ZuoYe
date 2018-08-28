@@ -42,7 +42,6 @@
     return @"请说明您的取消辅导的原因";
 }
 
-
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@""];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -80,7 +79,6 @@
 -(void)confirmSelectedReasonAction{
     
 }
-
 
 #pragma mark -- Getters
 -(UITableView *)reasonTableView{

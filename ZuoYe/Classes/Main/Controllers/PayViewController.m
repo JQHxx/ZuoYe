@@ -8,6 +8,8 @@
 
 #import "PayViewController.h"
 #import "UIViewController+STPopup.h"
+#import "STPopupController.h"
+#import "CommentViewController.h"
 
 @interface PayViewController ()<UITableViewDelegate,UITableViewDataSource>{
     NSArray   *titlesArr;
@@ -79,7 +81,11 @@
 #pragma mark -- event response
 #pragma mark 确认支付
 -(void)confirmPayAction{
-    
+    if (self.popupController) {
+        [self.popupController dismissWithCompletion:^{
+            self.backBlock(nil);
+        }];
+    }
 }
 
 #pragma mark -- Getters

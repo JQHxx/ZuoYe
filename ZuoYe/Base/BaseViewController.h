@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
+typedef void(^BaseReturnBackBlock)(id object);
 
 @interface BaseViewController : UIViewController
 
@@ -19,6 +20,7 @@
 @property (nonatomic ,copy)NSString    *rightImageName;      //导航栏右侧图片名称
 @property (nonatomic ,copy)NSString    *rigthTitleName;      //导航栏右侧标题名称
 
+@property (nonatomic, copy)BaseReturnBackBlock backBlock;
 
 
 -(void)leftNavigationItemAction;
