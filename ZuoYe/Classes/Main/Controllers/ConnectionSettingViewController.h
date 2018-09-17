@@ -7,7 +7,10 @@
 //
 
 #import "BaseViewController.h"
+#import "TeacherModel.h"
 
 @interface ConnectionSettingViewController : BaseViewController
+
+@property (nonatomic ,strong) TeacherModel *teacherModel;
 
 @end

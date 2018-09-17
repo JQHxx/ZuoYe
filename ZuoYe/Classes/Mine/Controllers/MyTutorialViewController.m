@@ -13,17 +13,19 @@
 #import "ConnectionSettingViewController.h"
 #import "KRVideoPlayerController.h"
 #import "STPopupController.h"
-#import "ItemGroupView.h"
 #import "TutorialModel.h"
+#import "SlideMenuView.h"
 
-@interface MyTutorialViewController ()<UITableViewDataSource,UITableViewDelegate,ItemGroupViewDelegate,MyTutorialTableViewCellDelegate>{
+@interface MyTutorialViewController ()<UITableViewDataSource,UITableViewDelegate,SlideMenuViewDelegate,MyTutorialTableViewCellDelegate>{
     NSArray      *stateArray;
     NSInteger    selectedIndex;
 }
 
-@property (nonatomic, strong) ItemGroupView    *orderMenuView;
-
+@property (nonatomic, strong)SlideMenuView     *titleView;
+@property (nonatomic, strong) SlideMenuView    *orderMenuView;
 @property (nonatomic, strong) UITableView      *tutorialTableView;
+
+@property (nonatomic, strong) NSMutableArray   *checkArray;
 @property (nonatomic, strong) NSMutableArray   *tutorialArray;
 
 @property (nonatomic, strong) KRVideoPlayerController *videoController;
@@ -35,12 +37,13 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.baseTitle = @"我的辅导";
+    
     self.view.backgroundColor = [UIColor bgColor_Gray];
     
     stateArray = @[@"全部",@"待付款",@"已完成",@"已取消"];
     selectedIndex = 0;
     
+    [self.view addSubview:self.titleView];
     [self.view addSubview:self.orderMenuView];
     [self.view addSubview:self.tutorialTableView];
     
@@ -50,7 +53,7 @@
 
 #pragma mark -- UITableViewDataSource
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return self.tutorialArray.count;
+    return selectedIndex==0?self.checkArray.count:self.tutorialArray.count;
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -66,14 +69,18 @@
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.delegate = self;
     
-    TutorialModel *model = self.tutorialArray[indexPath.section];
+    TutorialModel *model = nil;
+    if (selectedIndex==0) {
+        model = self.checkArray[indexPath.section];
+    }else{
+        model = self.tutorialArray[indexPath.section];
+    }
     cell.tutorial = model;
-    
     return cell;
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 240;
+    return 175;
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
@@ -85,22 +92,38 @@
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    TutorialModel *model = self.tutorialArray[indexPath.section];
+    TutorialModel *model = nil;
+    if (selectedIndex==0) {
+        model = self.checkArray[indexPath.section];
+    }else{
+        model = self.tutorialArray[indexPath.section];
+    }
     TutorialDetailsViewController *detailsVC = [[TutorialDetailsViewController alloc] init];
     detailsVC.myTutorial = model;
     [self.navigationController pushViewController:detailsVC animated:YES];
 }
 
 #pragma mark -- Delegate
-#pragma mark ItemGroupViewDelegate
--(void)itemGroupView:(ItemGroupView *)groupView didClickActionWithIndex:(NSInteger)index{
-    
+#pragma mark SlideMenuViewDelegate
+-(void)slideMenuView:(SlideMenuView *)menuView didSelectedWithIndex:(NSInteger)index{
+    selectedIndex = index;
+    [self loadMyTutorialData];
 }
 
 #pragma mark MyTutorialTableViewCellDelegate
 #pragma mark 去付款或连线老师
 -(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell payOrderOrConnectTeacherWithTutorial:(TutorialModel *)model{
-    
+    if (model.state==0) {
+        TutorialPayViewController *payVC = [[TutorialPayViewController alloc] init];
+        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
+        popupVC.style = STPopupStyleBottomSheet;
+        popupVC.navigationBarHidden = YES;
+        [popupVC presentInViewController:self];
+    }else{
+        ConnectionSettingViewController *connectSettingVC = [[ConnectionSettingViewController alloc] init];
+        connectSettingVC.teacherModel = model.teacher;
+        [self.navigationController pushViewController:connectSettingVC animated:YES];
+    }
 }
 
 #pragma mark 回放
@@ -132,68 +155,74 @@
             break;
     }
     
-    UIButton *btn;
-    for (UIView  *view in self.orderMenuView.subviews) {
-        for (UIView *menuview in view.subviews) {
-            if ([menuview isKindOfClass:[UIButton class]]&&(menuview.tag == selectedIndex+100)) {
-                btn = (UIButton*)menuview;
-            }
-        }
-    }
-    [self.orderMenuView changeItemForSwipMenuAction:btn];
+    self.orderMenuView.currentIndex = selectedIndex;
 }
 
-#pragma mark 去付款或连线老师
--(void)payOrderOrConnectTeacherAction:(UIButton *)sender{
-    TutorialModel *model = self.tutorialArray[sender.tag];
-    if (model.state==3) {
-        TutorialPayViewController *payVC = [[TutorialPayViewController alloc] init];
-        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
-        popupVC.style = STPopupStyleBottomSheet;
-        popupVC.navigationBarHidden = YES;
-        [popupVC presentInViewController:self];
-    }else{
-        ConnectionSettingViewController *connectSettingVC = [[ConnectionSettingViewController alloc] init];
-        [self.navigationController pushViewController:connectSettingVC animated:YES];
-    }
-    
-}
 
 #pragma mark -- Private Methods
 #pragma mark 加载数据
 -(void)loadMyTutorialData{
     NSArray *names = @[@"小美老师",@"小芳老师",@"张三老师",@"李四老师",@"王五老师",@"赵六老师"];
-    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+    NSMutableArray *tempCheckArr = [[NSMutableArray alloc] init];
+    NSMutableArray *tempTutorialArr = [[NSMutableArray alloc] init];
     for (NSInteger i=0; i<names.count; i++) {
         TutorialModel *model = [[TutorialModel alloc] init];
-        model.type = i%2+1;
+        model.type = i%2;
         model.datetime = [NSString stringWithFormat:@"2018-08-%02ld %02ld:%02ld",15+i,10+i,i*5];
-        model.state = i%3+3;
-        model.head_image = @"ic_m_head";
+        model.state = i%3;
+        model.head_image = @"photo";
         model.name = names[i];
         model.level = @"高级教师";
         model.grade = @"一年级";
         model.subject = @"数学";
         model.check_price = (double)i*5+10;
+        model.per_price = 1.0 + i*0.1;
         model.duration = 85+i*10;
         model.pay_price = (double)(i*15+5);
-        [tempArr addObject:model];
+        model.order_sn = @"201878906547812";
+        model.payway = i%3;
+        model.video_cover = @"zuoye";
+        model.payTime = [NSString stringWithFormat:@"2018-08-%02ld %02ld:%02ld",15+i,10+i,i*5];
+        
+        model.teacher.name = names[i];
+        model.teacher.level = @"高级教师";
+        model.teacher.grade = @"一年级";
+        model.teacher.subjects = @"数学";
+        
+        if (model.type==0) {
+          [tempCheckArr addObject:model];
+        }else{
+            [tempTutorialArr addObject:model];
+        }
+        
     }
-    self.tutorialArray = tempArr;
+    self.checkArray = tempCheckArr;
+    self.tutorialArray = tempTutorialArr;
     [self.tutorialTableView reloadData];
 }
 
 #pragma mark -- getters
+#pragma mark 标题栏
+-(SlideMenuView *)titleView{
+    if (!_titleView) {
+        _titleView = [[SlideMenuView alloc] initWithFrame:CGRectMake((kScreenWidth -200)/2, KStatusHeight, 200, kNavHeight-KStatusHeight) btnTitleFont:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16] color:[UIColor colorWithHexString:@"#4A4A4A"] selColor:[UIColor colorWithHexString:@"#FF6161"] showLine:NO];
+        _titleView.isShowUnderLine = YES;
+        _titleView.myTitleArray = @[@"作业检查",@"作业辅导"];
+        _titleView.currentIndex = selectedIndex;
+        _titleView.backgroundColor = [UIColor clearColor];
+        _titleView.delegate = self;
+    }
+    return _titleView;
+}
+
 #pragma mark 订单状态栏
--(ItemGroupView *)orderMenuView{
+-(SlideMenuView *)orderMenuView{
     if (!_orderMenuView) {
-        _orderMenuView = [[ItemGroupView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, 40) titles:stateArray];
-        _orderMenuView.viewDelegate = self;
+        _orderMenuView = [[SlideMenuView alloc] initWithFrame:CGRectMake(0, kNavHeight+5, kScreenWidth, 40) btnTitleFont:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:13] color:[UIColor colorWithHexString:@"#9B9B9B "] selColor:nil showLine:NO];
+        _orderMenuView.myTitleArray = stateArray;
+        _orderMenuView.currentIndex = 0;
+        _orderMenuView.delegate = self;
         _orderMenuView.backgroundColor = [UIColor whiteColor];
-        
-        UIView *lineView = [[UIView alloc]initWithFrame:CGRectMake(10, 39, kScreenWidth-10, 0.5)];
-        lineView.backgroundColor  = kLineColor;
-        [_orderMenuView addSubview:lineView];
     }
     return _orderMenuView;
 }
@@ -219,7 +248,15 @@
     return _tutorialTableView;
 }
 
-#pragma mark 我的辅导信息
+#pragma mark 检查信息
+-(NSMutableArray *)checkArray{
+    if (!_checkArray) {
+        _checkArray = [[NSMutableArray alloc] init];
+    }
+    return _checkArray;
+}
+
+#pragma mark 辅导信息
 -(NSMutableArray *)tutorialArray{
     if (!_tutorialArray) {
         _tutorialArray = [[NSMutableArray alloc] init];

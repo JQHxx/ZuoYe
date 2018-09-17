@@ -10,14 +10,25 @@
 
 #import "BaseViewController.h"
 
-typedef void(^ReturnBackBLock)(NSMutableArray *photosArray);
+@class TakePicturesViewController;
+@protocol TakePicturesViewControllerDelegate<NSObject>
+
+@optional
+-(void)takePicturesViewContriller:(TakePicturesViewController *)controller didGotPhotos:(NSMutableArray *)photos;
+
+
+@end
+
+
 
 @interface TakePicturesViewController : BaseViewController
+
+@property (nonatomic ,weak ) id <TakePicturesViewControllerDelegate>controllerDelegate;
 
 @property (nonatomic, assign)TutoringType type; //辅导类型
 
 @property (nonatomic,assign) BOOL  isConnectionSetting;
 
-@property (nonatomic, copy ) ReturnBackBLock backBlock;
+
 
 @end

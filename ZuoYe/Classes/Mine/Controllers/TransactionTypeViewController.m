@@ -44,8 +44,15 @@
     typesArray = @[@"全部",@"作业检查",@"作业辅导",@"充值"];
     typeStr = @"全部";
     
+    self.view.topBoderRadius = 8.0;
+    
     [self.view addSubview:self.titleLabel];
     [self.view addSubview:self.closeButton];
+    
+    UIView *line2 = [[UIView alloc] initWithFrame:CGRectMake(0.0, 45.0, kScreenWidth, 2.0)];
+    line2.backgroundColor = [UIColor colorWithHexString:@"#D8D8D8"];
+    [self.view addSubview:line2];
+    
     [self.view addSubview:self.typeLabelsView];
     [self.view addSubview:self.confirmButton];
 }
@@ -73,8 +80,9 @@
 #pragma mark 标题
 -(UILabel *)titleLabel{
     if (!_titleLabel) {
-        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 10, kScreenWidth-40, 25)];
-        _titleLabel.font = kFontWithSize(18);
+        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(60, 10, kScreenWidth-120, 25)];
+        _titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
+        _titleLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         _titleLabel.text = @"交易类型";
         _titleLabel.textAlignment = NSTextAlignmentCenter;
     }
@@ -84,8 +92,10 @@
 #pragma mark 关闭
 -(UIButton *)closeButton{
     if(!_closeButton){
-        _closeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-30, 5, 30,30)];
-        [_closeButton setImage:[UIImage imageNamed:@"pub_ic_lite_del"] forState:UIControlStateNormal];
+        _closeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-50, 15, 35,22)];
+        [_closeButton setTitle:@"取消" forState:UIControlStateNormal];
+        [_closeButton setTitleColor:[UIColor colorWithHexString:@"#4A4A4A"] forState:UIControlStateNormal];
+        _closeButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
         [_closeButton addTarget:self action:@selector(closeTansactionViewAction:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _closeButton;
@@ -100,7 +110,7 @@
         kSelfWeak;
         __weak typeof(_typeLabelsView) weakLabelsView = _typeLabelsView;
         _typeLabelsView.viewHeightRecalc = ^(CGFloat height) {
-            weakLabelsView.frame = CGRectMake(10, weakSelf.titleLabel.bottom+20, kScreenWidth-20, height);
+            weakLabelsView.frame = CGRectMake(10, weakSelf.titleLabel.bottom+33.0, kScreenWidth-20, height);
         };
         _typeLabelsView.didClickItem = ^(NSInteger itemIndex) {
             typeStr = typesArray[itemIndex];
@@ -112,11 +122,11 @@
 #pragma mark 确定
 -(UIButton *)confirmButton{
     if (!_confirmButton) {
-        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(20, kMyHeight-50, kScreenWidth-40, 40)];
-        _confirmButton.layer.cornerRadius = 5;
+        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(43.0,self.titleLabel.bottom+102.0,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
         [_confirmButton setTitle:@"确定" forState:UIControlStateNormal];
+        [_confirmButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        _confirmButton.backgroundColor = [UIColor redColor];
+        _confirmButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
         [_confirmButton addTarget:self action:@selector(confirmSelectedTransactionTypeAction:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _confirmButton;

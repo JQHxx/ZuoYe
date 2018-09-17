@@ -26,33 +26,32 @@
 -(instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier{
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, 40, 40)];
+        headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(19, 10, 36, 36)];
         [self.contentView addSubview:headImageView];
         
-        nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+10, 5, 150, 20)];
-        nameLabel.font = kFontWithSize(14);
-        nameLabel.textColor = [UIColor blackColor];
+        nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+12, 11, 80, 20)];
+        nameLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
+        nameLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         [self.contentView addSubview:nameLabel];
         
-        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-140, 10, 130, 20)];
-        timeLabel.textAlignment = NSTextAlignmentRight;
-        timeLabel.font = kFontWithSize(13);
-        timeLabel.textColor = [UIColor lightGrayColor];
+        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+12,nameLabel.bottom, 100, 16)];
+        timeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:11];
+        timeLabel.textColor = [UIColor colorWithHexString:@"#A2A2A2"];
         [self.contentView addSubview:timeLabel];
         
         //准备5个心桃 默认隐藏
         scoreArray = [[NSMutableArray alloc]init];
         for (int i = 0; i<=4; i++) {
-            UIImageView *scoreImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"pub_ic_star"]];
+            UIImageView *scoreImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"score"]];
             [scoreArray addObject:scoreImage];
             [self addSubview:scoreImage];
         }
         
         //    评论内容
-        commentLabel=[[UILabel alloc] initWithFrame:CGRectMake(nameLabel.left, headImageView.bottom+5, kScreenWidth-headImageView.right-20, 0)];
-        commentLabel.font=[UIFont systemFontOfSize:14];
+        commentLabel=[[UILabel alloc] initWithFrame:CGRectMake(nameLabel.left, timeLabel.bottom+2, kScreenWidth-97.0, 0)];
+        commentLabel.font=[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12];
         commentLabel.numberOfLines=0;
-        commentLabel.textColor = [UIColor lightGrayColor];
+        commentLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         [self.contentView addSubview:commentLabel];
         
     }
@@ -65,26 +64,26 @@
     nameLabel.text = commentModel.name;
     
     //加星级
-    CGSize scoreSize = CGSizeMake(15, 15);
+    CGSize scoreSize = CGSizeMake(13, 13);
     double scoreNum = commentModel.score;
     NSInteger oneScroe=(NSInteger)scoreNum;
     NSInteger num=scoreNum>oneScroe?oneScroe+1:oneScroe;
     for (int i = 0; i<scoreArray.count; i++) {
         UIImageView *scoreImage = scoreArray[i];
-        [scoreImage setFrame:CGRectMake(headImageView.right+10+scoreSize.width*i,nameLabel.bottom+5, scoreSize.width, scoreSize.height)];
+        [scoreImage setFrame:CGRectMake(kScreenWidth-96.0+(scoreSize.width+4.0)*i,16.0, scoreSize.width, scoreSize.height)];
         if (i<= num-1) {
             if ((i==num-1)&&scoreNum>oneScroe) {
-                scoreImage.image=[UIImage imageNamed:@"pub_ic_star_half"];
+                scoreImage.image=[UIImage imageNamed:@"score_half"];
             }
         }else{
-            scoreImage.image=[UIImage imageNamed:@"pub_ic_star_un"];
+            scoreImage.image=[UIImage imageNamed:@"score_gray"];
         }
     }
     
     timeLabel.text = commentModel.create_time;
     commentLabel.text = commentModel.comment;
-    CGFloat commentH=[commentLabel.text boundingRectWithSize:CGSizeMake(kScreenWidth-headImageView.right-20, CGFLOAT_MAX) withTextFont:commentLabel.font].height;
-    commentLabel.frame = CGRectMake(nameLabel.left, headImageView.bottom+5, kScreenWidth-headImageView.right-20, commentH);
+    CGFloat commentH=[commentLabel.text boundingRectWithSize:CGSizeMake(kScreenWidth-97.0, CGFLOAT_MAX) withTextFont:commentLabel.font].height;
+    commentLabel.frame = CGRectMake(nameLabel.left, timeLabel.bottom+2, kScreenWidth-97, commentH);
 }
 
 

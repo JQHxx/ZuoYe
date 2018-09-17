@@ -65,23 +65,24 @@
 #pragma mark 文字输入
 -(UITextView *)myTextView{
     if (!_myTextView) {
-        _myTextView = [[UITextView alloc] initWithFrame:CGRectMake(10, kNavHeight+20, kScreenWidth-20, 120)];
-        _myTextView.layer.borderWidth = 1.0;
-        _myTextView.layer.borderColor = kLineColor.CGColor;
+        _myTextView = [[UITextView alloc] initWithFrame:CGRectMake(10, kNavHeight+20, kScreenWidth-20, 256)];
+        _myTextView.backgroundColor = [UIColor colorWithHexString:@"#F6F6F6"];
         _myTextView.delegate = self;
-        _myTextView.font = kFontWithSize(14);
+        _myTextView.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        _myTextView.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
+        _myTextView.boderRadius = 4.0;
         
-        promptLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, 250, 20)];
+        promptLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, 8, 250, 20)];
         promptLabel.text = @"请简要描述您的问题和意见";
-        promptLabel.font = [UIFont systemFontOfSize:14];
-        promptLabel.textColor = [UIColor lightGrayColor];
+        promptLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        promptLabel.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
         [_myTextView addSubview:promptLabel];
         
-        countLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-120, 90, 80, 20)];
+        countLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-120, 222, 80, 20)];
         countLabel.text = @"0/200";
-        countLabel.textColor = [UIColor lightGrayColor];
+        countLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         countLabel.textAlignment = NSTextAlignmentRight;
-        countLabel.font = [UIFont systemFontOfSize:14];
+        countLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
         [_myTextView addSubview:countLabel];
     }
     return _myTextView;
@@ -90,11 +91,11 @@
 #pragma mark 提交
 -(UIButton *)submitButton{
     if (!_submitButton) {
-        _submitButton = [[UIButton alloc] initWithFrame:CGRectMake(20, self.myTextView.bottom+30, kScreenWidth-40, 40)];
+        _submitButton = [[UIButton alloc] initWithFrame:CGRectMake(48, self.myTextView.bottom+30, kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
         [_submitButton setTitle:@"提交" forState:UIControlStateNormal];
+        [_submitButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_submitButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        _submitButton.backgroundColor = [UIColor redColor];
-        _submitButton.layer.cornerRadius = 5;
+        _submitButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
         [_submitButton addTarget:self action:@selector(submitFeedbackAction:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _submitButton;

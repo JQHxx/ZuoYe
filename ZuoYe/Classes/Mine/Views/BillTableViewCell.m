@@ -25,48 +25,54 @@
 -(instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier{
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        billImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, 50, 50)];
+        billImageView = [[UIImageView alloc] initWithFrame:CGRectMake(18, 17,34, 34)];
         [self.contentView addSubview:billImageView];
         
-        typeLabel = [[UILabel alloc] initWithFrame:CGRectMake(billImageView.right+10, 10, 100, 25)];
-        typeLabel.textColor = [UIColor blackColor];
-        typeLabel.font = kFontWithSize(14);
+        typeLabel = [[UILabel alloc] initWithFrame:CGRectMake(billImageView.right+13, 13, 100, 21)];
+        typeLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
+        typeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:15];
         [self.contentView addSubview:typeLabel];
         
-        paywayLabel = [[UILabel alloc] initWithFrame:CGRectMake(billImageView.right+10, typeLabel.bottom, 100, 25)];
-        paywayLabel.font = kFontWithSize(13);
-        paywayLabel.textColor = [UIColor lightGrayColor];
+        paywayLabel = [[UILabel alloc] initWithFrame:CGRectMake(billImageView.right+13, typeLabel.bottom+3.0, 100, 18)];
+        paywayLabel.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
+        paywayLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:13];
         [self.contentView addSubview:paywayLabel];
         
-        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-120, 10, 110, 25)];
-        timeLabel.font = kFontWithSize(12);
-        timeLabel.textColor = [UIColor lightGrayColor];
+        amountLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-160, 11.0, 142, 25)];
+        amountLabel.textAlignment = NSTextAlignmentRight;
+        amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
+        amountLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:18];
+        [self.contentView addSubview:amountLabel];
+        
+        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-120,amountLabel.bottom+1.0, 102, 25)];
+        timeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:13];
+        timeLabel.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
         timeLabel.textAlignment = NSTextAlignmentRight;
         [self.contentView addSubview:timeLabel];
         
-        amountLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-120, timeLabel.bottom, 110, 25)];
-        amountLabel.textAlignment = NSTextAlignmentRight;
-        amountLabel.font = kFontWithSize(14);
-        [self.contentView addSubview:amountLabel];
+        
     }
     return self;
 }
 
 -(void)setMyBill:(BillModel *)myBill{
-    billImageView.image = [UIImage imageNamed:@"ic_m_head"];
+    
     
     NSString *tempStr = nil;
     if (myBill.bill_type==0) {
+        billImageView.image = [UIImage imageNamed:@"bill_recharge"];
         typeLabel.text = @"充值";
-        amountLabel.textColor = [UIColor greenColor];
+        amountLabel.textColor = [UIColor colorWithHexString:@"#FF6161"];
         tempStr = @"+";
     }else if (myBill.bill_type==1){
+        billImageView.image = [UIImage imageNamed:@"bill_inspect"];
         typeLabel.text = @"作业检查";
-        amountLabel.textColor = [UIColor redColor];
+        amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         tempStr = @"-";
     }else{
+        billImageView.image = [UIImage imageNamed:@"bill_coach"];
         typeLabel.text = @"作业辅导";
-        amountLabel.textColor = [UIColor redColor];
+        amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         tempStr = @"-";
     }
     

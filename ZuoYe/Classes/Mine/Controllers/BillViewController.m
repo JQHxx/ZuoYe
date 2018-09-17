@@ -8,6 +8,7 @@
 
 #import "BillViewController.h"
 #import "TransactionTypeViewController.h"
+#import "BillDetailsViewController.h"
 #import "STPopupController.h"
 #import "BillTableViewCell.h"
 #import "BillModel.h"
@@ -62,6 +63,14 @@
     return cell;
 }
 
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    BillModel *model = self.billData[indexPath.row];
+    BillDetailsViewController *billDetailsVC = [[BillDetailsViewController alloc] init];
+    billDetailsVC.myBill = model;
+    [self.navigationController pushViewController:billDetailsVC animated:YES];
+}
+
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return 70;
 }
@@ -73,6 +82,8 @@
 -(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
     return 0.5;
 }
+
+
 
 
 #pragma mark -- Event Response
@@ -99,6 +110,8 @@
         model.pay_type = i/2;
         model.create_time = [NSString stringWithFormat:@"8月%02ld %02ld:%02ld:%2ld",22-i,10+i%3,20+i,10+i*3];
         model.amount = [amounts[i] doubleValue];
+        model.state = @"交易成功";
+        model.order_sn = @"20180903823844";
         [tempArr addObject:model];
     }
     self.billData = tempArr;

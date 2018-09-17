@@ -22,8 +22,12 @@ typedef void(^BaseReturnBackBlock)(id object);
 
 @property (nonatomic, copy)BaseReturnBackBlock backBlock;
 
+@property (nonatomic ,strong)UIImagePickerController *imgPicker;
+
 
 -(void)leftNavigationItemAction;
 -(void)rightNavigationItemAction;
+
+-(void)addPhoto;
 
 @end

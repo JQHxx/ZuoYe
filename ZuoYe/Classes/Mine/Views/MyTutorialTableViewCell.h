@@ -25,7 +25,8 @@
 @property (nonatomic, weak) id<MyTutorialTableViewCellDelegate>delegate;
 
 @property (nonatomic, strong) UIButton      *replayBtn;            //回放
-@property (nonatomic, strong) UIButton       *myButton;             //付款或连线
+@property (nonatomic, strong) UIButton       *payButton;           //付款
+@property (nonatomic, strong) UIButton       *connectButton;       //连线
 @property (nonatomic, strong) TutorialModel  *tutorial;
 
 @end

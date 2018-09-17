@@ -92,9 +92,10 @@
 #pragma mark 标题
 -(UILabel *)titleLabel{
     if (!_titleLabel) {
-        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 10, kScreenWidth-40, 25)];
-        _titleLabel.font = kFontWithSize(18);
+        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 12, kScreenWidth-40, 22)];
+        _titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
         _titleLabel.text = @"支付";
+        _titleLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         _titleLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _titleLabel;

@@ -10,6 +10,7 @@
 
 @interface UserModel : NSObject
 
+@property (nonatomic ,strong) UIImage   *headImage;
 @property (nonatomic, copy ) NSString  *head_image;
 @property (nonatomic, copy ) NSString  *name;
 @property (nonatomic,assign) NSInteger sex;

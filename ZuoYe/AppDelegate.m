@@ -71,11 +71,17 @@
 #pragma mark -- Private Methods
 #pragma mark app配置
 -(void)setAppSystemConfig{
+    //键盘工具配置
     IQKeyboardManager *keyboardManager= [IQKeyboardManager sharedManager];   // 获取类库的单例变量
     keyboardManager.enable = YES;   // 控制整个功能是否启用
     keyboardManager.shouldResignOnTouchOutside = YES; // 控制点击背景是否收起键盘
     keyboardManager.toolbarManageBehaviour = IQAutoToolbarBySubviews; // 有多个输入框时，可以通过点击Toolbar 上的“前一个”“后一个”按钮来实现移动到不同的输入框
     keyboardManager.enableAutoToolbar = NO; // 控制是否显示键盘上的工具条
+    
+    //网络请求配置
+    [HYBNetworking updateBaseUrl:@"http://apistore.baidu.com"];   // 用于指定网络请求接口的基础url
+    [HYBNetworking enableInterfaceDebug:YES];  //开启或关闭接口打印信息 开发期，最好打开，默认是NO
+    [HYBNetworking cacheGetRequest:YES shoulCachePost:YES]; // 设置GET、POST请求都缓存
 }
 
 @end

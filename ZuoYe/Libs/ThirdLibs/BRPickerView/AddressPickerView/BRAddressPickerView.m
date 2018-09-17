@@ -16,6 +16,8 @@
     NSInteger rowOfProvince; // 保存省份对应的下标
     NSInteger rowOfCity;     // 保存市对应的下标
     NSInteger rowOfTown;     // 保存区对应的下标
+    
+     NSString *_title;
 }
 
 // 时间选择器（默认大小: 320px × 216px）
@@ -34,14 +36,16 @@
 @implementation BRAddressPickerView
 
 #pragma mark - 显示地址选择器
-+ (void)showAddressPickerWithDefaultSelected:(NSArray *)defaultSelectedArr isAutoSelect:(BOOL)isAutoSelect resultBlock:(BRAddressResultBlock)resultBlock {
-    BRAddressPickerView *addressPickerView = [[BRAddressPickerView alloc] initWithDefaultSelected:defaultSelectedArr isAutoSelect:isAutoSelect resultBlock:resultBlock];
++ (void)showAddressPickerWithTitle:(NSString *)title defaultSelected:(NSArray *)defaultSelectedArr isAutoSelect:(BOOL)isAutoSelect resultBlock:(BRAddressResultBlock)resultBlock {
+    BRAddressPickerView *addressPickerView = [[BRAddressPickerView alloc] initWithTitle:title defaultSelected:defaultSelectedArr isAutoSelect:isAutoSelect resultBlock:resultBlock];
     [addressPickerView showWithAnimation:YES];
 }
 
 #pragma mark - 初始化地址选择器
-- (instancetype)initWithDefaultSelected:(NSArray *)defaultSelectedArr isAutoSelect:(BOOL)isAutoSelect resultBlock:(BRAddressResultBlock)resultBlock {
+- (instancetype)initWithTitle:(NSString *)title defaultSelected:(NSArray *)defaultSelectedArr isAutoSelect:(BOOL)isAutoSelect resultBlock:(BRAddressResultBlock)resultBlock {
     if (self = [super init]) {
+        
+        _title = title;
         // 默认选中
         if (defaultSelectedArr.count == 3) {
             self.defaultSelectedArr = defaultSelectedArr;
@@ -70,7 +74,7 @@
 #pragma mark - 初始化子视图
 - (void)initUI {
     [super initUI];
-    self.titleLabel.text = @"请选择城市";
+    self.titleLabel.text = _title;
     // 添加时间选择器
     [self.alertView addSubview:self.pickerView];
 }

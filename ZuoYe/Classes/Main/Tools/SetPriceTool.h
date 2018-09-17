@@ -10,7 +10,7 @@
 
 @protocol SetPriceToolDelegate <NSObject>
 //设置数量（填写）
--(void)setPriceToolDidSetPrice:(double)price;
+-(void)setPriceToolDidSetPrice:(NSInteger)price;
 
 //设置数量（输入）
 @optional
@@ -22,6 +22,6 @@
 
 @property (nonatomic,weak)id<SetPriceToolDelegate>delegate;
 
-@property (nonatomic,assign)double price;  //数量
+@property (nonatomic,assign)NSInteger price;  //价格
 
 @end

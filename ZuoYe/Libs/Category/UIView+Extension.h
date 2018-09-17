@@ -25,5 +25,9 @@
 @property (nonatomic, assign) CGFloat bottom;
 @property (nonatomic, assign) CGFloat right;
 
+@property (nonatomic, assign) CGFloat boderRadius;  //圆角
+@property (nonatomic, assign) CGFloat topBoderRadius;  //顶部圆角
+@property (nonatomic, assign) CGFloat rightBoderRadius;  //右侧圆角
+
 
 @end

@@ -9,35 +9,37 @@
 #import "ReleaseDemandViewController.h"
 #import "STPopupController.h"
 #import "UIViewController+STPopup.h"
-#import "CheckPriceView.h"
 #import "SelectTeacherView.h"
 #import "TeacherCollectionViewCell.h"
 #import "BRPickerView.h"
-#import "DemandButton.h"
 #import "LevelModel.h"
 #import "OrderTimePickerView.h"
+#import "DemandTableViewCell.h"
+#import "SetValueModel.h"
 
 @interface ReleaseDemandViewController ()<UITableViewDelegate,UITableViewDataSource>{
+    
     NSMutableArray  *teacherLevelsArr;
     
     NSInteger        timeType;          //0、实时 1、预约
     NSString         *orderTime;        //预约时间
     NSString         *gradeStr;         //年级
     NSString         *courseStr;        //科目
-    double           checkPrice;        //检查价格
+    
     LevelModel       *selLevelModel;    //选择老师等级
     
     NSMutableArray   *coursesArr;
 }
 
+@property (nonatomic, strong) UIButton          *cancelButton;       //关闭按钮
 @property (nonatomic, strong) UILabel           *titleLabel;        //标题
-@property (nonatomic, strong) UIButton          *closeButton;       //关闭按钮
-@property (nonatomic, strong) UITableView       *demandTableView;
-@property (nonatomic, strong) DemandButton      *timeButton;        //时间
-@property (nonatomic, strong) DemandButton      *gradeButton;       //年级
-@property (nonatomic, strong) CheckPriceView    *checkPriceView;    //检查价格
-@property (nonatomic, strong) SelectTeacherView *selTeacherView;    //选择老师
 @property (nonatomic, strong) UIButton          *confirmButton;     //确定
+
+@property (nonatomic, strong) UITableView       *demandTableView;
+@property (nonatomic, strong) SelectTeacherView *selTeacherView;    //选择老师
+
+@property (nonatomic ,strong) NSMutableArray   *myValuesArray;
+
 
 @end
 
@@ -46,7 +48,7 @@
 -(instancetype)init{
     self = [super init];
     if (self) {
-        CGFloat h = kScreenHeight *0.65;
+        CGFloat h = 345;
         self.contentSizeInPopup = CGSizeMake(kScreenWidth, h);
         self.landscapeContentSizeInPopup = CGSizeMake(kScreenHeight, h);
     }
@@ -61,62 +63,87 @@
     selLevelModel = [[LevelModel alloc] init];
     coursesArr = [[NSMutableArray alloc] init];
     
-    [self.view addSubview:self.titleLabel];
-    [self.view addSubview:self.closeButton];
+    self.view.topBoderRadius = 10.0;
     
-    UILabel *lineLbl = [[UILabel alloc] initWithFrame:CGRectMake(0,self.titleLabel.bottom+19,kScreenWidth, 1)];
-    lineLbl.backgroundColor = [UIColor colorWithHexString:@"#dddddd"];
-    [self.view addSubview:lineLbl];
-    
-    [self.view addSubview:self.demandTableView];
-    [self.view addSubview:self.confirmButton];
-    
+    [self initReleaseDemandView];
     [self loadLevelsData];
     
 }
 
 #pragma mark -- UITableViewDataSource
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 3;
+    return 4;
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    if (indexPath.row==0) {
-        [cell.contentView addSubview:self.timeButton];
-        [cell.contentView addSubview:self.gradeButton];
-    }else if (indexPath.row==1){
-        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-        cell.textLabel.text = @"科目";
-        cell.detailTextLabel.text = courseStr;
+    if (indexPath.row<3) {
+        DemandTableViewCell *cell = [[DemandTableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        SetValueModel *model = self.myValuesArray[indexPath.row];
+        cell.valueModel = model;
+        return cell;
     }else{
-        if(self.type == TutoringTypeReview){
-            [cell.contentView addSubview:self.checkPriceView];
-        }else{
-            [cell.contentView addSubview:self.selTeacherView];
-            self.selTeacherView.levelsArray = teacherLevelsArr;
-        }
+        UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+        [cell.contentView addSubview:self.selTeacherView];
+        self.selTeacherView.levelsArray = teacherLevelsArr;
+        return cell;
     }
-    return cell;
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if(indexPath.row == 2){
-        return self.type == TutoringTypeReview?80:150;
+    if(indexPath.row == 3){
+        return 150;
     }else{
-        return 55;
+        return 44;
     }
 }
 
 #pragma mark -- UITableViewDelegate
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row==1) {  //选择科目
+    if (indexPath.row==0) {
+        kSelfWeak;
+        [OrderTimePickerView showOrderTimePickerWithTitle:@"选择时间" defaultTime:@{} resultBlock:^(NSString *dayStr, NSString *hourStr, NSString *minuteStr) {
+            MyLog(@"day:%@,hour:%@,minute:%@",dayStr,hourStr,minuteStr);
+            NSString *tempHourStr = [hourStr substringToIndex:hourStr.length-1];
+            NSString *tempMinuteStr = [minuteStr substringToIndex:minuteStr.length-1];
+            timeType = 1;
+            for (SetValueModel *model in self.myValuesArray) {
+                if (model.value_id==0) {
+                    model.value = [NSString stringWithFormat:@"%@%02ld%02ld",dayStr,[tempHourStr integerValue],[tempMinuteStr integerValue]];
+                    model.isSet = YES;
+                }
+            }
+             [weakSelf.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        }];
+    }else if (indexPath.row==1) {  //选择科目
+        NSArray *grades = @[@"一年级",@"二年级",@"三年级",@"四年级",@"五年级",@"六年级",@"初一",@"初二",@"初三"];
+        kSelfWeak;
+        [BRStringPickerView showStringPickerWithTitle:@"选择年级" dataSource:grades defaultSelValue:gradeStr isAutoSelect:NO resultBlock:^(id selectValue) {
+            gradeStr = selectValue;
+            coursesArr = [NSMutableArray arrayWithArray:[[ZYHelper sharedZYHelper] getCourseForGrade:gradeStr]];
+            
+            for (SetValueModel *model in self.myValuesArray) {
+                if (model.value_id==1) {
+                    model.value = selectValue;
+                    model.isSet = YES;
+                }
+            }
+            [weakSelf.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        }];
+    }else if (indexPath.row==2){
+        kSelfWeak;
         [BRStringPickerView showStringPickerWithTitle:@"选择科目" dataSource:coursesArr defaultSelValue:courseStr isAutoSelect:NO resultBlock:^(id selectValue) {
             courseStr = selectValue;
-            [self.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+            for (SetValueModel *model in self.myValuesArray) {
+                if (model.value_id==2) {
+                    model.value = selectValue;
+                    model.isSet = YES;
+                }
+            }
+            [weakSelf.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
         }];
-    }
+   }
+    
 }
 
 #pragma mark -- Event reponse
@@ -127,121 +154,110 @@
     }
 }
 
-#pragma mark  设置预约时间
-- (void)changeOrderTimeAction:(UIButton *)sender{
-    [OrderTimePickerView showOrderTimePickerWithTitle:@"选择时间" defaultTime:@{} resultBlock:^(NSString *dayStr, NSString *hourStr, NSString *minuteStr) {
-        MyLog(@"day:%@,hour:%@,minute:%@",dayStr,hourStr,minuteStr);
-        NSString *tempHourStr = [hourStr substringToIndex:hourStr.length-1];
-        NSString *tempMinuteStr = [minuteStr substringToIndex:minuteStr.length-1];
-        [self.timeButton setTitle:[NSString stringWithFormat:@"%@ %02ld点%02ld分",dayStr,[tempHourStr integerValue],[tempMinuteStr integerValue]] forState:UIControlStateNormal];
-    }];
-}
-
-#pragma mark 修改年级
--(void)changeGradeAction:(UIButton *)sender{
-    NSArray *grades = @[@"一年级",@"二年级",@"三年级",@"四年级",@"五年级",@"六年级",@"初一",@"初二",@"初三"];
-    [BRStringPickerView showStringPickerWithTitle:@"选择年级" dataSource:grades defaultSelValue:gradeStr isAutoSelect:NO resultBlock:^(id selectValue) {
-        gradeStr = selectValue;
-        [self.gradeButton setTitle:gradeStr forState:UIControlStateNormal];
-        coursesArr = [NSMutableArray arrayWithArray:[[ZYHelper sharedZYHelper] getCourseForGrade:gradeStr]];
-    }];
-}
-
 #pragma mark  确定发布
 -(void)confirmReleaseDemandAction{
-    MyLog(@"辅导类型：%@,预约时间：%@,年级：%@，科目：%@,检查价格:%.2f,作业辅导：教师等级：%@；教师价格：%.2f",self.type==TutoringTypeReview?@"作业检查":@"作业辅导",timeType==0?@"实时":orderTime,gradeStr,courseStr,checkPrice,selLevelModel.level,selLevelModel.price);
+    MyLog(@"辅导类型：%@,预约时间：%@,年级：%@，科目：%@,作业辅导：教师等级：%@；教师价格：%.2f",@"作业辅导",timeType==0?@"实时":orderTime,gradeStr,courseStr,selLevelModel.level,selLevelModel.price);
     
 } 
 
 #pragma mark -- Private methods
+#pragma mark 加载数据
 -(void)loadLevelsData{
     timeType=0;
-    [self.timeButton setTitle:timeType==0?@"现在":orderTime forState:UIControlStateNormal];
-    
     gradeStr = @"一年级";
-    [self.gradeButton setTitle:gradeStr forState:UIControlStateNormal];
-    
     NSArray *courses = [[ZYHelper sharedZYHelper] getCourseForGrade:gradeStr];
     coursesArr = [NSMutableArray arrayWithArray:courses];
+    courseStr = nil;
     
-    courseStr = @"数学";
-    
-    NSArray *levels = @[@"普通教师",@"初级教师",@"中级教师",@"高级教师",@"特级教师"];
-    NSArray *photos = @[@"chujijiaoshi",@"zhongjijiaoshi",@"gaojijiaoshi",@"zhongjijiaoshi",@"gaojijiaoshi"];
+    NSArray *images = @[@"release_time",@"release_grade",@"release_subject"];
+    NSArray *titles = @[@"现在",gradeStr,@"请选择科目"];
     NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+    for (NSInteger i=0; i<images.count; i++) {
+        SetValueModel *model = [[SetValueModel alloc] init];
+        model.value_id = i;
+        model.imgName = images[i];
+        model.isSet = i<2;
+        model.value = titles[i];
+        [tempArr addObject:model];
+    }
+    self.myValuesArray = tempArr;
+
+    
+    NSArray *levels = @[@"普通教师",@"初级教师",@"中级教师",@"高级教师",@"特级教师",];
+    NSArray *photos = @[@"teacher_grade_junior",@"teacher_grade_intermediate",@"teacher_grade_senior",@"teacher_grade_junior",@"teacher_grade_intermediate"];
+    NSMutableArray *tempLevelArr = [[NSMutableArray alloc] init];
     for (NSInteger i=0; i<levels.count; i++) {
         LevelModel *level = [[LevelModel alloc] init];
         level.level = levels[i];
         level.head_image = photos[i];
         level.price = 1.0 + 0.2*i;
-        [tempArr addObject:level];
+        [tempLevelArr addObject:level];
     }
-    teacherLevelsArr = tempArr;
+    teacherLevelsArr = tempLevelArr;
     [self.demandTableView reloadData];
+}
+
+#pragma mark 初始化
+-(void)initReleaseDemandView{
+    [self.view addSubview:self.titleLabel];
+    [self.view addSubview:self.cancelButton];
+    [self.view addSubview:self.confirmButton];
+    
+    UILabel *lineLbl = [[UILabel alloc] initWithFrame:CGRectMake(0,45.0,kScreenWidth, 0.5)];
+    lineLbl.backgroundColor = [UIColor colorWithHexString:@"#D8D8D8"];
+    [self.view addSubview:lineLbl];
+    
+    [self.view addSubview:self.demandTableView];
 }
 
 #pragma mark -- getters and setters
 #pragma mark 标题
 -(UILabel *)titleLabel{
     if (!_titleLabel) {
-        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 10, kScreenWidth-40, 25)];
-        _titleLabel.font = kFontWithSize(18);
-        _titleLabel.text = self.type == TutoringTypeReview?@"作业检查":@"作业辅导";
+        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(100, 12, kScreenWidth-200, 22)];
+        _titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
+        _titleLabel.text = @"作业辅导";
+        _titleLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         _titleLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _titleLabel;
 }
 
-#pragma mark 关闭
--(UIButton *)closeButton{
-    if(!_closeButton){
-        _closeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-30, 5, 30,30)];
-        [_closeButton setImage:[UIImage imageNamed:@"pub_ic_lite_del"] forState:UIControlStateNormal];
-        [_closeButton addTarget:self action:@selector(closeCurrentViewAction) forControlEvents:UIControlEventTouchUpInside];
+#pragma mark 取消
+-(UIButton *)cancelButton{
+    if(!_cancelButton){
+        _cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(17.0,12.0, 32,22)];
+        [_cancelButton setTitle:@"取消" forState:UIControlStateNormal];
+        [_cancelButton setTitleColor:[UIColor colorWithHexString:@"#4A4A4A"] forState:UIControlStateNormal];
+        _cancelButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        [_cancelButton addTarget:self action:@selector(closeCurrentViewAction) forControlEvents:UIControlEventTouchUpInside];
     }
-    return _closeButton;
+    return _cancelButton;
 }
+
+#pragma mark 发布
+-(UIButton *)confirmButton{
+    if (!_confirmButton) {
+        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-50, 12.0, 34, 22)];
+        [_confirmButton setTitle:@"发布" forState:UIControlStateNormal];
+        [_confirmButton setTitleColor:[UIColor colorWithHexString:@"#FF7568"] forState:UIControlStateNormal];
+        _confirmButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        [_confirmButton addTarget:self action:@selector(confirmReleaseDemandAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _confirmButton;
+}
+
 
 #pragma mark 需求列表
 -(UITableView *)demandTableView{
     if (!_demandTableView) {
-        _demandTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.titleLabel.bottom+20, kScreenWidth, kScreenHeight*0.65-self.titleLabel.bottom-60) style:UITableViewStylePlain];
+        _demandTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 46.0, kScreenWidth, 300.0) style:UITableViewStylePlain];
         _demandTableView.dataSource = self;
         _demandTableView.delegate = self;
         _demandTableView.tableFooterView = [[UIView alloc] init];
+        _demandTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     }
     return _demandTableView;
-}
-
-#pragma mark 预约时间
--(DemandButton *)timeButton{
-    if (!_timeButton) {
-        _timeButton = [[DemandButton alloc] initWithFrame:CGRectMake(10, 10, kScreenWidth/2-20, 30)];
-        [_timeButton setImage:[UIImage imageNamed:@"ic_login_num"] forState:UIControlStateNormal];
-        [_timeButton addTarget:self action:@selector(changeOrderTimeAction:) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _timeButton;
-}
-
-#pragma mark 年级
--(DemandButton *)gradeButton{
-    if (!_gradeButton) {
-        _gradeButton = [[DemandButton alloc] initWithFrame:CGRectMake(kScreenWidth/2+10, 10, kScreenWidth/2-20, 30)];
-        [_gradeButton setImage:[UIImage imageNamed:@"ic_login_code"] forState:UIControlStateNormal];
-        [_gradeButton addTarget:self action:@selector(changeGradeAction:) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _gradeButton;
-}
-
-#pragma mark 检查价格
--(CheckPriceView *)checkPriceView{
-    if (!_checkPriceView) {
-        _checkPriceView = [[CheckPriceView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, 80)];
-        _checkPriceView.getPriceBlock = ^(double aPrice) {
-            checkPrice = aPrice;
-        };
-    }
-    return _checkPriceView;
 }
 
 #pragma mark 选择老师
@@ -255,16 +271,12 @@
     return _selTeacherView;
 }
 
-#pragma mark 确定
--(UIButton *)confirmButton{
-    if (!_confirmButton) {
-        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(0, kScreenHeight*0.65-50, kScreenWidth, 50)];
-        _confirmButton.backgroundColor = [UIColor redColor];
-        [_confirmButton setTitle:@"确定" forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [_confirmButton addTarget:self action:@selector(confirmReleaseDemandAction) forControlEvents:UIControlEventTouchUpInside];
+#pragma mark
+-(NSMutableArray *)myValuesArray{
+    if (!_myValuesArray) {
+        _myValuesArray = [[NSMutableArray alloc] init];
     }
-    return _confirmButton;
+    return _myValuesArray;
 }
 
 

@@ -23,6 +23,8 @@
     [super viewDidLoad];
     self.baseTitle = @"评论";
     
+    self.view.backgroundColor = [UIColor bgColor_Gray];
+    
     [self.view addSubview:self.commentTableView];
     
     [self loadCommentData];
@@ -48,8 +50,8 @@
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     CommentModel *model = self.commentArray[indexPath.row];
-    CGFloat commentH=[model.comment boundingRectWithSize:CGSizeMake(kScreenWidth-50-20, CGFLOAT_MAX) withTextFont:kFontWithSize(14)].height;
-    return commentH+70;
+    CGFloat commentH=[model.comment boundingRectWithSize:CGSizeMake(kScreenWidth-97.0, CGFLOAT_MAX) withTextFont:[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12]].height;
+    return commentH+60;
 }
 
 
@@ -62,7 +64,7 @@
     NSMutableArray *tempArr = [[NSMutableArray alloc] init];
     for (NSInteger i=0; i<names.count; i++) {
         CommentModel *model = [[CommentModel alloc] init];
-        model.head_image = @"ic_m_head";
+        model.head_image = @"photo";
         model.name = names[i];
         model.score = (double)(i+5)*0.5;
         model.create_time = [NSString stringWithFormat:@"2018-08-%ld %02ld:%02ld",i+12,i*3,i*5+3];
@@ -78,7 +80,7 @@
 #pragma mark 评论列表
 -(UITableView *)commentTableView{
     if (!_commentTableView) {
-        _commentTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight) style:UITableViewStylePlain];
+        _commentTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, kNavHeight+3, kScreenWidth, kScreenHeight-kNavHeight-3) style:UITableViewStylePlain];
         _commentTableView.delegate = self;
         _commentTableView.dataSource = self;
         _commentTableView.tableFooterView = [[UIView alloc] init];

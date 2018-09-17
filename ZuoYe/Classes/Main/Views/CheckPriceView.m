@@ -20,27 +20,26 @@
     if (self) {
         self.backgroundColor = [UIColor whiteColor];
         
-        UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(15, 10, 90, 30)];
+        UIImageView *imgView = [[UIImageView alloc] initWithFrame:CGRectMake(27, 11, 20, 20)];
+        imgView.image = [UIImage imageNamed:@"release_price"];
+        [self addSubview:imgView];
+        
+        UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(imgView.right+17.0, 11, 90, 22)];
         titleLab.text = @"检查价格";
-        titleLab.font = [UIFont systemFontOfSize:16];
-        titleLab.textColor = [UIColor blackColor];
+        titleLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        titleLab.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
         [self addSubview:titleLab];
         
-        SetPriceTool *priceTool = [[SetPriceTool alloc] initWithFrame:CGRectMake(frame.size.width-150, 10, 120,30)];
+        SetPriceTool *priceTool = [[SetPriceTool alloc] initWithFrame:CGRectMake(frame.size.width-150, 7.0, 125.0,32.0)];
         priceTool.delegate = self;
+        priceTool.price = 10;
         [self addSubview:priceTool];
         
-        UILabel *unitLab = [[UILabel alloc] initWithFrame:CGRectMake(priceTool.right,10, 30, 30)];
-        unitLab.textColor = [UIColor darkGrayColor];
-        unitLab.text = @"元";
-        unitLab.font = kFontWithSize(14);
-        [self addSubview:unitLab];
-        
-        UILabel *tipsLab = [[UILabel alloc] initWithFrame:CGRectMake(10, titleLab.bottom+10, kScreenWidth-20, 20)];
+        UILabel *tipsLab = [[UILabel alloc] initWithFrame:CGRectMake(10, titleLab.bottom+32.0, kScreenWidth-20, 16.0)];
         tipsLab.text = @"请根据您的作业的题数及难易程度，设置一个合理的价格。";
-        tipsLab.font = kFontWithSize(12);
+        tipsLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:11];
         tipsLab.textAlignment = NSTextAlignmentCenter;
-        tipsLab.textColor = [UIColor lightGrayColor];
+        tipsLab.textColor = [UIColor colorWithHexString:@"#808080"];
         [self addSubview:tipsLab];
     }
     return self;
@@ -52,7 +51,7 @@
 }
 
 #pragma mark 加减获得价格
--(void)setPriceToolDidSetPrice:(double)price{
+-(void)setPriceToolDidSetPrice:(NSInteger)price{
     self.getPriceBlock(price);
 }
 

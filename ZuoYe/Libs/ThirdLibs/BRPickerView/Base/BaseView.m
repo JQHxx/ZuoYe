@@ -47,6 +47,13 @@
     if (!_alertView) {
         _alertView = [[UIView alloc]initWithFrame:CGRectMake(0, SCREEN_HEIGHT - kTopViewHeight - kDatePicHeight, SCREEN_WIDTH, kTopViewHeight + kDatePicHeight)];
         _alertView.backgroundColor = [UIColor whiteColor];
+        
+        //设置圆角
+        UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:_alertView.bounds byRoundingCorners:UIRectCornerTopRight | UIRectCornerTopLeft cornerRadii:CGSizeMake(15, 15)];
+        CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
+        maskLayer.frame = _alertView.bounds;
+        maskLayer.path = maskPath.CGPath;
+        _alertView.layer.mask = maskLayer;
     }
     return _alertView;
 }
@@ -66,7 +73,7 @@
         _leftBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         _leftBtn.frame = CGRectMake(5, 8, 60, 28);
         _leftBtn.titleLabel.font = [UIFont systemFontOfSize:15.0f];
-        [_leftBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+        [_leftBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [_leftBtn setTitle:@"取消" forState:UIControlStateNormal];
         [_leftBtn addTarget:self action:@selector(clickLeftBtn) forControlEvents:UIControlEventTouchUpInside];
     }
@@ -79,7 +86,7 @@
         _rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         _rightBtn.frame = CGRectMake(SCREEN_WIDTH - 65, 8, 60, 28);
         _rightBtn.titleLabel.font = [UIFont systemFontOfSize:15.0f];
-        [_rightBtn setTitleColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
+        [_rightBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
         [_rightBtn setTitle:@"确定" forState:UIControlStateNormal];
         [_rightBtn addTarget:self action:@selector(clickRightBtn) forControlEvents:UIControlEventTouchUpInside];
     }
@@ -91,8 +98,8 @@
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc]initWithFrame:CGRectMake(65, 0, SCREEN_WIDTH - 130, kTopViewHeight)];
         _titleLabel.backgroundColor = [UIColor clearColor];
-        _titleLabel.font = [UIFont systemFontOfSize:14.0f];
-        _titleLabel.textColor = RGB_HEX(0xFF7998, 1.0);
+        _titleLabel.font = [UIFont boldSystemFontOfSize:18];
+        _titleLabel.textColor = [UIColor blackColor];
         _titleLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _titleLabel;

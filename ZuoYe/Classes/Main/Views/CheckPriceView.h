@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-typedef void(^GetpriceBlock)(double aPrice);
+typedef void(^GetpriceBlock)(NSInteger aPrice);
 
 @interface CheckPriceView : UIView
 

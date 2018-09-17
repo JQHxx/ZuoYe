@@ -10,6 +10,5 @@
 
 @interface ReleaseDemandViewController : BaseViewController
 
-@property (nonatomic, assign)TutoringType type; //辅导类型
 
 @end

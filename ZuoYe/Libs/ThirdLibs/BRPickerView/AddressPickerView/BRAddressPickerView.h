@@ -20,6 +20,6 @@ typedef void(^BRAddressResultBlock)(NSArray *selectAddressArr);
  *  @param resultBlock              选择后的回调
  *
  */
-+ (void)showAddressPickerWithDefaultSelected:(NSArray *)defaultSelectedArr isAutoSelect:(BOOL)isAutoSelect resultBlock:(BRAddressResultBlock)resultBlock;
++ (void)showAddressPickerWithTitle:(NSString *)title defaultSelected:(NSArray *)defaultSelectedArr isAutoSelect:(BOOL)isAutoSelect resultBlock:(BRAddressResultBlock)resultBlock;
 
 @end

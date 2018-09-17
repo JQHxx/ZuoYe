@@ -8,20 +8,20 @@
 
 #import "TeacherHeaderView.h"
 
-@interface TeacherHeaderView (){
-    UILabel    *introLabel;
-    UILabel    *commentCountLabel;
-}
+#define kItemW 75
+#define kCapW (kScreenWidth-52-4*kItemW)/3.0
+
+@interface TeacherHeaderView ()
 
 @property (nonatomic, strong) UIImageView *headImageView;     //头像
 @property (nonatomic, strong) UILabel     *nameLabel;         //姓名
 @property (nonatomic, strong) UILabel     *gradeLabel;        //年级/科目
 @property (nonatomic, strong) UILabel     *levelLabel;        //教师等级
 @property (nonatomic, strong) UILabel     *experienceLabel;   //经验
-@property (nonatomic, strong) UIButton    *foucusBtn;         //关注
 @property (nonatomic, strong) UILabel     *scoreLabel;        //评分
 @property (nonatomic, strong) UILabel     *studentLabel;      //学生人数
 @property (nonatomic, strong) UILabel     *fansLabel;         //粉丝数
+
 @property (nonatomic, strong) UILabel     *priceLabel;        //辅导价格
 @property (nonatomic, strong) UILabel     *totalTimeLabel;         //辅导时长
 @property (nonatomic, strong) UILabel     *checkCountLabel;   //检查次数
@@ -29,9 +29,6 @@
 @property (nonatomic, strong) UIButton    *teacherButton;     //教师资质
 @property (nonatomic, strong) UIButton    *educationButton;    //学历认证
 @property (nonatomic, strong) UIButton    *technicalButton;    //专业技能
-@property (nonatomic, strong) UIView      *introView;
-
-@property (nonatomic, strong) UIView      *commentHeaderView;  //评论头部视图
 
 
 @end
@@ -41,68 +38,80 @@
 -(instancetype)initWithFrame:(CGRect)frame{
     self = [super initWithFrame:frame];
     if (self) {
-        UIView *bgView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, 270)];
-        bgView.backgroundColor = [UIColor whiteColor];
-        [self addSubview:bgView];
+        //背景图片
+        UIImageView *bgImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth,KStatusHeight+180)];
+        bgImageView.image = [UIImage imageNamed:@"teacher_details_background"];
+        bgImageView.contentMode = UIViewContentModeScaleAspectFill;
+        bgImageView.clipsToBounds =YES;
+        [self addSubview:bgImageView];
         
-        [bgView addSubview:self.headImageView];
-        [bgView addSubview:self.nameLabel];
-        [bgView addSubview:self.gradeLabel];
-        [bgView addSubview:self.levelLabel];
-        [bgView addSubview:self.experienceLabel];
-        [bgView addSubview:self.foucusBtn];
-        [bgView addSubview:self.scoreLabel];
-        [bgView addSubview:self.studentLabel];
-        [bgView addSubview:self.fansLabel];
+        //头像
+        UIImageView *bgHeadImageView = [[UIImageView alloc] initWithFrame:CGRectMake(28,KStatusHeight+40, 72, 72)];
+        bgHeadImageView.backgroundColor = [UIColor whiteColor];
+        bgHeadImageView.boderRadius = 36.0;
+        [self addSubview:bgHeadImageView];
+        [self addSubview:self.headImageView];
         
-        UIView *line= [[UIView alloc] initWithFrame:CGRectMake(10, self.scoreLabel.bottom+10, kScreenWidth-20, 0.5)];
-        line.backgroundColor  = kLineColor;
-        [bgView addSubview:line];
+        [self addSubview:self.nameLabel];
+        [self addSubview:self.gradeLabel];
+        [self addSubview:self.levelLabel];
+        [self addSubview:self.experienceLabel];
+        [self addSubview:self.scoreLabel];
+        [self addSubview:self.studentLabel];
+        [self addSubview:self.fansLabel];
         
-        [bgView addSubview:self.priceLabel];
-        [bgView addSubview:self.totalTimeLabel];
-        [bgView addSubview:self.checkCountLabel];
-        
-        NSArray *titles = @[@"作业辅导价格",@"作业辅导时长",@"作业检查次数"];
-        for (NSInteger i=0; i<3; i++) {
-            UIView *lineView= [[UIView alloc] initWithFrame:CGRectMake((i+1)*kScreenWidth/3.0, self.scoreLabel.bottom+30,0.5, 40)];
-            lineView.backgroundColor  = kLineColor;
-            [bgView addSubview:lineView];
-            
-            UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(i*(kScreenWidth/3.0), self.priceLabel.bottom, kScreenWidth/3.0, 30)];
-            lab.text = titles[i];
-            lab.textAlignment = NSTextAlignmentCenter;
-            lab.font = kFontWithSize(16);
-            [bgView addSubview:lab];
+        for (NSInteger i=0; i<2; i++) {
+            UIView *line= [[UIView alloc] initWithFrame:CGRectMake((i+1)*kScreenWidth/3.0, self.headImageView.bottom+22,1, 19)];
+            line.backgroundColor  = [UIColor whiteColor];
+            [self addSubview:line];
         }
         
+        UIView *bgView = [[UIView alloc] initWithFrame:CGRectMake(0,KStatusHeight+165, kScreenWidth, 160)];
+        bgView.backgroundColor = [UIColor whiteColor];
+        bgView.topBoderRadius = 8.0;
+        [self addSubview:bgView];
+        
+        // 作业辅导价格 作业辅导时长 作业检查次数
+        NSArray *images = @[@"tutor_price",@"tutor_time",@"tutor_frequency"];
+        NSArray *titles = @[@"作业辅导价格",@"作业辅导时长",@"作业检查次数"];
+        for (NSInteger i=0; i<3; i++) {
+            UIImageView *imgView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth/3.0)*i+(kScreenWidth/3.0-28)/2.0, 17, 28, 28)];
+            imgView.image = [UIImage imageNamed:images[i]];
+            [bgView addSubview:imgView];
+            
+            UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(i*(kScreenWidth/3.0), imgView.bottom+5.0, kScreenWidth/3.0, 20)];
+            lab.text = titles[i];
+            lab.textAlignment = NSTextAlignmentCenter;
+            lab.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
+            lab.textColor = [UIColor colorWithHexString:@" #4A4A4A"];
+            [bgView addSubview:lab];
+            if (i==0) {
+                self.priceLabel = lab;
+            }else if (i==1){
+                self.totalTimeLabel = lab;
+            }else{
+                self.checkCountLabel = lab;
+            }
+            
+            UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(i*(kScreenWidth/3.0), lab.bottom+2.0, kScreenWidth/3.0, 20)];
+            titleLab.text = titles[i];
+            titleLab.textAlignment = NSTextAlignmentCenter;
+            titleLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
+            titleLab.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
+            [bgView addSubview:titleLab];
+        }
+        
+        UIView *line2= [[UIView alloc] initWithFrame:CGRectMake(26,109.0,kScreenWidth-51, 0.5)];
+        line2.backgroundColor  = [UIColor colorWithHexString:@"#D8D8D8"];
+        [bgView addSubview:line2];
+        
+        //认证
         [bgView addSubview:self.identityButton];
         [bgView addSubview:self.teacherButton];
         [bgView addSubview:self.educationButton];
         [bgView addSubview:self.technicalButton];
-        
-        [self addSubview:self.introView];
-        [self addSubview:self.commentHeaderView];
-        
-        
     }
     return self;
-}
-
-#pragma mark -- Event response
-#pragma mark 更多评论
--(void)getMoreCommentAction:(UIButton *)sender{
-    if ([self.delegate respondsToSelector:@selector(teacherHeaderViewGetMoreCommentAction)]) {
-        [self.delegate teacherHeaderViewGetMoreCommentAction];
-    }
-}
-
-#pragma mark 关注
--(void)concernTeacherForClickAction:(UIButton *)sender{
-    sender.selected = !sender.selected;
-    if ([self.delegate respondsToSelector:@selector(teacherHeaderViewDidConcernAction)]) {
-        [self.delegate teacherHeaderViewDidConcernAction];
-    }
 }
 
 #pragma mark -- setters
@@ -119,30 +128,26 @@
     self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",teacher.price];
     self.totalTimeLabel.text = [NSString stringWithFormat:@"%ld分钟",teacher.tutoring_time];
     self.checkCountLabel.text = [NSString stringWithFormat:@"%ld次",teacher.check_number];
+    
     self.identityButton.selected = teacher.identity_authentication;
     self.teacherButton.selected = teacher.teacher_qualification;
     self.educationButton.selected = teacher.education_certification;
     self.technicalButton.selected = teacher.technical_skill;
-    
-    introLabel.text = teacher.intro;
-    CGFloat introHeight = [teacher.intro boundingRectWithSize:CGSizeMake(kScreenWidth-30, CGFLOAT_MAX) withTextFont:kFontWithSize(14)].height;
-    introLabel.frame = CGRectMake(15, 40, kScreenWidth-30, introHeight+10);
-    self.introView.frame = CGRectMake(0, 280, kScreenWidth, introHeight+60);
-    
-    commentCountLabel.text = [NSString stringWithFormat:@"评论（%ld）",teacher.comment_count];
-    self.commentHeaderView.frame = CGRectMake(0, self.introView.bottom+10, kScreenWidth, 40);
 }
 
 
 #pragma mark -- Private methods
--(UIButton *)createButtonWithFrame:(CGRect)frame title:(NSString *)title{
+#pragma mark 自定义按钮
+-(UIButton *)createButtonWithFrame:(CGRect)frame title:(NSString *)title image:(NSString *)imgName selImage:(NSString *)selImage{
     UIButton *btn = [[UIButton alloc] initWithFrame:frame];
-    [btn setImage:[UIImage imageNamed:@"ic_eqment_pick_un"] forState:UIControlStateNormal];
-    [btn setImage:[UIImage imageNamed:@"ic_eqment_pick_on"] forState:UIControlStateSelected];
+    [btn setImage:[UIImage imageNamed:imgName] forState:UIControlStateNormal];
+    [btn setImage:[UIImage imageNamed:selImage] forState:UIControlStateSelected];
+    [btn setTitleColor:[UIColor colorWithHexString:@"#4A4A4A"] forState:UIControlStateNormal];
+    [btn setTitleColor:[UIColor colorWithHexString:@"#D8D8D8"] forState:UIControlStateSelected];
     [btn setTitle:title forState:UIControlStateNormal];
-    btn.titleLabel.font = kFontWithSize(14);
-    btn.titleEdgeInsets = UIEdgeInsetsMake(0, 5, 0, 0);
-    [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    btn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:12];
+    btn.titleEdgeInsets = UIEdgeInsetsMake(4, 5, 4, 0);
+    btn.userInteractionEnabled = NO;
     return btn;
 }
 
@@ -150,8 +155,7 @@
 #pragma mark 头像
 -(UIImageView *)headImageView{
     if (!_headImageView) {
-        _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 20, 80, 80)];
-        _headImageView.backgroundColor = [UIColor lightGrayColor];
+        _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(31,KStatusHeight+43, 66, 66)];
     }
     return _headImageView;
 }
@@ -159,9 +163,9 @@
 #pragma mark 姓名
 -(UILabel *)nameLabel{
     if (!_nameLabel) {
-        _nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+10, self.headImageView.top, 120, 30)];
-        _nameLabel.font = [UIFont boldSystemFontOfSize:16];
-        _nameLabel.textColor = [UIColor blackColor];
+        _nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+14,KStatusHeight+45, 75, 25)];
+        _nameLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:18];
+        _nameLabel.textColor = [UIColor whiteColor];
     }
     return _nameLabel;
 }
@@ -169,9 +173,9 @@
 #pragma mark 年级/科目
 -(UILabel *)gradeLabel{
     if (!_gradeLabel) {
-        _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+10, self.nameLabel.bottom, 100, 25)];
-        _gradeLabel.font = kFontWithSize(13);
-        _gradeLabel.textColor = [UIColor blackColor];
+        _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+14, self.nameLabel.bottom+4, 100, 17)];
+        _gradeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12];
+        _gradeLabel.textColor = [UIColor whiteColor];
     }
     return _gradeLabel;
 }
@@ -179,9 +183,13 @@
 #pragma mark 教师等级
 -(UILabel *)levelLabel{
     if (!_levelLabel) {
-        _levelLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.gradeLabel.right, self.nameLabel.bottom, 80, 25)];
-        _levelLabel.font = kFontWithSize(13);
-        _levelLabel.textColor = [UIColor blackColor];
+        _levelLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.nameLabel.right+5,KStatusHeight+49,65, 18)];
+        _levelLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:12];
+        _levelLabel.backgroundColor = [UIColor colorWithHexString:@"#FFB842"];
+        _levelLabel.textColor = [UIColor whiteColor];
+        _levelLabel.textAlignment = NSTextAlignmentCenter;
+        _levelLabel.layer.cornerRadius = 9.0;
+        _levelLabel.clipsToBounds = YES;
     }
     return _levelLabel;
 }
@@ -189,35 +197,19 @@
 #pragma mark 教龄 毕业学校
 -(UILabel *)experienceLabel{
     if (!_experienceLabel) {
-        _experienceLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+10, self.gradeLabel.bottom, 200, 25)];
-        _experienceLabel.font = kFontWithSize(13);
-        _experienceLabel.textColor = [UIColor darkGrayColor];
+        _experienceLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+14, self.gradeLabel.bottom+2.0, 200, 17)];
+        _experienceLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12];
+        _experienceLabel.textColor = [UIColor whiteColor];
     }
     return _experienceLabel;
-}
-
-#pragma mark 关注
--(UIButton *)foucusBtn{
-    if (!_foucusBtn) {
-        _foucusBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-90, self.nameLabel.top+15, 70, 30)];
-        [_foucusBtn setTitle:@"+关注" forState:UIControlStateNormal];
-        [_foucusBtn setTitle:@"已关注" forState:UIControlStateSelected];
-        _foucusBtn.titleLabel.font = kFontWithSize(14);
-        _foucusBtn.layer.cornerRadius = 5;
-        _foucusBtn.layer.borderColor = [UIColor blackColor].CGColor;
-        _foucusBtn.layer.borderWidth = 1.0;
-        [_foucusBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        [_foucusBtn addTarget:self action:@selector(concernTeacherForClickAction:) forControlEvents:UIControlEventTouchUpInside];
-        _foucusBtn.backgroundColor = [UIColor whiteColor];
-    }
-    return _foucusBtn;
 }
 
 #pragma mark 评分
 -(UILabel *)scoreLabel{
     if (!_scoreLabel) {
-        _scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, self.headImageView.bottom+10, (kScreenWidth-20)/3.0, 30)];
-        _scoreLabel.font = kFontWithSize(14);
+        _scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth/3.0-80, self.headImageView.bottom+21, 60, 20)];
+        _scoreLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
+        _scoreLabel.textColor = [UIColor whiteColor];
     }
     return _scoreLabel;
 }
@@ -225,8 +217,10 @@
 #pragma mark 学生人数
 -(UILabel *)studentLabel{
     if (!_studentLabel) {
-        _studentLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.scoreLabel.right, self.headImageView.bottom+10, (kScreenWidth-20)/3.0, 30)];
-        _studentLabel.font = kFontWithSize(14);
+        _studentLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth/3.0+5, self.headImageView.bottom+21,kScreenWidth/3.0-10, 20)];
+        _studentLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
+        _studentLabel.textColor = [UIColor whiteColor];
+        _studentLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _studentLabel;
 }
@@ -234,47 +228,18 @@
 #pragma mark 粉丝人数
 -(UILabel *)fansLabel{
     if (!_fansLabel) {
-        _fansLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.studentLabel.right, self.headImageView.bottom+10, (kScreenWidth-20)/3.0, 30)];
-        _fansLabel.font = kFontWithSize(14);
-        _fansLabel.textAlignment = NSTextAlignmentRight;
+        _fansLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth*(2.0/3.0)+5, self.headImageView.bottom+21, kScreenWidth/3.0-10, 20)];
+        _fansLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
+        _fansLabel.textColor = [UIColor whiteColor];
+        _fansLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _fansLabel;
-}
-
-#pragma mark 辅导价格
--(UILabel *)priceLabel{
-    if (!_priceLabel) {
-        _priceLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, self.scoreLabel.bottom+20, kScreenWidth/3.0, 30)];
-        _priceLabel.font = kFontWithSize(14);
-        _priceLabel.textAlignment = NSTextAlignmentCenter;
-    }
-    return _priceLabel;
-}
-
-#pragma mark 辅导时长
--(UILabel *)totalTimeLabel{
-    if (!_totalTimeLabel) {
-        _totalTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.priceLabel.right, self.scoreLabel.bottom+20, kScreenWidth/3.0, 30)];
-        _totalTimeLabel.font = kFontWithSize(14);
-        _totalTimeLabel.textAlignment = NSTextAlignmentCenter;
-    }
-    return _totalTimeLabel;
-}
-
-#pragma mark 检查次数
--(UILabel *)checkCountLabel{
-    if (!_checkCountLabel) {
-        _checkCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.totalTimeLabel.right, self.scoreLabel.bottom+20, kScreenWidth/3.0, 30)];
-        _checkCountLabel.font = kFontWithSize(14);
-        _checkCountLabel.textAlignment = NSTextAlignmentCenter;
-    }
-    return _checkCountLabel;
 }
 
 #pragma mark 身份认证
 -(UIButton *)identityButton{
     if (!_identityButton) {
-        _identityButton = [self createButtonWithFrame:CGRectMake(0,self.priceLabel.bottom+40, kScreenWidth/4.0, 30) title:@"身份认证"];
+        _identityButton = [self createButtonWithFrame:CGRectMake(26,123, kItemW, 25) title:@"身份认证" image:@"authentication_identity_gray" selImage:@"authentication_identity"];
     }
     return _identityButton;
 }
@@ -282,7 +247,7 @@
 #pragma mark 教师资质
 -(UIButton *)teacherButton{
     if (!_teacherButton) {
-        _teacherButton = [self createButtonWithFrame:CGRectMake(self.identityButton.right, self.priceLabel.bottom+40, kScreenWidth/4.0, 30) title:@"教师资质"];
+        _teacherButton = [self createButtonWithFrame:CGRectMake(self.identityButton.right+kCapW,123, kItemW, 25) title:@"教师资质" image:@"authentication_teacher_gray" selImage:@"authentication_teacher"];
     }
     return _teacherButton;
 }
@@ -290,7 +255,7 @@
 #pragma mark 学历认证
 -(UIButton *)educationButton{
     if (!_educationButton) {
-        _educationButton = [self createButtonWithFrame:CGRectMake(self.teacherButton.right, self.priceLabel.bottom+40, kScreenWidth/4.0, 30) title:@"学历认证"];
+        _educationButton = [self createButtonWithFrame:CGRectMake(self.teacherButton.right+kCapW, 123,kItemW, 25) title:@"学历认证" image:@"authentication_education_gray" selImage:@"authentication_education"];
     }
     return _educationButton;
 }
@@ -298,56 +263,10 @@
 #pragma mark 专业技能
 -(UIButton *)technicalButton{
     if (!_technicalButton) {
-        _technicalButton = [self createButtonWithFrame:CGRectMake(self.educationButton.right, self.priceLabel.bottom+40, kScreenWidth/4.0, 30) title:@"专业技能"];
+        _technicalButton = [self createButtonWithFrame:CGRectMake(self.educationButton.right+kCapW,123,kItemW, 25) title:@"专业技能" image:@"authentication_skill_gray" selImage:@"authentication_skill"];
     }
     return _technicalButton;
 }
-
-#pragma mark 个人简介
--(UIView *)introView{
-    if (!_introView) {
-        _introView = [[UIView alloc] initWithFrame:CGRectMake(0, 310, kScreenWidth, 0)];
-        _introView.backgroundColor = [UIColor whiteColor];
-        
-        UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(15, 10, kScreenWidth-30, 30)];
-        titleLab.font = kFontWithSize(14);
-        titleLab.text = @"个人简介";
-        titleLab.textColor = [UIColor darkGrayColor];
-        [_introView addSubview:titleLab];
-        
-        introLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-        introLabel.numberOfLines = 0;
-        introLabel.textColor = [UIColor blackColor];
-        introLabel.font = kFontWithSize(14);
-        [_introView addSubview:introLabel];
-    }
-    return _introView;
-}
-
-#pragma mark 评论头部视图
--(UIView *)commentHeaderView{
-    if (!_commentHeaderView) {
-        _commentHeaderView = [[UIView alloc] initWithFrame:CGRectZero];
-        _commentHeaderView.backgroundColor = [UIColor whiteColor];
-        
-        commentCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 150, 20)];
-        commentCountLabel.font = kFontWithSize(14);
-        [_commentHeaderView addSubview:commentCountLabel];
-        
-        UIView *line= [[UIView alloc] initWithFrame:CGRectMake(10, commentCountLabel.bottom+10, kScreenWidth-20, 0.5)];
-        line.backgroundColor  = kLineColor;
-        [_commentHeaderView addSubview:line];
-        
-        UIButton *moreBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-80, 5, 70, 30)];
-        [moreBtn setTitle:@"更多 >>" forState:UIControlStateNormal];
-        moreBtn.titleLabel.font = kFontWithSize(14);
-        [moreBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        [moreBtn addTarget:self action:@selector(getMoreCommentAction:) forControlEvents:UIControlEventTouchUpInside];
-        [_commentHeaderView addSubview:moreBtn];
-    }
-    return _commentHeaderView;
-}
-
 
 
 @end

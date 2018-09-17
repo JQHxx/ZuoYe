@@ -8,9 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-#define kItemW  (kScreenWidth - 40)/3.0
-#define kItemH  ((kScreenHeight-80)/kScreenWidth)*kItemW
-
 @protocol PhotoFrameViewDelegate <NSObject>
 
 //删除图片
@@ -27,7 +24,7 @@
 
 @property (nonatomic, weak ) id<PhotoFrameViewDelegate>delegate;
 
--(instancetype)initWithFrame:(CGRect)frame isEditing:(BOOL)isEditing;
+-(instancetype)initWithFrame:(CGRect)frame isSetting:(BOOL)isSetting;
 
 - (void)updateCollectViewWithPhotosArr:(NSMutableArray *)arr;
 

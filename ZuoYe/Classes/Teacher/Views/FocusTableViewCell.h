@@ -2,7 +2,7 @@
 //  FocusTableViewCell.h
 //  ZuoYe
 //
-//  Created by vision on 2018/8/7.
+//  Created by vision on 2018/9/12.
 //  Copyright © 2018年 vision. All rights reserved.
 //
 
@@ -11,8 +11,8 @@
 
 @interface FocusTableViewCell : UITableViewCell
 
-@property (weak, nonatomic) IBOutlet UIButton *connectBtn;
-@property (weak, nonatomic) IBOutlet UILabel *stateLabel;
+
+@property (strong, nonatomic) UIButton *connectButton;      //连线老师
 
 -(void)displayCellWithModel:(TeacherModel *)model;
 

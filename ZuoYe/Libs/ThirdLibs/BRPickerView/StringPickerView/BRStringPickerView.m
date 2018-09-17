@@ -288,6 +288,10 @@
     }
 }
 
+-(CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component{
+    return 35;
+}
+
 #pragma mark - UIPickerViewDelegate
 - (NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
     if (self.isSingleColumn) {

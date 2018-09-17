@@ -15,10 +15,9 @@
     if (self) {
         self.layer.doubleSided = NO;
         
-        self.coverImgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 20, 100, 260)];
-        self.coverImgView.backgroundColor = [UIColor lightGrayColor];
+        self.coverImgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 227, 340)];
         [self.contentView addSubview:self.coverImgView];
-        
+
     }
     return self;
 }

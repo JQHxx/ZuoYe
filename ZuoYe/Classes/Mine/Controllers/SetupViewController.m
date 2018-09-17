@@ -24,10 +24,12 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.baseTitle = @"设置";
+    self.view.backgroundColor = [UIColor bgColor_Gray];
     
     titlesArray=@[@"清除缓存",@"意见反馈",@"评价一下",@"关于我们"];
     
     [self.view addSubview:self.setupTableView];
+    [self.view addSubview:self.loginoutButton];
 }
 
 #pragma mark --UITableViewDataSource and UITableViewDelegate
@@ -39,6 +41,7 @@
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.textLabel.text = titlesArray[indexPath.row];
+    cell.textLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
     
     if (indexPath.row == 0) {
         cell.accessoryType = UITableViewCellAccessoryNone;
@@ -53,6 +56,8 @@
             dataValueStr = [NSString stringWithFormat:@"%.2fMB",fileValue];
         }
         cell.detailTextLabel.text = dataValueStr;
+        cell.detailTextLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        cell.detailTextLabel.textColor = [UIColor colorWithHexString:@"#FF6161"];
     }else{
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
@@ -132,7 +137,7 @@
 #pragma mark 设置
 -(UITableView *)setupTableView{
     if (!_setupTableView) {
-        _setupTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight) style:UITableViewStylePlain];
+        _setupTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, kNavHeight+3.0, kScreenWidth, kScreenHeight-kNavHeight) style:UITableViewStylePlain];
         _setupTableView.backgroundColor=[UIColor bgColor_Gray];
         _setupTableView.delegate=self;
         _setupTableView.dataSource=self;
@@ -145,12 +150,11 @@
 #pragma mark 退出登录
 -(UIButton *)loginoutButton{
     if (!_loginoutButton) {
-        _loginoutButton = [[UIButton alloc] initWithFrame:CGRectMake(30, titlesArray.count*44+kNavHeight+30, kScreenWidth-60, 40)];
+        _loginoutButton = [[UIButton alloc] initWithFrame:CGRectMake(43.0,kScreenHeight-(kScreenWidth-95.0)*(128.0/588.0)-45.0,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
         [_loginoutButton setTitle:@"退出登录" forState:UIControlStateNormal];
-        [_loginoutButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        _loginoutButton.layer.cornerRadius = 5;
-        _loginoutButton.layer.borderColor = [UIColor blackColor].CGColor;
-        _loginoutButton.layer.borderWidth = 1.0;
+        [_loginoutButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
+        [_loginoutButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        _loginoutButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
         [_loginoutButton addTarget:self action:@selector(loginoutAction:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _loginoutButton;

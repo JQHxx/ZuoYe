@@ -10,8 +10,6 @@
 
 @interface LoginButton : UIButton
 
-@property (nonatomic , assign) BOOL clickable;
-
 -(instancetype)initWithFrame:(CGRect)frame title:(NSString *)title;
 
 

@@ -29,7 +29,6 @@
 /**
  *  url encode 和decode
  *
- *  @return
  */
 - (NSString *)stringEncode;
 - (NSString *)stringDecode;

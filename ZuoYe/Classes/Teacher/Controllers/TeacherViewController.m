@@ -8,19 +8,18 @@
 
 #import "TeacherViewController.h"
 #import "TeacherDetailsViewController.h"
-
-#import "ItemTitleView.h"
+#import "ConnectionSettingViewController.h"
+#import "SlideMenuView.h"
 #import "RecommandTableViewCell.h"
 #import "FocusTableViewCell.h"
-
 #import "TeacherModel.h"
 
-@interface TeacherViewController ()<ItemTitleViewDelegate,UITableViewDelegate,UITableViewDataSource>{
+@interface TeacherViewController ()<UITableViewDelegate,UITableViewDataSource,SlideMenuViewDelegate>{
     BOOL   isFocusOn;
 }
 
 
-@property (nonatomic, strong)ItemTitleView   *titleView;
+@property (nonatomic, strong)SlideMenuView   *titleView;
 @property (nonatomic, strong)UITableView     *myTableView;
 
 @property (nonatomic, strong)NSMutableArray  *recommandTeachersArray;  //推荐老师
@@ -41,11 +40,11 @@
 
 #pragma mark -- UITableViewDataSource
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return isFocusOn?1:self.recommandTeachersArray.count;
+    return 1;
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return isFocusOn?self.focusTeachersArray.count:1;
+    return isFocusOn?self.focusTeachersArray.count:self.recommandTeachersArray.count;
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -53,45 +52,39 @@
         static NSString *cellIdentifier = @"FocusTableViewCell";
         FocusTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
         if (cell == nil) {
-            cell = [[[NSBundle mainBundle] loadNibNamed:@"FocusTableViewCell" owner:self options:nil] objectAtIndex:0];
+            cell = [[FocusTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         }
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
         TeacherModel *model = self.focusTeachersArray[indexPath.row];
         [cell displayCellWithModel:model];
         
-        cell.connectBtn.tag = indexPath.row;
-        [cell.connectBtn addTarget:self action:@selector(toConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
+        cell.connectButton.userInteractionEnabled = model.isOnline;
+        cell.connectButton.tag = indexPath.row;
+        [cell.connectButton addTarget:self action:@selector(toConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
         
         return cell;
     }else{
         static NSString *cellIdentifier = @"RecommandTableViewCell";
         RecommandTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
         if (cell == nil) {
-            cell = [[[NSBundle mainBundle] loadNibNamed:@"RecommandTableViewCell" owner:self options:nil] objectAtIndex:0];
+            cell = [[RecommandTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         }
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
         TeacherModel *model = self.recommandTeachersArray[indexPath.section];
-        [cell appleDataForRecommandTeacher:model];
+        [cell displayCellWithTeacher:model];
         
-        cell.connectTeacherBtn.tag = indexPath.section;
-        [cell.connectTeacherBtn addTarget:self action:@selector(toConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
+        cell.connectButton.tag = indexPath.section;
+        [cell.connectButton addTarget:self action:@selector(toConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
         
         return cell;
     }
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return isFocusOn?70:150;
-}
-
--(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return 0.5;
-}
-
--(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
-    return isFocusOn?1:10;
+    return isFocusOn?90:96.0;
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    [tableView deselectRowAtIndexPath:indexPath animated:NO];
     TeacherModel *model = isFocusOn?self.focusTeachersArray[indexPath.row]:self.recommandTeachersArray[indexPath.section];
     TeacherDetailsViewController *detailsVC = [[TeacherDetailsViewController alloc] init];
     detailsVC.id = model.id;
@@ -101,15 +94,18 @@
 
 #pragma mark -- Custom Delegate
 #pragma mark ItemTitleViewDelegate
--(void)itemTitleViewDidClickWithIndex:(NSInteger)index{
+-(void)slideMenuView:(SlideMenuView *)menuView didSelectedWithIndex:(NSInteger)index{
     isFocusOn = index;
     [self requestForTeachersDataWithIndex:index];
 }
 
 #pragma mark -- Event response
 -(void)toConnectTeacherAction:(UIButton *)sender{
-//    TeacherModel *model = isFocusOn?self.focusTeachersArray[sender.tag]:self.recommandTeachersArray[sender.tag];
-    
+    TeacherModel *model = isFocusOn?self.focusTeachersArray[sender.tag]:self.recommandTeachersArray[sender.tag];
+    ConnectionSettingViewController *settingVC = [[ConnectionSettingViewController alloc] init];
+    settingVC.teacherModel = model;
+    settingVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:settingVC animated:YES];
 }
 
 #pragma mark -- Private Methods
@@ -121,7 +117,7 @@
     for (NSInteger i=0; i<5; i++) {
         TeacherModel *model = [[TeacherModel alloc] init];
         model.id = i+1;
-        model.head = @"ic_m_head";
+        model.head = @"photo";
         model.name = names[i];
         model.grade = @"一年级";
         model.subjects = @"科目";
@@ -130,6 +126,8 @@
         model.score = 5.0 - i*0.2;
         model.count = 1500 + i*50;
         model.price = 2.0 - 0.2*i;
+        model.tech_stage = @"小学";
+        model.isOnline = i%2;
         [tempArr addObject:model];
     }
     
@@ -144,9 +142,12 @@
 
 #pragma mark -- Setters and Getters
 #pragma mark 标题栏
--(ItemTitleView *)titleView{
+-(SlideMenuView *)titleView{
     if (!_titleView) {
-        _titleView = [[ItemTitleView alloc] initWithFrame:CGRectMake((kScreenWidth -120)/2, KStatusHeight, 120, kNavHeight-KStatusHeight) titles:@[@"推荐",@"关注"]];
+        _titleView = [[SlideMenuView alloc] initWithFrame:CGRectMake((kScreenWidth -120)/2, KStatusHeight, 120, kNavHeight-KStatusHeight) btnTitleFont:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16] color:[UIColor colorWithHexString:@"#4A4A4A"] selColor:[UIColor colorWithHexString:@"#FF6161"] showLine:NO];
+        _titleView.isShowUnderLine = YES;
+        _titleView.myTitleArray = @[@"推荐",@"关注"];
+         _titleView.currentIndex = 0;
         _titleView.backgroundColor = [UIColor clearColor];
         _titleView.delegate = self;
     }
@@ -156,12 +157,14 @@
 #pragma mark 老师列表
 -(UITableView *)myTableView{
     if (!_myTableView) {
-        _myTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight-kTabHeight) style:UITableViewStyleGrouped];
+        _myTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight-kTabHeight) style:UITableViewStylePlain];
         _myTableView.dataSource = self;
         _myTableView.delegate = self;
         _myTableView.estimatedSectionHeaderHeight=0;
         _myTableView.estimatedSectionFooterHeight=0;
         _myTableView.tableFooterView = [[UIView alloc] init];
+        _myTableView.backgroundColor = isFocusOn ? [UIColor whiteColor]:[UIColor bgColor_Gray];
+        _myTableView.separatorStyle = isFocusOn?UITableViewCellSeparatorStyleSingleLine:UITableViewCellSeparatorStyleNone;
     }
     return _myTableView;
 }

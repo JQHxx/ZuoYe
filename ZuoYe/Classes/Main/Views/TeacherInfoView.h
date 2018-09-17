@@ -7,7 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "TeacherModel.h"
 
 @interface TeacherInfoView : UIView
+
+@property (nonatomic ,strong) TeacherModel *model;
 
 @end

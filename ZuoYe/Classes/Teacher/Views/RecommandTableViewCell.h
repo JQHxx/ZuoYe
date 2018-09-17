@@ -2,7 +2,7 @@
 //  RecommandTableViewCell.h
 //  ZuoYe
 //
-//  Created by vision on 2018/8/7.
+//  Created by vision on 2018/9/11.
 //  Copyright © 2018年 vision. All rights reserved.
 //
 
@@ -11,10 +11,8 @@
 
 @interface RecommandTableViewCell : UITableViewCell
 
+@property (strong, nonatomic) UIButton *connectButton;      //连线老师
 
-@property (weak, nonatomic) IBOutlet UIButton *connectTeacherBtn;
-
-
-- (void)appleDataForRecommandTeacher:(TeacherModel *)model;
+-(void)displayCellWithTeacher:(TeacherModel *)model;
 
 @end

@@ -33,11 +33,16 @@
     [super viewDidLoad];
     self.isHiddenNavBar = YES;
     
-    titleArray = @[@[@"我的辅导",@"我的钱包"],@[@"使用帮助",@"分享邀请",@"联系客服"],@[@"设置"]];
+    titleArray = @[@[@"我的订单",@"我的钱包"],@[@"使用帮助",@"分享邀请",@"联系客服"],@[@"设置"]];
+    imagesArray = @[@[@"my_tutorship",@"my_wallet"],@[@"using_help",@"invitation",@"custom_service"],@[@"setup"]];
     classesArray = @[@[@"MyTutorial",@"MyWallet"],@[@"UseHelp",@"",@"ContactService"],@[@"Setup"]];
     
     [self initMineView];
     [self loadUserInfoData];
+}
+
+-(UIStatusBarStyle)preferredStatusBarStyle{
+    return UIStatusBarStyleLightContent;
 }
 
 #pragma mark -- UITableViewDataSource
@@ -52,8 +57,9 @@
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    cell.imageView.image = [UIImage drawImageWithName:imagesArray[indexPath.section][indexPath.row] size:CGSizeMake(22, 22)];
     cell.textLabel.text = titleArray[indexPath.section][indexPath.row];
-    cell.textLabel.font = kFontWithSize(16);
+    cell.textLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
     return cell;
 }
 
@@ -63,6 +69,10 @@
 
 -(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
     return 10;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return 50.0;
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -98,59 +108,63 @@
 #pragma mark -- Private methods
 #pragma mark 初始化界面
 -(void)initMineView{
-    [self.view addSubview:self.mineTableView];
-    [self.mineTableView addSubview:self.zoomImageView];
+    [self.view addSubview:self.zoomImageView];
+    
+    UIImageView *headBgImgView = [[UIImageView alloc] initWithFrame:CGRectMake(28, 46, 72.0, 72.0)];
+    headBgImgView.image = [UIImage imageNamed:@"connection_head_image_white"];
+    [self.zoomImageView addSubview:headBgImgView];
+    
     [self.zoomImageView addSubview:self.headImageView];
     [self.zoomImageView addSubview:self.nickNameLabel];
     [self.zoomImageView addSubview:self.gradeLabel];
     [self.zoomImageView addSubview:self.arrowImageView];
+    
+    [self.view addSubview:self.mineTableView];
 }
 
 #pragma mark 加载数据
 -(void)loadUserInfoData{
-    UIImage *img = [UIImage imageNamed:@"ic_m_head"];
+    UIImage *img = [UIImage imageNamed:@"head_image"];
     self.headImageView.image = [img imageWithCornerRadius:30.0];
     self.nickNameLabel.text = @"小明";
-    self.gradeLabel.text = @"一年级";
+    self.gradeLabel.text = @"一年级/数学";
 }
 
 
 #pragma mark -- getters
-#pragma mark 我的主界面
--(UITableView *)mineTableView{
-    if (!_mineTableView) {
-        _mineTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight-kTabHeight) style:UITableViewStyleGrouped];
-        _mineTableView.dataSource = self;
-        _mineTableView.delegate = self;
-        _mineTableView.showsVerticalScrollIndicator=NO;
-        _mineTableView.contentInset=UIEdgeInsetsMake(kImageViewHeight, 0, 0, 0);
-        _mineTableView.backgroundColor=[UIColor bgColor_Gray];
-        _mineTableView.estimatedSectionHeaderHeight=0;
-        _mineTableView.estimatedSectionFooterHeight=0;
-    }
-    return _mineTableView;
-}
-
 #pragma mark 背景图片
 -(UIImageView *)zoomImageView{
     if (!_zoomImageView) {
-        _zoomImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, -kImageViewHeight, kScreenWidth, kImageViewHeight)];
-        _zoomImageView.image = [UIImage imageNamed:@"mine_background"];
+        _zoomImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenWidth*(296.0/750.0))];
+        _zoomImageView.image = [UIImage imageNamed:@"my_background"];
         _zoomImageView.userInteractionEnabled = YES;
-        _zoomImageView.autoresizesSubviews = YES; //设置autoresizesSubviews让子类自动布局
+        
+        UITapGestureRecognizer *tap =[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoUserInfoVC)];
+        [_zoomImageView addGestureRecognizer:tap];
     }
     return _zoomImageView;
+}
+
+#pragma mark 我的主界面
+-(UITableView *)mineTableView{
+    if (!_mineTableView) {
+        _mineTableView = [[UITableView alloc] initWithFrame:CGRectMake(0,self.zoomImageView.bottom-10, kScreenWidth, kScreenHeight-kTabHeight-self.zoomImageView.bottom+10) style:UITableViewStyleGrouped];
+        _mineTableView.dataSource = self;
+        _mineTableView.delegate = self;
+        _mineTableView.showsVerticalScrollIndicator=NO;
+        _mineTableView.backgroundColor=[UIColor bgColor_Gray];
+        _mineTableView.estimatedSectionHeaderHeight=0;
+        _mineTableView.estimatedSectionFooterHeight=0;
+        _mineTableView.scrollEnabled = NO;
+        _mineTableView.topBoderRadius = 8.0;
+    }
+    return _mineTableView;
 }
 
 #pragma mark 头像
 -(UIImageView *)headImageView{
     if (!_headImageView) {
-        _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 25, 60, 60)];
-        _headImageView.userInteractionEnabled = YES;
-        _headImageView.autoresizingMask=UIViewAutoresizingFlexibleTopMargin ;  //自动布局，自适应顶部
-        
-        UITapGestureRecognizer *tap =[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotoUserInfoVC)];
-        [_headImageView addGestureRecognizer:tap];
+        _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(31, 49, 65.9, 65.9)];
     }
     return _headImageView;
 }
@@ -158,10 +172,9 @@
 #pragma mark 昵称
 -(UILabel *)nickNameLabel{
     if (!_nickNameLabel) {
-        _nickNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+10, 30, 100, 30)];
+        _nickNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+11.0,61.0, 100,25.0)];
         _nickNameLabel.textColor=[UIColor whiteColor];
-        _nickNameLabel.font=[UIFont systemFontOfSize:15];
-        _nickNameLabel.autoresizingMask=UIViewAutoresizingFlexibleTopMargin;
+        _nickNameLabel.font=[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:18];
     }
     return _nickNameLabel;
 }
@@ -170,9 +183,8 @@
 -(UILabel *)gradeLabel{
     if (!_gradeLabel) {
         _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+10, self.nickNameLabel.bottom, 80, 20)];
-        _gradeLabel.textColor=[UIColor lightGrayColor];
-        _gradeLabel.font=[UIFont systemFontOfSize:13];
-        _gradeLabel.autoresizingMask=UIViewAutoresizingFlexibleTopMargin;
+        _gradeLabel.textColor=[UIColor whiteColor];
+        _gradeLabel.font=[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12];
     }
     return _gradeLabel;
 }
@@ -180,8 +192,8 @@
 #pragma mark 箭头
 -(UIImageView *)arrowImageView{
     if (!_arrowImageView) {
-        _arrowImageView= [[UIImageView alloc]initWithFrame:CGRectMake(kScreenWidth -20, 75 , 14/2, 26/2)];
-        _arrowImageView.image = [UIImage imageNamed:@"arrows"];
+        _arrowImageView= [[UIImageView alloc]initWithFrame:CGRectMake(kScreenWidth-28.0,67.0 ,9.0, 15.0)];
+        _arrowImageView.image = [UIImage imageNamed:@"arrow_personal_information"];
     }
     return _arrowImageView;
 }

@@ -14,7 +14,7 @@
 
 @interface PhotoFrameView ()<UICollectionViewDelegate,UICollectionViewDataSource>{
     NSMutableArray  *photosArr;
-    BOOL            isEditingPhotos;
+    BOOL   _isSetting;
 }
 
 @property (nonatomic, strong)UICollectionView *collectionView;
@@ -24,14 +24,10 @@
 
 @implementation PhotoFrameView
 
--(instancetype)initWithFrame:(CGRect)frame isEditing:(BOOL)isEditing{
+-(instancetype)initWithFrame:(CGRect)frame isSetting:(BOOL)isSetting{
     self = [super initWithFrame:frame];
     if (self) {
-        isEditingPhotos = isEditing;
-        
-        
-        self.backgroundColor = [UIColor whiteColor];
-        
+        _isSetting = isSetting;
         photosArr = [[NSMutableArray alloc] init];
         [self setupImageCollectionView];
     }
@@ -40,32 +36,30 @@
 
 #pragma mark UICollectionViewDataSource
 -(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
-    return isEditingPhotos?photosArr.count+1:photosArr.count;
+    return photosArr.count==9?9:photosArr.count+1;
 }
 
 -(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     ImageCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"ImageCollectionViewCell" forIndexPath:indexPath];
-    if (indexPath.row == photosArr.count) {
-        cell.imgView.image = [UIImage imageNamed:@"ic_frame_add"];
-        cell.imgView.contentMode = UIViewContentModeScaleAspectFit;
+    if (indexPath.row == photosArr.count&&photosArr.count<9) {
+        cell.imgBtn.backgroundColor = [UIColor colorWithHexString:@"#EEEFF2"];
+        [cell.imgBtn setImage:[UIImage imageNamed:@"add_photo"] forState:UIControlStateNormal];
+        cell.imgBtn.imageEdgeInsets = UIEdgeInsetsMake(35.0, 35.0, 35.0, 35.0);
         cell.deleteBtn.hidden = YES;
     } else {
         UIImage *photoImg = photosArr[indexPath.row];
-        cell.imgView.image = photoImg;
-        cell.imgView.contentMode = UIViewContentModeScaleToFill;
-        cell.deleteBtn.hidden = !isEditingPhotos;
+        [cell.imgBtn setImage:photoImg forState:UIControlStateNormal];
+        cell.imgBtn.imageEdgeInsets = UIEdgeInsetsZero;
+        cell.deleteBtn.hidden = NO;
     }
+    
     cell.deleteBtn.tag = indexPath.row;
     [cell.deleteBtn addTarget:self action:@selector(deleteBtnClick:) forControlEvents:UIControlEventTouchUpInside];
     
+    cell.imgBtn.tag = indexPath.row;
+    [cell.imgBtn addTarget:self action:@selector(photoFrameVIewDidSelectPhotoAction:) forControlEvents:UIControlEventTouchUpInside];
+    
     return cell;
-}
-
--(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
-    NSInteger selTag = indexPath.row == photosArr.count?10001:1000;
-    if ([self.delegate respondsToSelector:@selector(photoFrameViewDidClickForTag:andCell:)]) {
-        [self.delegate photoFrameViewDidClickForTag:selTag andCell:indexPath.row];
-    }
 }
 
 #pragma mark -- Event response
@@ -76,29 +70,54 @@
     }
 }
 
+#pragma mark 选择图片
+-(void)photoFrameVIewDidSelectPhotoAction:(UIButton *)sender{
+    if (sender.tag == photosArr.count&&photosArr.count==9) {
+        [self makeToast:@"最多只能上传9张图片" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    NSInteger selTag = sender.tag == photosArr.count?10001:1000;
+    if ([self.delegate respondsToSelector:@selector(photoFrameViewDidClickForTag:andCell:)]) {
+        [self.delegate photoFrameViewDidClickForTag:selTag andCell:sender.tag];
+    }
+}
+
 #pragma mark -- Public Methods
 -(void)updateCollectViewWithPhotosArr:(NSMutableArray *)arr{
     photosArr = arr;
-    CGFloat viewHeight = kItemH *(photosArr.count/3) + kItemH;
-    self.collectionView.frame = CGRectMake(0, 0, kScreenWidth, viewHeight);
     [self.collectionView reloadData];
 }
 
 
 #pragma mark -- Private Methods
 -(void)setupImageCollectionView{
+    
+    CGFloat itemW = 0.0 ;
+    CGFloat orginX = 0.0;
+    if (_isSetting) {
+        itemW = (self.width - 32.0-8.0)/3.0;
+        orginX = 17.0;
+    }else{
+        itemW = (self.width -4*4.0)/3.0;
+        orginX = 4.0;
+    }
+    
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    layout.itemSize = CGSizeMake(kItemW, kItemH);
+    layout.itemSize = CGSizeMake(itemW, itemW);
     layout.minimumLineSpacing = 0;
     layout.minimumInteritemSpacing = 0;
-    layout.sectionInset = UIEdgeInsetsMake(10, 10, 10, 10);
+    layout.sectionInset = UIEdgeInsetsMake(4, 4, 4, 0);
     
-    self.collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height) collectionViewLayout:layout];
+    self.collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(orginX, 0, self.width-2*orginX, self.height) collectionViewLayout:layout];
     self.collectionView.backgroundColor  = [UIColor whiteColor];
     [self.collectionView registerClass:[ImageCollectionViewCell class] forCellWithReuseIdentifier:@"ImageCollectionViewCell"];
     self.collectionView.delegate = self;
     self.collectionView.dataSource = self;
-    self.collectionView.scrollEnabled = isEditingPhotos;
+    if (@available(iOS 11.0, *)) {
+        self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    } else {
+//        self.collectionView.automaticallyAdjustsScrollViewInsets = NO;
+    }
     [self addSubview:self.collectionView];
 }
 

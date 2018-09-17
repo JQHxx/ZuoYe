@@ -37,7 +37,7 @@
         //设置文字的宽度
         NSString *titleStr = self.labelsArray[i];
         
-        item.width = [titleStr boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, kItemH) withTextFont:kFontWithSize(16)].width + 10;
+        item.width = [titleStr boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, kItemH) withTextFont:item.titleLabel.font].width +15;
         item.height = kItemH;
         if (i == 0) {  //第一个的时候放心大胆的布局，并记录下上一个button的位置
             if(item.width >kScreenWidth - 2*kGapping -kTitleWidth){  //单行文字超过一行处理
@@ -94,13 +94,13 @@
     
     for (int i = 0; i < labelsArray.count; i ++) {
         UIButton *item = [[UIButton alloc] init];
-        item.titleLabel.font = [UIFont systemFontOfSize:16.0f];
-        [item setTitleColor:[UIColor colorWithHexString:@"#333333"] forState:UIControlStateNormal];
+        item.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        [item setTitleColor:[UIColor colorWithHexString:@"#4A4A4A"] forState:UIControlStateNormal];
         [item setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
-        item.layer.cornerRadius = 1.0;
+        item.layer.cornerRadius = 4.0;
         item.clipsToBounds = YES;
         item.layer.borderWidth = 0.5;
-        item.layer.borderColor = [kLineColor CGColor] ;
+        item.layer.borderColor = [[UIColor colorWithHexString:@"#979797"] CGColor] ;
         item.tag = i;
         if (i==0) {
             item.selected = YES;

@@ -15,5 +15,6 @@
 @property (nonatomic , copy )   NSString   *create_time;   //支付时间
 @property (nonatomic ,assign )  double     amount;         //金额
 @property (nonatomic , copy )   NSString   *order_sn;      //交易单号
+@property (nonatomic , copy )   NSString   *state;         //当前状态
 
 @end

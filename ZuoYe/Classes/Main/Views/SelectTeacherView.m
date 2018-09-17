@@ -24,7 +24,7 @@
     if (self) {
         UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
         layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-        
+        layout.sectionInset = UIEdgeInsetsMake(10, 10, 10, 10);
         
         self.myCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height) collectionViewLayout:layout];
         self.myCollectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -63,7 +63,7 @@
 #pragma mark UICollectionViewDelegateFlowLayout
 #pragma mark 水平排放(变成一排展示)
 -(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
-    return CGSizeMake(100, 150);
+    return CGSizeMake(100, 106);
 }
 
 #pragma mark  使前后项都能居中显示

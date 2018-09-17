@@ -15,12 +15,12 @@
     if (self) {
         self.backgroundColor = [UIColor whiteColor];
         
-        _imgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height-10)];
-        [self addSubview:_imgView];
+        _imgBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height-3.0)];
+        [self addSubview:_imgBtn];
         
         _deleteBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        _deleteBtn.frame = CGRectMake(self.width - 16, 0, 16, 16);
-        [_deleteBtn setImage:[UIImage imageNamed:@"pub_ic_lite_del"] forState:UIControlStateNormal];
+        _deleteBtn.frame = CGRectMake(self.width - 23, 5, 18, 18);
+        [_deleteBtn setImage:[UIImage imageNamed:@"delete"] forState:UIControlStateNormal];
         _deleteBtn.imageEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
         [self addSubview:_deleteBtn];
     }
@@ -30,8 +30,8 @@
 
 -(void)layoutSubviews{
     [super layoutSubviews];
-    _imgView.frame = CGRectMake(0, 0, self.width, self.height-10);
-    _deleteBtn.frame = CGRectMake(self.width - 16, 0, 16, 16);
+    _imgBtn.frame = CGRectMake(0, 0, self.width, self.height-3);
+    _deleteBtn.frame = CGRectMake(self.width - 23, 5, 18, 18);
 }
 
 

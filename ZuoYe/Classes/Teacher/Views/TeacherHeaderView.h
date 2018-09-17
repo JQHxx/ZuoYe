@@ -9,18 +9,10 @@
 #import <UIKit/UIKit.h>
 #import "TeacherModel.h"
 
-@protocol TeacherHeaderViewDelegate <NSObject>
 
--(void)teacherHeaderViewDidConcernAction;
-
--(void)teacherHeaderViewGetMoreCommentAction;
-
-
-@end
 
 @interface TeacherHeaderView : UIView
 
-@property (nonatomic, weak )id<TeacherHeaderViewDelegate>delegate;
 
 @property (nonatomic, strong) TeacherModel *teacher;
 

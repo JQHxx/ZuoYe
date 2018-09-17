@@ -7,9 +7,11 @@
 //
 
 #import "BaseViewController.h"
+#import "TeacherModel.h"
 
 @interface ConnecttingViewController : BaseViewController
 
-@property (nonatomic,assign)TutoringType type;
+@property (nonatomic ,strong) TeacherModel *model;
+
 
 @end

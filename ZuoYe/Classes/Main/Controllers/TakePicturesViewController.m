@@ -7,19 +7,22 @@
 //
 
 #import "TakePicturesViewController.h"
+#import "ReleaseDemandViewController.h"
+#import "CheckReleaseViewController.h"
 #import "TZImagePickerController.h"
 #import "STPopupController.h"
-#import "ReleaseDemandViewController.h"
 #import <AVFoundation/AVFoundation.h>
-#import "PhotoClipView.h"
 #import "PhotoFrameView.h"
 #import "TZImageManager.h"
 
 
-@interface TakePicturesViewController ()<AVCapturePhotoCaptureDelegate,PhotoClipViewDelegate,PhotoFrameViewDelegate,TZImagePickerControllerDelegate>{
-    NSMutableArray   *selectedAssets;
+@interface TakePicturesViewController ()<AVCapturePhotoCaptureDelegate,PhotoFrameViewDelegate,TZImagePickerControllerDelegate>{
     NSMutableArray   *allSelectedPhotos;     //所有图片
-    BOOL             isChoosePhoto; //拍照中
+    
+    UIImage          *selectImage;
+    
+    BOOL             isTakenPicture;
+    BOOL             isCompleteTakenPicture;
 }
 
 @property (nonatomic, strong) AVCaptureSession           *captureSession; // 会话
@@ -32,16 +35,11 @@
 @property (nonatomic, assign) AVCaptureDevicePosition    position;
 
 
-@property (nonatomic, strong) UIView *bottomView;
+@property (nonatomic, strong)UIButton        *handleButton;   //拍照或确认
+@property (nonatomic, strong)UIButton        *cancelButton;   //手电筒或取消
 
-/** 图片剪辑view */
-@property (strong, nonatomic) PhotoClipView  *clipView;
 /** 图片选择 **/
 @property (nonatomic, strong)PhotoFrameView  *photFrameView;
-@property (nonatomic, strong)UIButton        *confirmButton;
-
-//
-@property (nonatomic, strong)UIView          *demandView;
 
 
 @end
@@ -51,64 +49,31 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.baseTitle = @"选择图片";
+    self.rigthTitleName = @"确定";
+    
     allSelectedPhotos = [[NSMutableArray alloc] init];
-    selectedAssets = [[NSMutableArray alloc] init];
     
+    [self.view addSubview:self.handleButton];
+    [self.view addSubview:self.cancelButton];
     [self.view addSubview:self.photFrameView];
-    [self.view addSubview:self.confirmButton];
-    
-    [self.view addSubview:self.bottomView];
 
     [self setupCaptureSession];
     [self updateTaKePictureView];
 }
 
-
 #pragma mark -- Delegate
 #pragma mark AVCapturePhotoCaptureDelegate
+#pragma mark 确认拍照
 -(void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(nonnull AVCapturePhoto *)photo error:(nullable NSError *)error{
     NSData *imageData = photo.fileDataRepresentation;
-    UIImage *image = [UIImage imageWithData:imageData];
+    selectImage= [UIImage imageWithData:imageData];
+    
     [self.captureSession stopRunning];
     
-    [self.view addSubview:self.clipView];
-    self.clipView.image = image;
-}
-
-#pragma mark  PhotoClipViewDelegate
-#pragma mark 取消拍照
--(void)photoClipViewCancelTakePhoto{
-    
-}
-
-#pragma mark 确认选择图片
--(void)photoClipViewConfirmTakeImage:(UIImage *)image{
-    //保存到相册
-    [[TZImageManager manager] savePhotoWithImage:image completion:^(NSError *error) {
-        if (error) {
-            MyLog(@"图片保存失败 error:%@",error.localizedDescription);
-        }else{
-            [[TZImageManager manager] getCameraRollAlbum:NO allowPickingImage:YES completion:^(TZAlbumModel *model) {
-                [[TZImageManager manager] getAssetsFromFetchResult:model.result allowPickingVideo:NO allowPickingImage:YES completion:^(NSArray<TZAssetModel *> *models) {
-                    TZAssetModel *assertModel = [models firstObject];
-                    [selectedAssets addObject:assertModel.asset];
-                    
-                    isChoosePhoto = YES;
-                    [self updateTaKePictureView];
-                    [allSelectedPhotos addObject:image];
-                    [self.photFrameView updateCollectViewWithPhotosArr:allSelectedPhotos];
-                    
-                }];
-            }];
-        }
-    }];
-}
-
-#pragma mark 重拍
--(void)photoClipViewRemakePhoto{
-    [self.clipView removeFromSuperview];
-    self.clipView = nil;
-    [self.captureSession startRunning];
+    self.isHiddenNavBar = YES;
+    [_handleButton setImage:[UIImage imageNamed:@"photograph_finish"] forState:UIControlStateNormal];
+    [_cancelButton setImage:[UIImage imageNamed:@"photograph_retract"] forState:UIControlStateNormal];
 }
 
 #pragma mark PhotoFrameViewDelegate
@@ -123,55 +88,85 @@
     if (tag == 10000) { //打开图片
         
     }else{ //添加图片
-        isChoosePhoto = NO;
+        isCompleteTakenPicture = NO;
         [self updateTaKePictureView];
-        [self.captureSession startRunning];
     }
 }
 
 #pragma mark TZImagePickerControllerDelegate
 -(void)imagePickerController:(TZImagePickerController *)picker didFinishPickingPhotos:(NSArray<UIImage *> *)photos sourceAssets:(NSArray *)assets isSelectOriginalPhoto:(BOOL)isSelectOriginalPhoto{
-    isChoosePhoto = YES;
-    [self updateTaKePictureView];
+    [allSelectedPhotos addObjectsFromArray:photos];
+    if (allSelectedPhotos.count>9) {
+        [self.view makeToast:@"最多只能上传9张图片" duration:1.0 position:CSToastPositionCenter];
+        [allSelectedPhotos removeObjectsInArray:photos];
+        return;
+    }
     
-    selectedAssets = [NSMutableArray arrayWithArray:assets];
-    allSelectedPhotos = [NSMutableArray arrayWithArray:photos];
-    [self.photFrameView updateCollectViewWithPhotosArr:allSelectedPhotos];
+    if (self.isConnectionSetting) {
+        if ([self.controllerDelegate respondsToSelector:@selector(takePicturesViewContriller:didGotPhotos:)]) {
+            [self.controllerDelegate takePicturesViewContriller:self didGotPhotos:allSelectedPhotos];
+        }
+        [self.navigationController popViewControllerAnimated:YES];
+    }else{
+        isCompleteTakenPicture = YES;
+        [self updateTaKePictureView];
+        [self.photFrameView updateCollectViewWithPhotosArr:allSelectedPhotos];
+    }
 }
 
 
 #pragma mark -- Event Response
--(void)takePictureAction{
-    self.photoSettings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey:AVVideoCodecTypeJPEG}];
-    [self.photoSettings setFlashMode:self.mode];
-    [self.photoOutput capturePhotoWithSettings:self.photoSettings delegate:self];
+#pragma mark  拍照或确认
+-(void)handlePhotoAction:(UIButton *)sender{
+    if (!isTakenPicture) {   //拍照
+        isTakenPicture = YES;
+        self.photoSettings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey:AVVideoCodecTypeJPEG}];
+        [self.photoSettings setFlashMode:self.mode];
+        [self.photoOutput capturePhotoWithSettings:self.photoSettings delegate:self];
+    }else{ //确定
+        [allSelectedPhotos addObject:selectImage];
+        if (self.isConnectionSetting) {
+            if ([self.controllerDelegate respondsToSelector:@selector(takePicturesViewContriller:didGotPhotos:)]) {
+                [self.controllerDelegate takePicturesViewContriller:self didGotPhotos:allSelectedPhotos];
+            }
+            [self.navigationController popViewControllerAnimated:YES];
+        }else{
+            isCompleteTakenPicture = YES;
+            [self updateTaKePictureView];
+            [self.photFrameView updateCollectViewWithPhotosArr:allSelectedPhotos];
+        }
+    }
+}
+
+#pragma mark  手电筒或取消拍照
+-(void)handleFlashlightOrCancelTakePhotoAction:(UIButton *)sender{
+    if (isTakenPicture) { //取消
+        isCompleteTakenPicture = NO;
+        [self updateTaKePictureView];
+    }else{  //打开手电筒
+        
+    }
 }
 
 #pragma mark 相册
 -(void)rightNavigationItemAction{
     if ([self.rigthTitleName isEqualToString:@"相册"]) {
-        TZImagePickerController *imagePickerVC = [[TZImagePickerController alloc]initWithMaxImagesCount:9 columnNumber:4 delegate:self];
-        imagePickerVC.selectedAssets = selectedAssets;
-        imagePickerVC.allowTakePicture = NO;     // 相册不显示拍照
+        TZImagePickerController *imagePickerVC = [[TZImagePickerController alloc] initWithMaxImagesCount:9 columnNumber:4 delegate:self];
+        imagePickerVC.allowTakePicture = NO;
         [self presentViewController:imagePickerVC animated:YES completion:nil];
-    }
-}
-
-#pragma mark 确定
--(void)confirmSelectedPhotosAction{
-    if (self.isConnectionSetting) {
-        [self.navigationController popViewControllerAnimated:YES];
-        self.backBlock(allSelectedPhotos);
     }else{
-        ReleaseDemandViewController *releaseDemandVC = [[ReleaseDemandViewController alloc] init];
-        releaseDemandVC.type = self.type;
-        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:releaseDemandVC];
+        BaseViewController *controller  = nil;
+        if (self.type == TutoringTypeReview) {
+            controller = [[CheckReleaseViewController alloc] init];
+        }else{
+            controller = [[ReleaseDemandViewController alloc] init];
+        }
+        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:controller];
         popupVC.style = STPopupStyleBottomSheet;
         popupVC.navigationBarHidden = YES;
         [popupVC presentInViewController:self];
     }
 }
-
 
 #pragma mark -- Private Methods
 #pragma mark 创建会话
@@ -202,32 +197,29 @@
 
 #pragma mark 更新界面
 -(void)updateTaKePictureView{
-    if (isChoosePhoto) {  //选择图片
+    self.isHiddenNavBar = NO;
+    if (isCompleteTakenPicture) {  //选择图片
         self.baseTitle = @"选择图片";
-        self.rigthTitleName = @"";
+        self.rigthTitleName = @"确定";
         
-        [self.clipView removeFromSuperview];
-        self.clipView = nil;
+        if (self.previewLayer) {
+            [self.previewLayer removeFromSuperlayer];
+            self.previewLayer =nil;
+        }
         
-        [self.previewLayer removeFromSuperlayer];
-        self.previewLayer =nil;
-        
-        self.photFrameView.hidden = self.confirmButton.hidden = NO;
-        self.bottomView.hidden = YES;
-        
-        
+        self.photFrameView.hidden = NO;
+        self.handleButton.hidden = self.cancelButton.hidden =YES;
     }else{  //开始拍照
         self.baseTitle = @"拍照";
         self.rigthTitleName = @"相册";
+    
+        self.photFrameView.hidden = YES;
+        self.handleButton.hidden = self.cancelButton.hidden = NO;
         
-        self.photFrameView.hidden = self.confirmButton.hidden = YES;
-        self.bottomView.hidden = NO;
+        isTakenPicture = NO;
         
-        [UIView animateWithDuration:1.0 animations:^{
-            [self.view.layer insertSublayer:self.previewLayer atIndex:0];
-        } completion:^(BOOL finished) {
-            [self.captureSession startRunning];
-        }];
+        [self.view.layer insertSublayer:self.previewLayer atIndex:0];
+        [self.captureSession startRunning];
     }
 }
 
@@ -236,67 +228,42 @@
 #pragma mark 相册
 -(PhotoFrameView *)photFrameView{
     if (!_photFrameView) {
-        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight, kScreenWidth, kScreenHeight-kNavHeight-60) isEditing:YES];
+        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight+10, kScreenWidth, kScreenHeight-kNavHeight-10) isSetting:NO];
         _photFrameView.delegate = self;
+        _photFrameView.backgroundColor = [UIColor whiteColor];
     }
     return _photFrameView;
-}
-
-#pragma mark 确定
--(UIButton *)confirmButton{
-    if (!_confirmButton) {
-        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(0, kScreenHeight-60, kScreenWidth, 60)];
-        _confirmButton.backgroundColor = [UIColor redColor];
-        [_confirmButton setTitle:@"确定" forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [_confirmButton addTarget:self action:@selector(confirmSelectedPhotosAction) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _confirmButton;
 }
 
 #pragma mark 预览框
 -(AVCaptureVideoPreviewLayer *)previewLayer{
     if (!_previewLayer) {
         _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
-        _previewLayer.frame = CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-80-kNavHeight);
+        _previewLayer.frame = CGRectMake(0, 0, kScreenWidth, kScreenHeight);
         [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
     }
     return _previewLayer;
 }
 
-#pragma mark 底部视图
--(UIView *)bottomView{
-    if (!_bottomView) {
-        _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, kScreenHeight-80, kScreenWidth, 80)];
-        _bottomView.backgroundColor = [UIColor whiteColor];
-        
-        UIButton *takeBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-60)/2, 10, 60, 60)];
-        [takeBtn setTitle:@"拍照" forState:UIControlStateNormal];
-        takeBtn.backgroundColor=[UIColor blackColor];
-        [takeBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        takeBtn.layer.cornerRadius = 30;
-        takeBtn.clipsToBounds=YES;
-        [takeBtn addTarget:self action:@selector(takePictureAction) forControlEvents:UIControlEventTouchUpInside];
-        [_bottomView addSubview:takeBtn];
+
+#pragma mark 拍照或确认
+-(UIButton *)handleButton{
+    if (!_handleButton) {
+        _handleButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth/2.0-32, kScreenHeight-110.0, 64, 64)];
+        [_handleButton setImage:[UIImage imageNamed:@"photograph"] forState:UIControlStateNormal];
+        [_handleButton addTarget:self action:@selector(handlePhotoAction:) forControlEvents:UIControlEventTouchUpInside];
     }
-    return _bottomView;
+    return _handleButton;
 }
 
-#pragma mark 图片裁剪视图
--(PhotoClipView *)clipView{
-    if (!_clipView) {
-        _clipView = [[PhotoClipView alloc] initWithFrame:CGRectMake(0,0, kScreenWidth, kScreenHeight)];
-        _clipView.delegate = self;
+#pragma mark 手电筒或取消
+-(UIButton *)cancelButton{
+    if (!_cancelButton) {
+        _cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(self.handleButton.right+22.0, kScreenHeight-110.0+16.0,32, 32)];
+        [_cancelButton setImage:[UIImage imageNamed:@"photograph_lighting"] forState:UIControlStateNormal];
+        [_cancelButton addTarget:self action:@selector(handleFlashlightOrCancelTakePhotoAction:) forControlEvents:UIControlEventTouchUpInside];
     }
-    return _clipView;
-}
-
--(UIView *)demandView{
-    if (!_demandView) {
-        _demandView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, 200)];
-        _demandView.backgroundColor = [UIColor lightGrayColor];
-    }
-    return _demandView;
+    return _cancelButton;
 }
 
 @end
