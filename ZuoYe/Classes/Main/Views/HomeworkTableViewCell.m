@@ -57,7 +57,6 @@
         _orderLabel = [[UILabel alloc] initWithFrame:CGRectMake(_orderImgView.right+4.7,line.bottom+7.0, 100.0, 20)];
         _orderLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         _orderLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
-        _orderLabel.textAlignment = NSTextAlignmentRight;
         [self.contentView addSubview:_orderLabel];
         
         _priceLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-180, line.bottom+7.0, 167.0, 20.0)];
@@ -81,24 +80,29 @@
     if (num>0) {
         for (NSInteger i=0; i<num; i++) {
             UIImageView *imgView = [[UIImageView alloc] initWithFrame:CGRectMake(17+(kImgW+10.5)*i, 0, kImgW, kImgH)];
-            imgView.image = [UIImage imageNamed:model.images[i]];
+            imgView.contentMode = UIViewContentModeScaleAspectFill;
+            imgView.clipsToBounds =YES;
+            NSString *imgUrl = model.images[i];
+            if (kIsEmptyString(imgUrl)) {
+                imgView.image = [UIImage imageNamed:@"home_task_all_loading"];
+            }else{
+                [imgView sd_setImageWithURL:[NSURL URLWithString:model.images[i]] placeholderImage:[UIImage imageNamed:@"home_task_all_loading"]];
+            }
             [self.homeworkScrollView addSubview:imgView];
         }
         self.homeworkScrollView.contentSize = CGSizeMake(17+(kImgW+10.5)*num+17, kImgH);
     }
     
-    self.stateLabel.text = model.state==0?@"待接单":@"已接单";
-    
+    self.stateLabel.text = [model.is_receive integerValue]>1?@"已接单":@"待接单";
 
-    
     NSString *tempStr = nil;
-    if (model.type==0) {
+    if ([model.label integerValue]==1) {
         self.orderImgView.hidden = self.orderLabel.hidden = YES;
-        tempStr = [NSString stringWithFormat:@"检查价格：%.2f元",model.check_price];
+        tempStr = [NSString stringWithFormat:@"检查价格：%.2f元",[model.price doubleValue]];
     }else{
         self.orderImgView.hidden = self.orderLabel.hidden = NO;
-        self.orderLabel.text = model.order_time;
-        tempStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",model.perPrice];
+        self.orderLabel.text = [model.label integerValue]==3?@"实时":[[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:model.start_time format:@"MM/dd hh:mm"];
+        tempStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",[model.price doubleValue]];
     }
     NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:tempStr];
     [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#4A4A4A"] range:NSMakeRange(0, 5)];

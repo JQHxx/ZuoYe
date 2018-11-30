@@ -14,8 +14,8 @@
 @optional
 -(void)photoFrameViewDidDeleteImageWithIndex:(NSInteger)index;
 
-//点击图片或添加图片
--(void)photoFrameViewDidClickForTag:(NSInteger)tag andCell:(NSInteger)cellRow;
+//添加图片
+-(void)photoFrameViewAddImage;
 
 @end
 

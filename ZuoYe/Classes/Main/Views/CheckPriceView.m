@@ -30,9 +30,8 @@
         titleLab.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
         [self addSubview:titleLab];
         
-        SetPriceTool *priceTool = [[SetPriceTool alloc] initWithFrame:CGRectMake(frame.size.width-150, 7.0, 125.0,32.0)];
+        SetPriceTool *priceTool = [[SetPriceTool alloc] initWithFrame:CGRectMake(frame.size.width-155, 7.0, 130.0,32.0)];
         priceTool.delegate = self;
-        priceTool.price = 10;
         [self addSubview:priceTool];
         
         UILabel *tipsLab = [[UILabel alloc] initWithFrame:CGRectMake(10, titleLab.bottom+32.0, kScreenWidth-20, 16.0)];
@@ -45,13 +44,8 @@
     return self;
 }
 
-#pragma mark 输入价格
--(void)setPriceToolTextInPrice{
-    
-}
-
 #pragma mark 加减获得价格
--(void)setPriceToolDidSetPrice:(NSInteger)price{
+-(void)setPriceToolDidSetPrice:(double)price{
     self.getPriceBlock(price);
 }
 

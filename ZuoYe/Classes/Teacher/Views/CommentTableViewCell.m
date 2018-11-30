@@ -27,6 +27,7 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(19, 10, 36, 36)];
+        headImageView.boderRadius = 18.0;
         [self.contentView addSubview:headImageView];
         
         nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+12, 11, 80, 20)];
@@ -34,7 +35,7 @@
         nameLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         [self.contentView addSubview:nameLabel];
         
-        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+12,nameLabel.bottom, 100, 16)];
+        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+12,nameLabel.bottom, 180, 16)];
         timeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:11];
         timeLabel.textColor = [UIColor colorWithHexString:@"#A2A2A2"];
         [self.contentView addSubview:timeLabel];
@@ -60,12 +61,18 @@
 
 -(void)setCommentModel:(CommentModel *)commentModel{
     _commentModel = commentModel;
-    headImageView.image = [UIImage imageNamed:commentModel.head_image];
-    nameLabel.text = commentModel.name;
+   
+    if (kIsEmptyString(commentModel.trait)) {
+        headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [headImageView sd_setImageWithURL:[NSURL URLWithString:commentModel.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
+    
+    nameLabel.text = commentModel.username;
     
     //加星级
     CGSize scoreSize = CGSizeMake(13, 13);
-    double scoreNum = commentModel.score;
+    double scoreNum = [commentModel.score doubleValue];
     NSInteger oneScroe=(NSInteger)scoreNum;
     NSInteger num=scoreNum>oneScroe?oneScroe+1:oneScroe;
     for (int i = 0; i<scoreArray.count; i++) {
@@ -80,7 +87,7 @@
         }
     }
     
-    timeLabel.text = commentModel.create_time;
+    timeLabel.text = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:commentModel.create_time format:@"yyyy-MM-dd HH:mm:ss"];
     commentLabel.text = commentModel.comment;
     CGFloat commentH=[commentLabel.text boundingRectWithSize:CGSizeMake(kScreenWidth-97.0, CGFLOAT_MAX) withTextFont:commentLabel.font].height;
     commentLabel.frame = CGRectMake(nameLabel.left, timeLabel.bottom+2, kScreenWidth-97, commentH);

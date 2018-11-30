@@ -375,6 +375,8 @@
     return netType;
 }
 
+
+
 #pragma mark 获取手机运营商
 +(NSString *)getCarrierName{
     CTTelephonyNetworkInfo *telephonyInfo = [[CTTelephonyNetworkInfo alloc] init];
@@ -408,6 +410,12 @@
     //NSString *platform = [NSStringstringWithUTF8String:machine];二者等效
     free(machine);
     return platform;
+}
+
++(BOOL)isWifi{
+    Reachability *reach = [Reachability reachabilityWithHostname:@"www.baidu.com"];
+    NetworkStatus type = [reach currentReachabilityStatus];
+    return type == ReachableViaWiFi;
 }
 
 @end

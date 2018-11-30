@@ -11,20 +11,21 @@
 
 @interface HomeworkModel : NSObject
 
-@property (nonatomic ,assign) NSInteger      type;          //辅导类型
-@property (nonatomic ,strong) NSMutableArray     *images;       //作业图片数组
-@property (nonatomic , copy ) NSString    *grade;        //年级
-@property (nonatomic , copy ) NSString    *subject;      //科目
-@property (nonatomic ,assign) double      perPrice;      //作业辅导 （元/分钟）
-@property (nonatomic ,assign) double      check_price;    //作业检查价格
-@property (nonatomic , copy ) NSString    *create_time;   //发布时间
-@property (nonatomic ,assign) NSInteger   time_type;      //0、实时 1、预约
-@property (nonatomic , copy ) NSString    *order_time;    //预约时间
-@property (nonatomic ,assign) NSInteger    state;           //0、待接单 1、已接单待辅导 2、辅导中
-@property (nonatomic , copy ) NSString    *head_image;      //老师头像
-@property (nonatomic , copy ) NSString    *name;            //老师姓名
-@property (nonatomic , copy ) NSString    *coverImage;
+@property (nonatomic , strong ) NSNumber    *job_id;        //作业编号
+@property (nonatomic , strong ) NSNumber    *label;         //作业类型
+@property (nonatomic , strong ) NSNumber    *create_time;   //发布时间
+@property (nonatomic , strong ) NSString    *grade;         //年级
+@property (nonatomic , strong ) NSString    *subject;      //科目
+@property (nonatomic ,  copy  ) NSArray     *images;       //作业图片数组
+@property (nonatomic , strong ) NSNumber    *price;         //价格
+@property (nonatomic ,   copy ) NSNumber    *start_time;    //开始辅导时间
+@property (nonatomic ,   copy ) NSString    *job_pic;       //
+@property (nonatomic , strong ) NSNumber    *is_receive;    //接单状态
+@property (nonatomic , strong ) NSNumber    *yuyue;         //是否预约
+@property (nonatomic ,   copy ) NSString    *tch_name;       //老师姓名
+@property (nonatomic ,   copy ) NSString    *trait;       //头像
+@property (nonatomic , strong ) NSNumber    *score;       //评分
 
-@property (nonatomic ,strong) TeacherModel *teacher;
+@property (nonatomic , copy) NSString    *third_id;       //云ID
 
 @end

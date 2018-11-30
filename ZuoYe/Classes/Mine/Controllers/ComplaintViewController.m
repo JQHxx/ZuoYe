@@ -7,13 +7,14 @@
 //
 
 #import "ComplaintViewController.h"
+#import "BackScrollView.h"
 
 @interface ComplaintViewController ()<UITextViewDelegate>{
     UIButton    *selectedBtn;
     UILabel     *promptLabel;
     UILabel     *countLabel;
+    NSInteger   type;   // 投诉类型1=对老师不满意2=对订单有疑问3=其他
 }
-
 
 @property (nonatomic, strong) UITextView  *complaintTextView;
 
@@ -26,8 +27,7 @@
     [super viewDidLoad];
     self.baseTitle = @"投诉";
     
-    self.view.backgroundColor = [UIColor bgColor_Gray];
-    
+    type = 1;
     
   
     [self initComplaintView];
@@ -72,18 +72,36 @@
     sender.selected = YES;
     sender.layer.borderColor = [UIColor redColor].CGColor;
     selectedBtn = sender;
+    type = sender.tag + 1;
 }
 
 #pragma mark 确认
 -(void)confirmComplaintAction:(UIButton *)sender{
-    
+    if (kIsEmptyString(self.complaintTextView.text)) {
+        [self.view makeToast:@"您的投诉内容不能为空" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&oid=%@&comment=%@&label=%ld",kUserTokenValue,self.oid,self.complaintTextView.text,type];
+    [TCHttpRequest postMethodWithURL:kOrderComplaintAPI body:body success:^(id json) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+           [weakSelf.view makeToast:@"您的投诉已提交" duration:1.0 position:CSToastPositionCenter];
+        });
+         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [weakSelf.navigationController popViewControllerAnimated:YES];
+        });
+    }];
 }
 
 #pragma mark -- Private methods
 -(void)initComplaintView{
-    UIView *rootView = [[UIView alloc] initWithFrame:CGRectMake(0, kNavHeight+10, kScreenWidth, 260)];
+    BackScrollView *rootScrollView = [[BackScrollView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight)];
+    rootScrollView.backgroundColor = [UIColor bgColor_Gray];
+    [self.view addSubview:rootScrollView];
+    
+    UIView *rootView = [[UIView alloc] initWithFrame:CGRectMake(0, 10, kScreenWidth, 260)];
     rootView.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview:rootView];
+    [rootScrollView addSubview:rootView];
     
     UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(18, 10, 80, 22)];
     titleLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
@@ -107,9 +125,9 @@
         }
         
         if (i==2) {
-            btn.frame = CGRectMake(18+140*i, titleLab.bottom+5, 55, 30);
+            btn.frame = CGRectMake(18+120*i, titleLab.bottom+5, 55, 30);
         }else{
-            btn.frame = CGRectMake(18+140*i, titleLab.bottom+5, 107, 30);
+            btn.frame = CGRectMake(18+120*i, titleLab.bottom+5, 107, 30);
         }
         
         btn.titleEdgeInsets = UIEdgeInsetsMake(5,5,5, 0);
@@ -124,7 +142,7 @@
     [rootView addSubview:self.complaintTextView];
     
     
-    UIButton *confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(48.0,rootView.bottom+35,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
+    UIButton *confirmButton = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0,rootView.bottom+35+kNavHeight,280.0,60)];
     [confirmButton setTitle:@"确认" forState:UIControlStateNormal];
     [confirmButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
     [confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
@@ -142,6 +160,7 @@
         _complaintTextView.delegate = self;
         _complaintTextView.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
         _complaintTextView.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
+        _complaintTextView.returnKeyType = UIReturnKeyDone;
         
         promptLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, 8, 250, 20)];
         promptLabel.text = @"请简要描述您要投诉的内容";

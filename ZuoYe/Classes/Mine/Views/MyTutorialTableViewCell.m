@@ -17,6 +17,8 @@
     UILabel      *gradeLab;             //年级/科目
     UILabel      *checkPriceLab;        //检查价格 或 辅导时长
     UILabel      *payLab;               //付款金额
+    
+    UIView       *lineView2;
 }
 
 
@@ -48,6 +50,7 @@
         [self.contentView addSubview:bgHeadImageView];
         
         headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(20.9, lineView.bottom+11.9, 46, 46)];
+        headImageView.boderRadius = 23.0;
         [self.contentView addSubview:headImageView];
         
         nameLab = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+16, dateTimeLab.bottom+27, 56, 20)];
@@ -69,18 +72,8 @@
         gradeLab.textColor = [UIColor colorWithHexString:@"#808080"];
         [self.contentView addSubview:gradeLab];
         
-        self.replayBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-98, lineView.bottom+13,79.6, 45)];
-        [self.replayBtn setBackgroundImage:[UIImage imageNamed:@"zuoye"] forState:UIControlStateNormal];
-        [self.replayBtn setImage:[UIImage imageNamed:@"play"] forState:UIControlStateNormal];
-        [self.replayBtn setTitle:@"回放" forState:UIControlStateNormal];
-        self.replayBtn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
-        [self.replayBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        self.replayBtn.imageEdgeInsets = UIEdgeInsetsMake(14, 14, 13, 47.6);
-        self.replayBtn.titleEdgeInsets = UIEdgeInsetsMake(13,14, 12, 15.6);
-        [self.replayBtn addTarget:self action:@selector(replayTutorialVideoAction:) forControlEvents:UIControlEventTouchUpInside];
-        [self.contentView addSubview:self.replayBtn];
         
-        UIView *lineView2 = [[UIView alloc]initWithFrame:CGRectMake(12, bgHeadImageView.bottom+10, kScreenWidth-12, 0.5)];
+        lineView2 = [[UIView alloc]initWithFrame:CGRectMake(12, bgHeadImageView.bottom+10, kScreenWidth-12, 0.5)];
         lineView2.backgroundColor  = [UIColor colorWithHexString:@" #D8D8D8"];
         [self.contentView addSubview:lineView2];
         
@@ -94,22 +87,34 @@
         payLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:13];
         [self.contentView addSubview:payLab];
         
-        self.payButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-100, lineView2.bottom+15, 80, 80*(76.0/172.0))];
+        
+        self.payButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-100, lineView2.bottom+15, 80, 35)];
         self.payButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
         [self.payButton setBackgroundImage:[UIImage imageNamed:@"button_2"] forState:UIControlStateNormal];
         [self.payButton setTitle:@"去付款" forState:UIControlStateNormal];
         [self.payButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [self.payButton addTarget:self action:@selector(payOrderOrConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
+        [self.payButton addTarget:self action:@selector(payOrderAction:) forControlEvents:UIControlEventTouchUpInside];
         [self.contentView addSubview:self.payButton];
         
-        self.connectButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-106, lineView2.bottom+15, 88, 28)];
+        self.cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28)];
+        [self.cancelButton setTitleColor:[UIColor colorWithHexString:@"#9B9B9B"] forState:UIControlStateNormal];
+        self.cancelButton.layer.cornerRadius = 14;
+        self.cancelButton.layer.borderColor = [UIColor colorWithHexString:@"#9B9B9B"].CGColor;
+        self.cancelButton.layer.borderWidth = 1;
+        self.cancelButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
+        [self.cancelButton setTitle:@"取消订单" forState:UIControlStateNormal];
+        [self.cancelButton addTarget:self action:@selector(cancelOrderAction:) forControlEvents:UIControlEventTouchUpInside];
+        [self.contentView addSubview:self.cancelButton];
+        self.cancelButton.hidden = YES;
+        
+        self.connectButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28)];
         self.connectButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
         self.connectButton.layer.cornerRadius = 10;
         self.connectButton.layer.borderColor =[UIColor colorWithHexString:@"#FF6161"].CGColor;
         self.connectButton.layer.borderWidth = 1.0;
         [self.connectButton setTitle:@"再次连线" forState:UIControlStateNormal];
         [self.connectButton setTitleColor:[UIColor colorWithHexString:@"#FF6161"] forState:UIControlStateNormal];
-        [self.connectButton addTarget:self action:@selector(payOrderOrConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
+        [self.connectButton addTarget:self action:@selector(connectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
         [self.contentView addSubview:self.connectButton];
         
     }
@@ -120,75 +125,108 @@
 -(void)setTutorial:(TutorialModel *)tutorial{
     _tutorial = tutorial;
     
-    dateTimeLab.text = tutorial.datetime;
-    
-    headImageView.image = [UIImage imageNamed:tutorial.head_image];
-    
+    //时间
+    dateTimeLab.text = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:tutorial.create_time format:@"yyyy-MM-dd HH:mm"];
+    //头像
+    if (kIsEmptyString(tutorial.trait)) {
+        headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [headImageView sd_setImageWithURL:[NSURL URLWithString:tutorial.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
+    //姓名
     nameLab.text = tutorial.name;
     CGFloat nameW = [tutorial.name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:nameLab.font].width;
     nameLab.frame = CGRectMake(headImageView.right+16.0,dateTimeLab.bottom+27.0, nameW, 20);
-
+    //等级啊
     levelLab.text = tutorial.level;
     levelLab.frame = CGRectMake(nameLab.right+7.0, dateTimeLab.bottom+29, 54, 15);
-    
-    gradeLab.text = [NSString stringWithFormat:@"%@/%@",tutorial.grade,tutorial.subject];
-    
-    self.replayBtn.hidden = !tutorial.type;
-    if (tutorial.type==1&&tutorial.state<2) {
-        self.replayBtn.hidden = NO;
-    }else{
-        self.replayBtn.hidden = YES;
-    }
+    //年级/科目
+    gradeLab.text = kIsEmptyString(tutorial.grade)?@"":[NSString stringWithFormat:@"%@/%@",tutorial.grade,tutorial.subject];
     
     //价格
-   
     NSString *tempPriceStr = nil;
-    if (tutorial.type==0) {
-        tempPriceStr = [NSString stringWithFormat:@"检查价格：%.2f元",tutorial.check_price];
+    if ([tutorial.label integerValue]==1) {
+        tempPriceStr = [NSString stringWithFormat:@"检查价格：%.2f元",[tutorial.price doubleValue]];
     }else{
-        tempPriceStr = [NSString stringWithFormat:@"辅导时长：%ld分%ld秒",tutorial.duration/60,tutorial.duration%60];
+        NSInteger jobTime = [tutorial.job_time integerValue];
+        tempPriceStr = [NSString stringWithFormat:@"辅导时长：%ld分%ld秒",jobTime/60,jobTime%60];
     }
     NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:tempPriceStr];
     [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#4A4A4A"] range:NSMakeRange(0, 5)];
     checkPriceLab.attributedText = attributeStr;
     
+    lineView2.hidden = NO;
     
-    if (tutorial.state==2) {
-        stateLab.text = @"已取消";
-        payLab.hidden = checkPriceLab.hidden = YES;
-        self.payButton.hidden = YES;
-        self.connectButton.hidden = NO;
-    }else{
+    if ([tutorial.status integerValue]==0) {  //进行中
+        self.cancelButton.hidden = NO;
+        self.payButton.hidden = payLab.hidden = YES;
+        if ([tutorial.label integerValue]==1) {
+            checkPriceLab.hidden = NO;
+            self.connectButton.hidden = YES;
+            stateLab.text = @"检查中";
+            self.cancelButton.frame = CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28);
+        }else{
+            checkPriceLab.hidden = YES;
+            self.connectButton.hidden = NO;
+            [self.connectButton setTitle:@"再次连线" forState:UIControlStateNormal];
+            self.connectButton.frame =CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28);
+            stateLab.text = @"辅导中";
+            self.cancelButton.frame = CGRectMake(kScreenWidth-212, lineView2.bottom+8, 88, 28);
+        }
+        stateLab.textColor = [UIColor colorWithHexString:@"#FF6161"];
+    }else if ([tutorial.status integerValue]==1||[tutorial.status integerValue]==2) {
+        self.cancelButton.hidden = YES;
         NSString *tempStr = nil;
-        if (tutorial.state==0) {
+        if ([tutorial.status integerValue]==1) {  //待付款
             self.payButton.hidden = NO;
             self.connectButton.hidden = YES;
             stateLab.text = @"待付款";
-            tempStr = [NSString stringWithFormat:@"%@：¥%.2f",@"待付金额",tutorial.pay_price];
-        }else if (tutorial.state==1){
+            tempStr = [NSString stringWithFormat:@"%@：¥%.2f",@"待付金额",[tutorial.pay_money doubleValue]];
+        }else if ([tutorial.status integerValue]==2){ //已完成
             stateLab.text = @"已完成";
-            tempStr = [NSString stringWithFormat:@"%@：¥%.2f",@"已付金额",tutorial.pay_price];
+            tempStr = [NSString stringWithFormat:@"%@：¥%.2f",@"已付金额",[tutorial.pay_money doubleValue]];
             self.payButton.hidden = YES;
             self.connectButton.hidden = NO;
+            [self.connectButton setTitle:[tutorial.label integerValue]<2?@"连线老师":@"再次连线" forState:UIControlStateNormal];
+            self.connectButton.frame =CGRectMake(kScreenWidth-106, lineView2.bottom+15, 88, 28);
         }
         NSMutableAttributedString *attributeStr2 = [[NSMutableAttributedString alloc] initWithString:tempStr];
         [attributeStr2 addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#4A4A4A"] range:NSMakeRange(0, 5)];
         payLab.attributedText = attributeStr2;
         payLab.hidden = checkPriceLab.hidden = NO;
+    }else{ //已取消
+        self.cancelButton.hidden = YES;
+        stateLab.text = @"已取消";
+        payLab.hidden = checkPriceLab.hidden = YES;
+        self.payButton.hidden = YES;
+        if ([tutorial.label integerValue]>1) {
+            self.connectButton.hidden = lineView2.hidden = NO;
+            [self.connectButton setTitle:@"再次连线" forState:UIControlStateNormal];
+            self.connectButton.frame =CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28);
+        }else{
+            self.connectButton.hidden = lineView2.hidden = YES;
+        }
     }
 }
 
-#pragma mark 付款或重新连线
--(void)payOrderOrConnectTeacherAction:(UIButton *)sender{
-    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:payOrderOrConnectTeacherWithTutorial:)]) {
-        [self.delegate myTutorialTableViewCell:self payOrderOrConnectTeacherWithTutorial:self.tutorial];
+#pragma mark 付款
+-(void)payOrderAction:(UIButton *)sender{
+    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:payOrderActionWithTutorial:)]) {
+        [self.delegate myTutorialTableViewCell:self payOrderActionWithTutorial:self.tutorial];
     }
 }
 
-#pragma mark  辅导视频回放
--(void)replayTutorialVideoAction:(UIButton *)sender{
-    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:payOrderOrConnectTeacherWithTutorial:)]) {
-        [self.delegate myTutorialTableViewCell:self replayVideoWithTutorial:self.tutorial];
+#pragma mark 重新连线
+-(void)connectTeacherAction:(UIButton *)sender{
+    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:connectTeacherWithTutorial:)]) {
+        [self.delegate myTutorialTableViewCell:self connectTeacherWithTutorial: self.tutorial];
+    }
+}
+
+#pragma mark 取消订单
+-(void)cancelOrderAction:(UIButton *)sender{
+    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:cancelOrderWithTutorial:)]) {
+        [self.delegate myTutorialTableViewCell:self cancelOrderWithTutorial:self.tutorial];
     }
 }
 

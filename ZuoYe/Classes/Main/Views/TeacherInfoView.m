@@ -29,6 +29,7 @@
         
         //头像
         self.headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(18, 17, 52, 52)];
+        self.headImageView.boderRadius = 26.0;
         [self addSubview:self.headImageView];
         
         self.nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+13.0, 21.0, 100, 22)];
@@ -36,7 +37,7 @@
         self.nameLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         [self addSubview:self.nameLabel];
         
-        self.gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+13, self.nameLabel.bottom+3.0, 120, 20)];
+        self.gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+13, self.nameLabel.bottom+3.0, 200, 20)];
         self.gradeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
         self.gradeLabel.textColor = [UIColor colorWithHexString:@"#808080"];
         [self addSubview:self.gradeLabel];
@@ -51,10 +52,19 @@
 }
 
 -(void)setModel:(TeacherModel *)model{
-    self.headImageView.image = [UIImage imageNamed:model.head];
-    self.nameLabel.text = model.name;
-    self.gradeLabel.text = [NSString stringWithFormat:@"%@/%@",model.grade,model.subjects];
-    self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",model.price];
+    if (kIsEmptyString(model.trait)) {
+        _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [_headImageView sd_setImageWithURL:[NSURL URLWithString:model.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
+    
+    
+    self.nameLabel.text = model.tch_name;
+    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
+    self.gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,model.subject];
+    if (!kIsEmptyObject(model.guide_price)) {
+        self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",[model.guide_price doubleValue]];
+    }
 }
 
 @end

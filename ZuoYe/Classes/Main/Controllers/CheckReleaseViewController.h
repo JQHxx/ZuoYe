@@ -6,8 +6,14 @@
 //  Copyright © 2018年 vision. All rights reserved.
 //
 
+
+
+
 #import "BaseViewController.h"
 
+
 @interface CheckReleaseViewController : BaseViewController
+
+@property (nonatomic ,strong) NSMutableArray *photosArray;
 
 @end

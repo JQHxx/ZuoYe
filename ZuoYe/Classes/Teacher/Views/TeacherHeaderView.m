@@ -9,7 +9,7 @@
 #import "TeacherHeaderView.h"
 
 #define kItemW 75
-#define kCapW (kScreenWidth-52-4*kItemW)/3.0
+#define kCapW (kScreenWidth-30-4*kItemW)/3.0
 
 @interface TeacherHeaderView ()
 
@@ -23,7 +23,7 @@
 @property (nonatomic, strong) UILabel     *fansLabel;         //粉丝数
 
 @property (nonatomic, strong) UILabel     *priceLabel;        //辅导价格
-@property (nonatomic, strong) UILabel     *totalTimeLabel;         //辅导时长
+@property (nonatomic, strong) UILabel     *totalTimeLabel;    //辅导时长
 @property (nonatomic, strong) UILabel     *checkCountLabel;   //检查次数
 @property (nonatomic, strong) UIButton    *identityButton;    //身份认证
 @property (nonatomic, strong) UIButton    *teacherButton;     //教师资质
@@ -117,24 +117,43 @@
 #pragma mark -- setters
 -(void)setTeacher:(TeacherModel *)teacher{
     _teacher = teacher;
-    self.headImageView.image = [UIImage imageNamed:teacher.head];
-    self.nameLabel.text = teacher.name;
-    self.gradeLabel.text = [NSString stringWithFormat:@"%@/%@",teacher.grade,teacher.subjects];
-    self.levelLabel.text = teacher.level;
-    self.experienceLabel.text = [NSString stringWithFormat:@"%ld年教龄，%@毕业",teacher.schoolAge,teacher.graduated_school];
-    self.scoreLabel.text = [NSString stringWithFormat:@"好评 %.1f",teacher.score];
-    self.studentLabel.text = [NSString stringWithFormat:@"学生人数 %ld",teacher.student_count];
-    self.fansLabel.text = [NSString stringWithFormat:@"粉丝 %ld",teacher.fans_count];
-    self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",teacher.price];
-    self.totalTimeLabel.text = [NSString stringWithFormat:@"%ld分钟",teacher.tutoring_time];
-    self.checkCountLabel.text = [NSString stringWithFormat:@"%ld次",teacher.check_number];
     
-    self.identityButton.selected = teacher.identity_authentication;
-    self.teacherButton.selected = teacher.teacher_qualification;
-    self.educationButton.selected = teacher.education_certification;
-    self.technicalButton.selected = teacher.technical_skill;
+    if (kIsEmptyString(teacher.trait)) {
+        _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [_headImageView sd_setImageWithURL:[NSURL URLWithString:teacher.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
+    
+    self.nameLabel.text = teacher.tch_name;
+    CGFloat nameW = [teacher.tch_name boundingRectWithSize:CGSizeMake(120, 25) withTextFont:self.nameLabel.font].width;
+    self.nameLabel.frame = CGRectMake(self.headImageView.right+14,KStatusHeight+45, nameW, 25);
+    if (!kIsEmptyString(teacher.level)) {
+        self.levelLabel.hidden = NO;
+        self.levelLabel.text = [NSString stringWithFormat:@"%@",teacher.level];
+        self.levelLabel.frame = CGRectMake(self.nameLabel.right+5,KStatusHeight+49,65, 18);
+    }else{
+        self.levelLabel.hidden = YES;
+    }
+    
+    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:teacher.grade];
+    self.gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,teacher.subject];
+    
+    
+    self.experienceLabel.text = [NSString stringWithFormat:@"%ld年教龄，%@毕业",[teacher.edu_exp integerValue],kIsEmptyString(teacher.college)?@"":teacher.college];
+    self.scoreLabel.text = [NSString stringWithFormat:@"好评 %.1f",[teacher.score doubleValue]];
+    self.studentLabel.text = [NSString stringWithFormat:@"学生人数 %@",teacher.stu_num];
+    self.fansLabel.text = [NSString stringWithFormat:@"粉丝 %@",teacher.follower_num];
+    if (!kIsEmptyObject(teacher.guide_price)) {
+        self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",[teacher.guide_price doubleValue]];
+    }
+    self.totalTimeLabel.text = [NSString stringWithFormat:@"%02ld分钟%02ld秒",[teacher.guide_time integerValue]/60,[teacher.guide_time integerValue]%60];
+    self.checkCountLabel.text = [NSString stringWithFormat:@"%ld次",[teacher.check_num integerValue]];
+    
+    self.identityButton.selected = [teacher.is_ID_auth boolValue];
+    self.teacherButton.selected = [teacher.is_teach_auth boolValue];
+    self.educationButton.selected = [teacher.is_edu_auth boolValue];
+    self.technicalButton.selected = [teacher.is_skill_auth boolValue];
 }
-
 
 #pragma mark -- Private methods
 #pragma mark 自定义按钮
@@ -142,8 +161,8 @@
     UIButton *btn = [[UIButton alloc] initWithFrame:frame];
     [btn setImage:[UIImage imageNamed:imgName] forState:UIControlStateNormal];
     [btn setImage:[UIImage imageNamed:selImage] forState:UIControlStateSelected];
-    [btn setTitleColor:[UIColor colorWithHexString:@"#4A4A4A"] forState:UIControlStateNormal];
-    [btn setTitleColor:[UIColor colorWithHexString:@"#D8D8D8"] forState:UIControlStateSelected];
+    [btn setTitleColor:[UIColor colorWithHexString:@"#D8D8D8"] forState:UIControlStateNormal];
+    [btn setTitleColor:[UIColor colorWithHexString:@"#4A4A4A"] forState:UIControlStateSelected];
     [btn setTitle:title forState:UIControlStateNormal];
     btn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:12];
     btn.titleEdgeInsets = UIEdgeInsetsMake(4, 5, 4, 0);
@@ -156,6 +175,7 @@
 -(UIImageView *)headImageView{
     if (!_headImageView) {
         _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(31,KStatusHeight+43, 66, 66)];
+        _headImageView.boderRadius = 33.0;
     }
     return _headImageView;
 }
@@ -173,7 +193,7 @@
 #pragma mark 年级/科目
 -(UILabel *)gradeLabel{
     if (!_gradeLabel) {
-        _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+14, self.nameLabel.bottom+4, 100, 17)];
+        _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+14, self.nameLabel.bottom+4, 180, 17)];
         _gradeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12];
         _gradeLabel.textColor = [UIColor whiteColor];
     }
@@ -239,7 +259,7 @@
 #pragma mark 身份认证
 -(UIButton *)identityButton{
     if (!_identityButton) {
-        _identityButton = [self createButtonWithFrame:CGRectMake(26,123, kItemW, 25) title:@"身份认证" image:@"authentication_identity_gray" selImage:@"authentication_identity"];
+        _identityButton = [self createButtonWithFrame:CGRectMake(16,123, kItemW, 25) title:@"身份认证" image:@"authentication_identity_gray" selImage:@"authentication_identity"];
     }
     return _identityButton;
 }

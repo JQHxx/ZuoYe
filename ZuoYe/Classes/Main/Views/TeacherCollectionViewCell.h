@@ -7,11 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "LevelModel.h"
 
 @interface TeacherCollectionViewCell : UICollectionViewCell
 
-@property (nonatomic, strong) UILabel      *levelLabel;       //等级
-@property (nonatomic, strong) UIImageView  *headImageView;    //头像
-@property (nonatomic, strong) UILabel      *priceLabel;       //价格
+-(void)updateCellWithLevel:(LevelModel *)model;
+
+
 
 @end

@@ -13,17 +13,19 @@
 #import "RecommandTableViewCell.h"
 #import "FocusTableViewCell.h"
 #import "TeacherModel.h"
+#import "MJRefresh.h"
 
 @interface TeacherViewController ()<UITableViewDelegate,UITableViewDataSource,SlideMenuViewDelegate>{
-    BOOL   isFocusOn;
+    NSInteger   selectIndex;
+    NSInteger   page;
 }
 
 
 @property (nonatomic, strong)SlideMenuView   *titleView;
 @property (nonatomic, strong)UITableView     *myTableView;
+@property (nonatomic ,strong) UIImageView       *blankView; //空白页
 
-@property (nonatomic, strong)NSMutableArray  *recommandTeachersArray;  //推荐老师
-@property (nonatomic, strong)NSMutableArray  *focusTeachersArray;      //关注老师
+@property (nonatomic, strong)NSMutableArray  *teachersArray;  //老师列表
 
 @end
 
@@ -33,9 +35,22 @@
     [super viewDidLoad];
     self.isHiddenBackBtn = YES;
     
+    selectIndex = 1;
+    page = 1;
+    
     [self.view addSubview:self.titleView];
     [self.view addSubview:self.myTableView];
-    [self requestForTeachersDataWithIndex:0];
+    [self.myTableView addSubview:self.blankView];
+    self.blankView.hidden = YES;
+    [self requestForTeachersData];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    if ([ZYHelper sharedZYHelper].isUpdateFocusTeacher) {
+        [self requestForTeachersData];
+        [ZYHelper sharedZYHelper].isUpdateFocusTeacher = NO;
+    }
 }
 
 #pragma mark -- UITableViewDataSource
@@ -44,21 +59,21 @@
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return isFocusOn?self.focusTeachersArray.count:self.recommandTeachersArray.count;
+    return self.teachersArray.count;
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (isFocusOn) {
+    if (selectIndex==2) {
         static NSString *cellIdentifier = @"FocusTableViewCell";
         FocusTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
         if (cell == nil) {
             cell = [[FocusTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         }
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-        TeacherModel *model = self.focusTeachersArray[indexPath.row];
+        TeacherModel *model = self.teachersArray[indexPath.row];
         [cell displayCellWithModel:model];
         
-        cell.connectButton.userInteractionEnabled = model.isOnline;
+        cell.connectButton.userInteractionEnabled = [model.online boolValue];
         cell.connectButton.tag = indexPath.row;
         [cell.connectButton addTarget:self action:@selector(toConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
         
@@ -70,10 +85,10 @@
             cell = [[RecommandTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         }
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-        TeacherModel *model = self.recommandTeachersArray[indexPath.section];
+        TeacherModel *model = self.teachersArray[indexPath.row];
         [cell displayCellWithTeacher:model];
         
-        cell.connectButton.tag = indexPath.section;
+        cell.connectButton.tag = indexPath.row;
         [cell.connectButton addTarget:self action:@selector(toConnectTeacherAction:) forControlEvents:UIControlEventTouchUpInside];
         
         return cell;
@@ -81,13 +96,14 @@
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return isFocusOn?90:96.0;
+    return selectIndex==2?90:96.0;
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    TeacherModel *model = isFocusOn?self.focusTeachersArray[indexPath.row]:self.recommandTeachersArray[indexPath.section];
+    TeacherModel *model = self.teachersArray[indexPath.row];
     TeacherDetailsViewController *detailsVC = [[TeacherDetailsViewController alloc] init];
-    detailsVC.id = model.id;
+    detailsVC.tch_id = model.tch_id;
+    detailsVC.isFocusIn = selectIndex==2;
     detailsVC.hidesBottomBarWhenPushed = YES;
     [self.navigationController pushViewController:detailsVC animated:YES];
 }
@@ -95,48 +111,67 @@
 #pragma mark -- Custom Delegate
 #pragma mark ItemTitleViewDelegate
 -(void)slideMenuView:(SlideMenuView *)menuView didSelectedWithIndex:(NSInteger)index{
-    isFocusOn = index;
-    [self requestForTeachersDataWithIndex:index];
+    selectIndex = index+1;
+    [self loadNewTeacherListData];
 }
 
 #pragma mark -- Event response
 -(void)toConnectTeacherAction:(UIButton *)sender{
-    TeacherModel *model = isFocusOn?self.focusTeachersArray[sender.tag]:self.recommandTeachersArray[sender.tag];
-    ConnectionSettingViewController *settingVC = [[ConnectionSettingViewController alloc] init];
-    settingVC.teacherModel = model;
-    settingVC.hidesBottomBarWhenPushed = YES;
-    [self.navigationController pushViewController:settingVC animated:YES];
+    TeacherModel *model = self.teachersArray[sender.tag];
+    BOOL isOnline = [model.online boolValue];
+    if (isOnline) {
+        ConnectionSettingViewController *settingVC = [[ConnectionSettingViewController alloc] init];
+        settingVC.teacherModel = model;
+        settingVC.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:settingVC animated:YES];
+    }else{
+        [self.view makeToast:@"老师当前不在线，请稍后再试" duration:1.0 position:CSToastPositionCenter];
+    }
 }
 
 #pragma mark -- Private Methods
+#pragma mark 加载最新老师列表
+-(void)loadNewTeacherListData{
+    page=1;
+    [self requestForTeachersData];
+}
+
+#pragma mark 加载更多老师列表
+-(void)loadMoreTeacherListData{
+    page++;
+    [self requestForTeachersData];
+}
+
 #pragma mark load Data
--(void)requestForTeachersDataWithIndex:(NSInteger)index{
-    NSArray *names =@[@"小美老师",@"张三",@"李四",@"王五",@"小芳老师"];
-    NSArray *levels = @[@"特级教师",@"高级教师",@"中级教师",@"初级教师",@"普通教师"];
-    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<5; i++) {
-        TeacherModel *model = [[TeacherModel alloc] init];
-        model.id = i+1;
-        model.head = @"photo";
-        model.name = names[i];
-        model.grade = @"一年级";
-        model.subjects = @"科目";
-        model.schoolAge = i+4;
-        model.level = levels[i];
-        model.score = 5.0 - i*0.2;
-        model.count = 1500 + i*50;
-        model.price = 2.0 - 0.2*i;
-        model.tech_stage = @"小学";
-        model.isOnline = i%2;
-        [tempArr addObject:model];
-    }
-    
-    if (index==0) {
-        self.recommandTeachersArray = tempArr;
-    }else{
-        self.focusTeachersArray = tempArr;
-    }
-    [self.myTableView reloadData];
+-(void)requestForTeachersData{
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&label=%ld&page=%ld",kUserTokenValue,selectIndex,page];
+    [TCHttpRequest postMethodWithURL:kGetMoreTeachersAPI body:body success:^(id json) {
+        NSArray *data = [json objectForKey:@"data"];
+        NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in data) {
+            TeacherModel *model = [[TeacherModel alloc] init];
+            [model setValues:dict];
+            [tempArr addObject:model];
+        }
+        if (page==1) {
+            weakSelf.teachersArray = tempArr;
+        }else{
+            [weakSelf.teachersArray addObjectsFromArray:tempArr];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakSelf.myTableView.mj_footer.hidden = data.count<20;
+            if (selectIndex==1) {
+                weakSelf.blankView.hidden = YES;
+            }else{
+                weakSelf.blankView.hidden = weakSelf.teachersArray.count>0;
+            }
+            [weakSelf.myTableView reloadData];
+            [weakSelf.myTableView.mj_header endRefreshing];
+            [weakSelf.myTableView.mj_footer endRefreshing];
+        });
+    }];
 }
 
 
@@ -163,28 +198,39 @@
         _myTableView.estimatedSectionHeaderHeight=0;
         _myTableView.estimatedSectionFooterHeight=0;
         _myTableView.tableFooterView = [[UIView alloc] init];
-        _myTableView.backgroundColor = isFocusOn ? [UIColor whiteColor]:[UIColor bgColor_Gray];
-        _myTableView.separatorStyle = isFocusOn?UITableViewCellSeparatorStyleSingleLine:UITableViewCellSeparatorStyleNone;
+        _myTableView.backgroundColor = selectIndex==2 ? [UIColor whiteColor]:[UIColor bgColor_Gray];
+        _myTableView.separatorStyle = selectIndex==2?UITableViewCellSeparatorStyleSingleLine:UITableViewCellSeparatorStyleNone;
+        
+        //  下拉加载最新
+        MJRefreshNormalHeader *header=[MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(loadNewTeacherListData)];
+        header.automaticallyChangeAlpha=YES;
+        header.lastUpdatedTimeLabel.hidden=YES;
+        _myTableView.mj_header=header;
+        
+        MJRefreshAutoNormalFooter *footer = [MJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(loadMoreTeacherListData)];
+        footer.automaticallyRefresh = NO;
+        _myTableView.mj_footer = footer;
+        footer.hidden=YES;
     }
     return _myTableView;
 }
 
+#pragma mark 空白页
+-(UIImageView *)blankView{
+    if (!_blankView) {
+        _blankView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth-149)/2.0,70, 149, 127)];
+        _blankView.image = [UIImage imageNamed:@"default_follow"];
+    }
+    return _blankView;
+}
+
 #pragma mark 推荐老师数组
--(NSMutableArray *)recommandTeachersArray{
-    if (!_recommandTeachersArray) {
-        _recommandTeachersArray = [[NSMutableArray alloc] init];
+-(NSMutableArray *)teachersArray{
+    if (!_teachersArray) {
+        _teachersArray = [[NSMutableArray alloc] init];
     }
-    return _recommandTeachersArray;
+    return _teachersArray;
 }
-
-#pragma mark 关注老师数组
--(NSMutableArray *)focusTeachersArray{
-    if (!_focusTeachersArray) {
-        _focusTeachersArray = [[NSMutableArray alloc] init];
-    }
-    return _focusTeachersArray;
-}
-
 
 
 @end

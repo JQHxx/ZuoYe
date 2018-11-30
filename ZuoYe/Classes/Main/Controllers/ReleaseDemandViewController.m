@@ -16,18 +16,21 @@
 #import "OrderTimePickerView.h"
 #import "DemandTableViewCell.h"
 #import "SetValueModel.h"
+#import "NSDate+Extension.h"
+#import "RechargeViewController.h"
 
 @interface ReleaseDemandViewController ()<UITableViewDelegate,UITableViewDataSource>{
-    
-    NSMutableArray  *teacherLevelsArr;
+    NSMutableArray  *teacherLevelsArr;  //小学老师等级
+    NSMutableArray  *teacherJuniorLevelsArr;  //初中老师等级
     
     NSInteger        timeType;          //0、实时 1、预约
     NSString         *orderTime;        //预约时间
     NSString         *gradeStr;         //年级
     NSString         *courseStr;        //科目
     
+    double           percent;
     LevelModel       *selLevelModel;    //选择老师等级
-    
+    NSArray          *gradesArr;
     NSMutableArray   *coursesArr;
 }
 
@@ -60,8 +63,10 @@
     self.isHiddenNavBar = YES;
     
     teacherLevelsArr = [[NSMutableArray alloc] init];
+    teacherJuniorLevelsArr = [[NSMutableArray alloc] init];
     selLevelModel = [[LevelModel alloc] init];
     coursesArr = [[NSMutableArray alloc] init];
+    gradesArr = [ZYHelper sharedZYHelper].grades;
     
     self.view.topBoderRadius = 10.0;
     
@@ -84,8 +89,13 @@
         return cell;
     }else{
         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
         [cell.contentView addSubview:self.selTeacherView];
-        self.selTeacherView.levelsArray = teacherLevelsArr;
+        if ([gradeStr isEqualToString:@"初一"]||[gradeStr isEqualToString:@"初二"]||[gradeStr isEqualToString:@"初三"]) {
+            self.selTeacherView.levelsArray = teacherJuniorLevelsArr;
+        }else{
+            self.selTeacherView.levelsArray = teacherLevelsArr;
+        }
         return cell;
     }
 }
@@ -103,13 +113,16 @@
     if (indexPath.row==0) {
         kSelfWeak;
         [OrderTimePickerView showOrderTimePickerWithTitle:@"选择时间" defaultTime:@{} resultBlock:^(NSString *dayStr, NSString *hourStr, NSString *minuteStr) {
-            MyLog(@"day:%@,hour:%@,minute:%@",dayStr,hourStr,minuteStr);
+            NSString *day = [dayStr isEqualToString:@"今天"]?[NSDate GetCurrentDay]:[NSDate GetTomorrowDay];
             NSString *tempHourStr = [hourStr substringToIndex:hourStr.length-1];
             NSString *tempMinuteStr = [minuteStr substringToIndex:minuteStr.length-1];
+            
+            orderTime = [NSString stringWithFormat:@"%@ %02ld:%02ld",day,[tempHourStr integerValue],[tempMinuteStr integerValue]];
+            MyLog(@"orderTime %@",orderTime);
             timeType = 1;
             for (SetValueModel *model in self.myValuesArray) {
                 if (model.value_id==0) {
-                    model.value = [NSString stringWithFormat:@"%@%02ld%02ld",dayStr,[tempHourStr integerValue],[tempMinuteStr integerValue]];
+                    model.value = [NSString stringWithFormat:@"%@ %02ld:%02ld",dayStr,[tempHourStr integerValue],[tempMinuteStr integerValue]];
                     model.isSet = YES;
                 }
             }
@@ -128,7 +141,10 @@
                     model.isSet = YES;
                 }
             }
-            [weakSelf.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.demandTableView reloadData];
+            });
         }];
     }else if (indexPath.row==2){
         kSelfWeak;
@@ -156,15 +172,80 @@
 
 #pragma mark  确定发布
 -(void)confirmReleaseDemandAction{
-    MyLog(@"辅导类型：%@,预约时间：%@,年级：%@，科目：%@,作业辅导：教师等级：%@；教师价格：%.2f",@"作业辅导",timeType==0?@"实时":orderTime,gradeStr,courseStr,selLevelModel.level,selLevelModel.price);
-    
-} 
+    double myCredit = [[NSUserDefaultsInfos getValueforKey:kUserCredit] doubleValue];
+    if (myCredit<10.0) {
+        [self.view makeToast:@"可用额度不足，请充值后发布作业" duration:1.5 position:CSToastPositionCenter];
+    }else{
+        if (kIsEmptyString(courseStr)) {
+            [self.view makeToast:@"请先选择科目" duration:1.0 position:CSToastPositionCenter];
+            return;
+        }
+        if (kIsEmptyObject(selLevelModel)||kIsEmptyString(selLevelModel.name)) {
+            [self.view makeToast:@"请先选择老师等级" duration:1.0 position:CSToastPositionCenter];
+            return;
+        }
+        
+        kSelfWeak;
+        NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:self.photosArray];
+        NSString *body = [NSString stringWithFormat:@"pic=%@&dir=2",imageArrJsonStr];
+        [TCHttpRequest postMethodWithURL:kUploadPicAPI body:body success:^(id json) {
+            NSArray *imagesUrl = [json objectForKey:@"data"];
+            NSString * imgJsonStr = [TCHttpRequest getValueWithParams:imagesUrl];
+            
+            //年级
+            NSArray *grades = [ZYHelper sharedZYHelper].grades;
+            NSInteger gradeInt = [grades indexOfObject:gradeStr]+1;
+            //科目
+            NSArray *subjects = [ZYHelper sharedZYHelper].subjects;
+            NSInteger subjectInt = [subjects indexOfObject:courseStr]+1;
+            //时间
+            NSInteger timsp = [[[ZYHelper sharedZYHelper] timeSwitchTimestamp:orderTime format:@"yyyy-MM-dd HH:mm"] integerValue];
+            
+            NSString *body2 = nil;
+            if (timeType==0) {
+                body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=3&grade=%ld&subject=%ld&price=%.2f",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue]];
+            }else{
+                body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=2&grade=%ld&subject=%ld&price=%.2f&start_time=%ld",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue],timsp];
+            }
+            
+            [TCHttpRequest postMethodWithURL:kJobPublishAPI body:body2 success:^(id json) {
+                NSInteger status=[[json objectForKey:@"error"] integerValue];
+                NSString *message=[json objectForKey:@"msg"];
+                if (status==3) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
+                    });
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        if(weakSelf.popupController){
+                            [weakSelf.popupController dismiss];
+                        }
+                        weakSelf.backBlock([NSNumber numberWithBool:NO]);
+                    });
+                    
+                }else{
+                    [ZYHelper sharedZYHelper].isUpdateHome = YES;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf.view makeToast:@"作业辅导发布成功" duration:1.0 position:CSToastPositionCenter];
+                    });
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        if(weakSelf.popupController){
+                            [weakSelf.popupController dismiss];
+                        }
+                        weakSelf.backBlock([NSNumber numberWithBool:YES]);
+                    });
+                }
+            }];
+        }];
+    }
+}
 
 #pragma mark -- Private methods
 #pragma mark 加载数据
 -(void)loadLevelsData{
     timeType=0;
-    gradeStr = @"一年级";
+    NSString *grade = [NSUserDefaultsInfos getValueforKey:kUserGrade];
+    gradeStr = kIsEmptyString(grade)?@"一年级": grade;
+    
     NSArray *courses = [[ZYHelper sharedZYHelper] getCourseForGrade:gradeStr];
     coursesArr = [NSMutableArray arrayWithArray:courses];
     courseStr = nil;
@@ -181,20 +262,36 @@
         [tempArr addObject:model];
     }
     self.myValuesArray = tempArr;
-
     
-    NSArray *levels = @[@"普通教师",@"初级教师",@"中级教师",@"高级教师",@"特级教师",];
-    NSArray *photos = @[@"teacher_grade_junior",@"teacher_grade_intermediate",@"teacher_grade_senior",@"teacher_grade_junior",@"teacher_grade_intermediate"];
-    NSMutableArray *tempLevelArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<levels.count; i++) {
-        LevelModel *level = [[LevelModel alloc] init];
-        level.level = levels[i];
-        level.head_image = photos[i];
-        level.price = 1.0 + 0.2*i;
-        [tempLevelArr addObject:level];
-    }
-    teacherLevelsArr = tempLevelArr;
-    [self.demandTableView reloadData];
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@",kUserTokenValue];
+    [TCHttpRequest postMethodWithURL:kJobGuideAPI body:body success:^(id json) {
+        NSDictionary *data = [json objectForKey:@"data"];
+        
+        percent = [data[@"percent"] doubleValue];
+        NSArray *levelsArr = [data valueForKey:@"level"];
+        NSMutableArray *tempLevelArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in levelsArr) {
+            LevelModel *model = [[LevelModel alloc] init];
+            [model setValues:dict];
+            [tempLevelArr addObject:model];
+        }
+        teacherLevelsArr = tempLevelArr;
+        
+        NSMutableArray *tempJuniorLevelArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in levelsArr) {
+            LevelModel *model = [[LevelModel alloc] init];
+            [model setValues:dict];
+            double price = [model.price doubleValue]*percent;
+            model.price = [NSNumber numberWithDouble:price];
+            [tempJuniorLevelArr addObject:model];
+        }
+        teacherJuniorLevelsArr = tempJuniorLevelArr;
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.demandTableView reloadData];
+        });
+    }];
 }
 
 #pragma mark 初始化
@@ -278,7 +375,5 @@
     }
     return _myValuesArray;
 }
-
-
 
 @end

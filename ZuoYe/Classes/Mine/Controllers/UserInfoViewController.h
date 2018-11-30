@@ -7,7 +7,10 @@
 //
 
 #import "BaseViewController.h"
+#import "UserModel.h"
 
 @interface UserInfoViewController : BaseViewController
+
+@property (nonatomic ,strong) UserModel  *userModel;
 
 @end

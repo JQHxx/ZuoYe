@@ -13,6 +13,7 @@
 
 @interface GetCodeViewController ()<UITextFieldDelegate>
 
+@property (nonatomic, strong) UIButton           *backBtn;
 @property (nonatomic, strong) UILabel            *titleLabel;
 @property (nonatomic, strong) LoginTextView      *phoneTextView;              //手机号
 @property (nonatomic, strong) UIButton           *getCodeButton;              //获取验证码
@@ -25,6 +26,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.isHiddenNavBar= YES;
     
     [self initGetCodeView];
 }
@@ -46,8 +49,19 @@
         return;
     }
     
-    SetPasswordViewController *setpwdVC = [[SetPasswordViewController alloc] init];
-    [self.navigationController pushViewController:setpwdVC animated:YES];
+    NSString *phoneStr = self.phoneTextView.myText.text;
+    NSString *codeStr = self.securityCodeTextView.myText.text;
+    
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"mobile=%@&code=%@",phoneStr,codeStr];
+    [TCHttpRequest postMethodWithURL:kCheckCodeAPI body:body success:^(id json) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            SetPasswordViewController *setpwdVC = [[SetPasswordViewController alloc] init];
+            setpwdVC.phone = phoneStr;
+            setpwdVC.code = codeStr;
+            [weakSelf.navigationController pushViewController:setpwdVC animated:YES];
+        });
+    }];
 }
 
 #pragma mark 获取验证码
@@ -62,35 +76,40 @@
         return;
     }
     
-    __block int timeout=60; //倒计时时间
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    dispatch_source_t _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
-    dispatch_source_set_timer(_timer,dispatch_walltime(NULL, 0),1.0*NSEC_PER_SEC, 0); //每秒执行
-    dispatch_source_set_event_handler(_timer, ^{
-        if(timeout<=0){ //倒计时结束，关闭
-            dispatch_source_cancel(_timer);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                //设置界面的按钮显示 根据自己需求设置
-                [self.getCodeButton setTitle:@"获取验证码" forState:UIControlStateNormal];
-                [self.getCodeButton setTitleColor:[UIColor colorWithHexString:@"#FF7568"] forState:UIControlStateNormal];
-                self.getCodeButton.userInteractionEnabled = YES;
-            });
-        }else{
-            int seconds = timeout % 61;
-            NSString *strTime = [NSString stringWithFormat:@"%.2d", seconds];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                //设置界面的按钮显示 根据自己需求设置
-                [self.getCodeButton setTitle:[NSString stringWithFormat:@"%@s",strTime] forState:UIControlStateNormal];
-                self.getCodeButton.userInteractionEnabled = NO;
-            });
-            timeout--;
-        }
-    });
-    dispatch_resume(_timer);
-    
-    [self.view makeToast:@"验证码已发送" duration:1.0 position:CSToastPositionCenter];
-    
-    
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"mobile=%@&cate=findPwd",self.phoneTextView.myText.text];
+    [TCHttpRequest postMethodWithURL:kGetCodeSign body:body success:^(id json) {
+        __block int timeout=60; //倒计时时间
+        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        dispatch_source_t _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
+        dispatch_source_set_timer(_timer,dispatch_walltime(NULL, 0),1.0*NSEC_PER_SEC, 0); //每秒执行
+        dispatch_source_set_event_handler(_timer, ^{
+            if(timeout<=0){ //倒计时结束，关闭
+                dispatch_source_cancel(_timer);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //设置界面的按钮显示 根据自己需求设置
+                    [self.getCodeButton setTitle:@"获取验证码" forState:UIControlStateNormal];
+                    [self.getCodeButton setTitleColor:[UIColor colorWithHexString:@"#FF7568"] forState:UIControlStateNormal];
+                    self.getCodeButton.userInteractionEnabled = YES;
+                });
+            }else{
+                int seconds = timeout % 61;
+                NSString *strTime = [NSString stringWithFormat:@"%.2d", seconds];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //设置界面的按钮显示 根据自己需求设置
+                    [self.getCodeButton setTitle:[NSString stringWithFormat:@"%@s",strTime] forState:UIControlStateNormal];
+                    self.getCodeButton.userInteractionEnabled = NO;
+                });
+                timeout--;
+            }
+        });
+        dispatch_resume(_timer);
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [weakSelf.phoneTextView.myText resignFirstResponder];
+            [weakSelf.securityCodeTextView.myText becomeFirstResponder];
+            [weakSelf.view makeToast:[json objectForKey:@"msg"] duration:1.0 position:CSToastPositionCenter];
+        });
+    }];
 }
 
 #pragma mark 监听输入变化
@@ -135,7 +154,7 @@
 #pragma mark -- Pravite Methods
 #pragma mark 初始化界面
 -(void)initGetCodeView{
-    
+    [self.view addSubview:self.backBtn];
     [self.view addSubview:self.titleLabel];
     [self.view addSubview:self.phoneTextView];
     [self.view addSubview:self.securityCodeTextView];
@@ -149,6 +168,17 @@
 }
 
 #pragma mark -- Getters
+#pragma mark 返回
+-(UIButton *)backBtn{
+    if (!_backBtn) {
+        _backBtn=[[UIButton alloc] initWithFrame:CGRectMake(5,KStatusHeight + 2, 40, 40)];
+        [_backBtn setImage:[UIImage drawImageWithName:@"return"size:CGSizeMake(10, 17)] forState:UIControlStateNormal];
+        [_backBtn setImageEdgeInsets:UIEdgeInsetsMake(0,-10.0, 0, 0)];
+        [_backBtn addTarget:self action:@selector(leftNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _backBtn;
+}
+
 #pragma mark 标题
 -(UILabel *)titleLabel{
     if (!_titleLabel) {
@@ -199,7 +229,7 @@
 #pragma mark 注册
 -(LoginButton *)nextStepButton{
     if (!_nextStepButton) {
-        _nextStepButton = [[LoginButton alloc] initWithFrame:CGRectMake(48.0, self.securityCodeTextView.bottom+37.0,kScreenWidth-95.0, (kScreenWidth-95.0)*(128.0/588.0)) title:@"下一步"];
+        _nextStepButton = [[LoginButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0, self.securityCodeTextView.bottom+37.0,280,55) title:@"下一步"];
         [_nextStepButton addTarget:self action:@selector(getCodeForNextStepAction) forControlEvents:UIControlEventTouchUpInside];
     }
     return _nextStepButton;

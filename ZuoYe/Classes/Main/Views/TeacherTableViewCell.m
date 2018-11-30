@@ -33,6 +33,7 @@
         
         //头像
         _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(34, 17, 52, 52)];
+        _headImageView.boderRadius = 26;
         [self.contentView addSubview:_headImageView];
         
         //姓名
@@ -69,7 +70,6 @@
         [self.contentView addSubview:_priceLabel];
         
         _connectButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-76, 13.0, 44.0, 60.0)];
-        [_connectButton setImage:[UIImage imageNamed:@"connection_teacher"] forState:UIControlStateNormal];
         [_connectButton setTitle:@"连线老师" forState:UIControlStateNormal];
         [_connectButton setTitleColor:[UIColor colorWithHexString:@"#808080"] forState:UIControlStateNormal];
         _connectButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:10];
@@ -85,22 +85,36 @@
 
 #pragma mark 数据展示
 -(void)applyDataForCellWithTeacher:(TeacherModel *)model{
-    _headImageView.image = [UIImage imageNamed:model.head];
+    if (kIsEmptyString(model.trait)) {
+        _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [_headImageView sd_setImageWithURL:[NSURL URLWithString:model.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
     
-    _nameLabel.text = model.name;
-    CGFloat nameW = [model.name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
+    _nameLabel.text = model.tch_name;
+    CGFloat nameW = [model.tch_name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
     _nameLabel.frame = CGRectMake(self.headImageView.right+8.0, 16.0, nameW, 20);
     
-    _levelLabel.frame = CGRectMake(_nameLabel.right+6.0, 18.0, 54.0, 15.0);
-    _levelLabel.text = model.level;
+    if (kIsEmptyString(model.level)) {
+        _levelLabel.hidden = YES;
+    }else{
+        _levelLabel.hidden = NO;
+        _levelLabel.frame = CGRectMake(_nameLabel.right+6.0, 18.0, 54.0, 15.0);
+        _levelLabel.text =[NSString stringWithFormat:@"%@",model.level];
+    }
     
-    _scoreLabel.text = [NSString stringWithFormat:@"评分 %.1f",model.score];
-    _countLabel.text = [NSString stringWithFormat:@"辅导次数 %ld",model.count];
     
-    NSString *priceStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",model.price];
-    NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:priceStr];
-    [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:NSMakeRange(5, priceStr.length-5)];
-    _priceLabel.attributedText = attributeStr;
+    _scoreLabel.text = [NSString stringWithFormat:@"评分 %.1f",[model.score doubleValue]];
+    _countLabel.text = [NSString stringWithFormat:@"辅导次数 %@",model.guide_num];
+    
+    if (!kIsEmptyObject(model.guide_price)) {
+        NSString *priceStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",[model.guide_price doubleValue]];
+        NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:priceStr];
+        [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:NSMakeRange(5, priceStr.length-5)];
+        _priceLabel.attributedText = attributeStr;
+    }
+    
+    [_connectButton setImage:[UIImage imageNamed:[model.online boolValue]?@"connection_teacher":@"connection_teacher_gray"] forState:UIControlStateNormal];
 }
 
 

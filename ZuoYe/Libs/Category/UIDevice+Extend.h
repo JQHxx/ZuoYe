@@ -58,6 +58,8 @@
  */
 + (NSString*)getDeviceVersion;
 
++ (BOOL) isWifi;
+
 
 
 @end

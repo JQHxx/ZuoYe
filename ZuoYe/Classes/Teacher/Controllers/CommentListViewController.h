@@ -10,4 +10,6 @@
 
 @interface CommentListViewController : BaseViewController
 
+@property (nonatomic ,strong) NSNumber  *tch_id;
+
 @end

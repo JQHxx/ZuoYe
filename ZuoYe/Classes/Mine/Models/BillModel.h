@@ -10,11 +10,11 @@
 
 @interface BillModel : NSObject
 
-@property (nonatomic ,assign )  NSInteger  bill_type;      //0、充值 1、作业检查 2、作业辅导
-@property (nonatomic ,assign )  NSInteger  pay_type;       //0、余额支付 1、微信支付 2、支付宝支付
-@property (nonatomic , copy )   NSString   *create_time;   //支付时间
-@property (nonatomic ,assign )  double     amount;         //金额
-@property (nonatomic , copy )   NSString   *order_sn;      //交易单号
-@property (nonatomic , copy )   NSString   *state;         //当前状态
+@property (nonatomic ,strong )  NSNumber   *pay_cate;     //1支付宝支付 2微信支付 3余额支付
+@property (nonatomic ,strong )  NSNumber   *label;        // 1、作业检查 2、作业辅导 3、充值
+@property (nonatomic ,strong )  NSNumber   *pay_time;     //支付时间
+@property (nonatomic , copy )   NSString   *pay_money;   //金额
+@property (nonatomic , copy )   NSString   *pay_no;      //交易单号
+@property (nonatomic ,strong)   NSNumber   *pay_status;   //当前状态  1支付失败 2支付成功
 
 @end

@@ -21,9 +21,7 @@
     if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
         [self.navigationBar setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIColor whiteColor],NSForegroundColorAttributeName, nil]];
     }
-    
 }
-
 
 
 @end

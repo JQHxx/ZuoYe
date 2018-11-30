@@ -8,13 +8,17 @@
 
 #import "MineViewController.h"
 #import "UserInfoViewController.h"
+#import <UShareUI/UShareUI.h>
+#import "MJRefresh.h"
 
 #define kImageViewHeight 120
 
-@interface MineViewController ()<UITableViewDelegate,UITableViewDataSource,UIScrollViewDelegate>{
+@interface MineViewController ()<UITableViewDelegate,UITableViewDataSource,UIScrollViewDelegate,UITabBarControllerDelegate>{
     NSArray               *titleArray;
     NSArray               *imagesArray;
     NSArray               *classesArray;
+    
+    UserModel             *user;
 }
 
 @property (nonatomic, strong) UITableView    *mineTableView;
@@ -25,6 +29,7 @@
 @property (nonatomic, strong) UIImageView    *arrowImageView;   //箭头
 
 
+
 @end
 
 @implementation MineViewController
@@ -33,9 +38,13 @@
     [super viewDidLoad];
     self.isHiddenNavBar = YES;
     
-    titleArray = @[@[@"我的订单",@"我的钱包"],@[@"使用帮助",@"分享邀请",@"联系客服"],@[@"设置"]];
+    user = [[UserModel alloc] init];
+    
+    titleArray = @[@[@"我的订单",@"我的钱包"],@[@"使用帮助",@"分享好友",@"联系客服"],@[@"设置"]];
     imagesArray = @[@[@"my_tutorship",@"my_wallet"],@[@"using_help",@"invitation",@"custom_service"],@[@"setup"]];
-    classesArray = @[@[@"MyTutorial",@"MyWallet"],@[@"UseHelp",@"",@"ContactService"],@[@"Setup"]];
+    classesArray = @[@[@"MyTutorial",@"MyWallet"],@[@"UserHelp",@"",@"ContactService"],@[@"Setup"]];
+    
+    self.tabBarController.delegate = self;
     
     [self initMineView];
     [self loadUserInfoData];
@@ -43,6 +52,14 @@
 
 -(UIStatusBarStyle)preferredStatusBarStyle{
     return UIStatusBarStyleLightContent;
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    if ([ZYHelper sharedZYHelper].isUpdateUserInfo) {
+        [self loadUserInfoData];
+        [ZYHelper sharedZYHelper].isUpdateUserInfo = NO;
+    }
 }
 
 #pragma mark -- UITableViewDataSource
@@ -78,11 +95,41 @@
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
     
-    NSString *classStr = [NSString stringWithFormat:@"%@ViewController",classesArray[indexPath.section][indexPath.row]];
-    Class aClass = NSClassFromString(classStr);
-    BaseViewController *vc = (BaseViewController *)[[aClass alloc] init];
-    vc.hidesBottomBarWhenPushed = YES;
-    [self.navigationController pushViewController:vc animated:YES];
+    if (indexPath.section==1&&indexPath.row==1) { //分享好友
+        kSelfWeak;
+        [UMSocialUIManager setPreDefinePlatforms:@[@(UMSocialPlatformType_WechatSession),@(UMSocialPlatformType_WechatTimeLine),@(UMSocialPlatformType_QQ),@(UMSocialPlatformType_Qzone)]];
+        [UMSocialUIManager showShareMenuViewInWindowWithPlatformSelectionBlock:^(UMSocialPlatformType platformType, NSDictionary *userInfo) {
+            //创建分享消息对象
+            UMSocialMessageObject *messageObject = [UMSocialMessageObject messageObject];
+            //创建网页内容对象
+            UIImage *image = [UIImage imageNamed:@"logo180"];
+            UMShareWebpageObject *shareObject = [UMShareWebpageObject shareObjectWithTitle:@"下载作业101" descr:@"中小学作业1对1在线辅导" thumImage:image];
+            shareObject.webpageUrl = @"http://zuoye101.com/";
+            messageObject.shareObject = shareObject;
+            [[UMSocialManager defaultManager] shareToPlatform:platformType messageObject:messageObject currentViewController:self completion:^(id result, NSError *error) {
+                if (!error) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf.view makeToast:@"分享成功" duration:1.0 position:CSToastPositionCenter];
+                    });
+                } else {
+                    if (error.code == 2009) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [weakSelf.view makeToast:@"您已取消分享" duration:1.0 position:CSToastPositionCenter];
+                        });
+                    }
+                    MyLog(@"分享失败， error:%@",error.localizedDescription);
+                }
+            }];
+        }];
+        
+    }else{
+        NSString *classStr = [NSString stringWithFormat:@"%@ViewController",classesArray[indexPath.section][indexPath.row]];
+        Class aClass = NSClassFromString(classStr);
+        BaseViewController *vc = (BaseViewController *)[[aClass alloc] init];
+        vc.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+    
 }
 
 #pragma mark -- UIScrollView Delegate
@@ -96,12 +143,25 @@
     }
 }
 
+#pragma mark - UITabBarControllerDelegate
+-(BOOL)tabBarController:(UITabBarController *)tabBarController shouldSelectViewController:(UIViewController *)viewController{
+    if ([tabBarController.selectedViewController isEqual:[tabBarController.viewControllers firstObject]]) {
+        // 判断再次选中的是否为当前的控制器
+        if ([viewController isEqual:tabBarController.selectedViewController]) {
+            [self loadUserInfoData];
+            return NO;
+        }
+    }
+    return YES;
+}
+
 
 #pragma mark -- Event response
 #pragma mark 跳转到个人信息
 -(void)gotoUserInfoVC{
     UserInfoViewController *userInfoVC = [[UserInfoViewController alloc] init];
     userInfoVC.hidesBottomBarWhenPushed = YES;
+    userInfoVC.userModel = user;
     [self.navigationController pushViewController:userInfoVC animated:YES];
 }
 
@@ -111,7 +171,8 @@
     [self.view addSubview:self.zoomImageView];
     
     UIImageView *headBgImgView = [[UIImageView alloc] initWithFrame:CGRectMake(28, 46, 72.0, 72.0)];
-    headBgImgView.image = [UIImage imageNamed:@"connection_head_image_white"];
+    headBgImgView.backgroundColor = [UIColor whiteColor];
+    headBgImgView.boderRadius = 36.0;
     [self.zoomImageView addSubview:headBgImgView];
     
     [self.zoomImageView addSubview:self.headImageView];
@@ -124,10 +185,22 @@
 
 #pragma mark 加载数据
 -(void)loadUserInfoData{
-    UIImage *img = [UIImage imageNamed:@"head_image"];
-    self.headImageView.image = [img imageWithCornerRadius:30.0];
-    self.nickNameLabel.text = @"小明";
-    self.gradeLabel.text = @"一年级/数学";
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@",kUserTokenValue];
+    [TCHttpRequest postMethodWithURL:kGetUserInfoAPI body:body success:^(id json) {
+        NSDictionary *data = [json objectForKey:@"data"];
+        [user setValues:data];
+        
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            if (kIsEmptyString(user.trait)) {
+                weakSelf.headImageView.image = [UIImage imageNamed:@"head_image"];
+            }else{
+                [weakSelf.headImageView sd_setImageWithURL:[NSURL URLWithString:user.trait] placeholderImage:[UIImage imageNamed:@"head_image"]];
+            }
+            weakSelf.nickNameLabel.text = user.username;
+            weakSelf.gradeLabel.text = user.grade;
+        });
+    }];
 }
 
 
@@ -135,7 +208,7 @@
 #pragma mark 背景图片
 -(UIImageView *)zoomImageView{
     if (!_zoomImageView) {
-        _zoomImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenWidth*(296.0/750.0))];
+        _zoomImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, 138.0)];
         _zoomImageView.image = [UIImage imageNamed:@"my_background"];
         _zoomImageView.userInteractionEnabled = YES;
         
@@ -164,7 +237,8 @@
 #pragma mark 头像
 -(UIImageView *)headImageView{
     if (!_headImageView) {
-        _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(31, 49, 65.9, 65.9)];
+        _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(31, 49, 66, 66)];
+        _headImageView.boderRadius = 33;
     }
     return _headImageView;
 }
@@ -182,7 +256,7 @@
 #pragma mark 年级
 -(UILabel *)gradeLabel{
     if (!_gradeLabel) {
-        _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+10, self.nickNameLabel.bottom, 80, 20)];
+        _gradeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.headImageView.right+11, self.nickNameLabel.bottom, 80, 20)];
         _gradeLabel.textColor=[UIColor whiteColor];
         _gradeLabel.font=[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12];
     }

@@ -10,4 +10,6 @@
 
 @interface ComplaintViewController : BaseViewController
 
+@property (nonatomic ,copy ) NSString *oid;
+
 @end

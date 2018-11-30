@@ -14,6 +14,7 @@
 
 @interface SetPasswordViewController ()<UITextFieldDelegate>
 
+@property (nonatomic, strong) UIButton           *backBtn;
 @property (nonatomic, strong) UILabel            *titleLabel;
 @property (nonatomic, strong) LoginTextView      *passwordTextView;           //密码
 @property (nonatomic, strong) LoginTextView      *confirmPwdTextView;         //确认密码
@@ -27,12 +28,19 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.isHiddenNavBar= YES;
+    
     [self initRegisterSuccessView];
 }
 
 #pragma mark -- Event response
 #pragma mark 完成设置
 -(void)confirmSetPwdAction{
+    if (kIsEmptyString(self.passwordTextView.myText.text)||kIsEmptyString(self.confirmPwdTextView.myText.text)) {
+        [self.view makeToast:@"密码不能为空" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    
     if (self.passwordTextView.myText.text.length<6||self.confirmPwdTextView.myText.text.length<6) {
         [self.view makeToast:@"密码不能少于6位" duration:1.0 position:CSToastPositionCenter];
         return;
@@ -43,10 +51,18 @@
         return;
     }
     
-    
-    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    MyTabBarController *myTabBar = [[MyTabBarController alloc] init];
-    appDelegate.window.rootViewController = myTabBar;
+    NSString *passwordStr = [self.passwordTextView.myText.text MD5];
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"mobile=%@&code=%@&password=%@",self.phone,self.code,passwordStr];
+    [TCHttpRequest postMethodWithURL:kSetPwdAPI body:body success:^(id json) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.view makeToast:@"密码设置成功" duration:1.0 position:CSToastPositionCenter];
+        });
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [weakSelf.navigationController popToRootViewControllerAnimated:YES];
+        });
+    }];
 }
 
 #pragma mark 密码是否可见
@@ -89,6 +105,7 @@
 #pragma mark -- private methods
 #pragma mark 初始化界面
 -(void)initRegisterSuccessView{
+    [self.view addSubview:self.backBtn];
     [self.view addSubview:self.titleLabel];
     [self.view addSubview:self.passwordTextView];
     [self.view addSubview:self.confirmPwdTextView];
@@ -106,6 +123,17 @@
 }
 
 #pragma mark -- Getters and Setters
+#pragma mark 返回
+-(UIButton *)backBtn{
+    if (!_backBtn) {
+        _backBtn=[[UIButton alloc] initWithFrame:CGRectMake(5,KStatusHeight + 2, 40, 40)];
+        [_backBtn setImage:[UIImage drawImageWithName:@"return"size:CGSizeMake(10, 17)] forState:UIControlStateNormal];
+        [_backBtn setImageEdgeInsets:UIEdgeInsetsMake(0,-10.0, 0, 0)];
+        [_backBtn addTarget:self action:@selector(leftNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _backBtn;
+}
+
 #pragma mark 标题
 -(UILabel *)titleLabel{
     if (!_titleLabel) {
@@ -120,7 +148,7 @@
 #pragma mark 密码
 -(LoginTextView *)passwordTextView{
     if (!_passwordTextView) {
-        _passwordTextView = [[LoginTextView alloc] initWithFrame:CGRectMake(26.0, self.titleLabel.bottom+30, kScreenWidth - 51.0, 52.0) placeholder:@"请输入6-14位字母数字组合密码" icon:@"register_password" isNumber:NO];
+        _passwordTextView = [[LoginTextView alloc] initWithFrame:CGRectMake(26.0, self.titleLabel.bottom+30, kScreenWidth - 51.0, 52.0) placeholder:@"请输入密码" icon:@"register_password" isNumber:NO];
         _passwordTextView.myText.delegate = self;
         _passwordTextView.myText.secureTextEntry = YES;
     }
@@ -141,7 +169,7 @@
 #pragma mark 确定
 -(LoginButton *)completeButton{
     if (!_completeButton) {
-        _completeButton = [[LoginButton alloc] initWithFrame:CGRectMake(48.0, self.confirmPwdTextView.bottom+37.0, kScreenWidth-95.0, (kScreenWidth-95.0)*(128.0/588.0)) title:@"确定"];
+        _completeButton = [[LoginButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0, self.confirmPwdTextView.bottom+37.0, 280,55) title:@"确定"];
         [_completeButton addTarget:self action:@selector(confirmSetPwdAction) forControlEvents:UIControlEventTouchUpInside];
     }
     return _completeButton;

@@ -10,8 +10,9 @@
 #import "HorizontalFlowLayout.h"
 #import "PhotoCollectionViewCell.h"
 #import "ZYCustomPageControl.h"
+#import "SDPhotoBrowser.h"
 
-@interface PhotosView ()<UICollectionViewDelegate,UICollectionViewDataSource,UIScrollViewDelegate>
+@interface PhotosView ()<UICollectionViewDelegate,UICollectionViewDataSource,UIScrollViewDelegate,SDPhotoBrowserDelegate>
 
 @property (nonatomic, strong) UICollectionView    *photoCollectionView;
 @property (nonatomic, strong) ZYCustomPageControl *pageControl;
@@ -27,7 +28,6 @@
         self.backgroundColor = bgColor;
         
         HorizontalFlowLayout *layout = [[HorizontalFlowLayout alloc] init];
-        layout.sectionInset  = UIEdgeInsetsMake(0, 10, 0, 10);
         
         self.photoCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height-20) collectionViewLayout:layout];
         self.photoCollectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -62,7 +62,18 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     PhotoCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"PhotoCollectionViewCell" forIndexPath:indexPath];
-    [cell.coverImgView setImage:[UIImage imageNamed:[self.photosArray objectAtIndex:indexPath.item]]];
+    NSString *imgUrl =[self.photosArray objectAtIndex:indexPath.item];
+    if (kIsEmptyString(imgUrl)) {
+        cell.coverImgView.image = [UIImage imageNamed:@"task_details_loading"];
+    }else{
+        [cell.coverImgView sd_setImageWithURL:[NSURL URLWithString:imgUrl] placeholderImage:[UIImage imageNamed:@"task_details_loading"]];
+    }
+    cell.coverImgView.tag = indexPath.row;
+    cell.coverImgView.userInteractionEnabled = YES;
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(checkJobBigPictureAction:)];
+    [cell.coverImgView addGestureRecognizer:tap];
+    
     return cell;
 }
 
@@ -88,12 +99,36 @@
     self.pageControl.currentPage = index;
 }
 
+#pragma mark  SDPhotoBrowserDelegate
+#pragma mark 返回临时占位图片（即原来的小图）
+- (UIImage *)photoBrowser:(SDPhotoBrowser *)browser placeholderImageForIndex:(NSInteger)index{
+    PhotoCollectionViewCell *cell = (PhotoCollectionViewCell *)[self collectionView:self.photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:index inSection:0]];
+    return cell.coverImgView.image;
+}
+
+#pragma mark
+-(NSURL *)photoBrowser:(SDPhotoBrowser *)browser highQualityImageURLForIndex:(NSInteger)index{
+    NSString *imgUrl = self.photosArray[index];
+    return [NSURL URLWithString:imgUrl];
+}
+
+#pragma mark 查看大图
+-(void)checkJobBigPictureAction:(UITapGestureRecognizer *)gesture{
+    SDPhotoBrowser *photoBrowser = [SDPhotoBrowser new];
+    photoBrowser.delegate = self;
+    photoBrowser.currentImageIndex = gesture.view.tag;
+    photoBrowser.imageCount = self.photosArray.count;
+    photoBrowser.sourceImagesContainerView = self.photoCollectionView;
+    [photoBrowser show];
+}
+
 #pragma mark
 -(void)setPhotosArray:(NSMutableArray *)photosArray{
     _photosArray = photosArray;
     if (!_photosArray) {
         _photosArray = [[NSMutableArray alloc] init];
     }
+    self.pageControl.hidden =  photosArray.count<2;
     self.pageControl.numberOfPages =photosArray.count;
     [self.photoCollectionView reloadData];
     [self.photoCollectionView layoutIfNeeded];

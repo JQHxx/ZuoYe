@@ -56,36 +56,34 @@
 }
 
 -(void)setMyBill:(BillModel *)myBill{
-    
-    
     NSString *tempStr = nil;
-    if (myBill.bill_type==0) {
-        billImageView.image = [UIImage imageNamed:@"bill_recharge"];
-        typeLabel.text = @"充值";
-        amountLabel.textColor = [UIColor colorWithHexString:@"#FF6161"];
-        tempStr = @"+";
-    }else if (myBill.bill_type==1){
+    if ([myBill.label integerValue]==1) {
         billImageView.image = [UIImage imageNamed:@"bill_inspect"];
         typeLabel.text = @"作业检查";
         amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         tempStr = @"-";
-    }else{
+    }else if ([myBill.label integerValue]==2){
         billImageView.image = [UIImage imageNamed:@"bill_coach"];
         typeLabel.text = @"作业辅导";
         amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         tempStr = @"-";
+    }else{
+        billImageView.image = [UIImage imageNamed:@"bill_recharge"];
+        typeLabel.text = @"充值";
+        amountLabel.textColor = [UIColor colorWithHexString:@"#FF6161"];
+        tempStr = @"+";
     }
     
-    if (myBill.pay_type==0) {
-        paywayLabel.text = @"余额支付";
-    }else if (myBill.pay_type==1){
+    if ([myBill.pay_cate integerValue]==1) {
+        paywayLabel.text = @"支付宝支付";
+    }else if ([myBill.pay_cate integerValue]==2){
         paywayLabel.text = @"微信支付";
     }else{
-        paywayLabel.text = @"支付宝支付";
+        paywayLabel.text = @"余额支付";
     }
     
-    timeLabel.text = myBill.create_time;
-    amountLabel.text = [tempStr stringByAppendingString:[NSString stringWithFormat:@"¥%.2f",myBill.amount]];
+    timeLabel.text = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:myBill.pay_time format:@"MM月dd日 HH:mm"];
+    amountLabel.text = [tempStr stringByAppendingString:[NSString stringWithFormat:@"¥%.2f",[myBill.pay_money doubleValue]]];
 }
 
 - (void)awakeFromNib {

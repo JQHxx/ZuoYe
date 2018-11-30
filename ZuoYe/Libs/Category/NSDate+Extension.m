@@ -10,11 +10,45 @@
 
 @implementation NSDate (Extension)
 
+#pragma mark 当前年
++(NSInteger)currentYear{
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    return [calendar component:NSCalendarUnitYear fromDate:[NSDate date]];
+}
+
+#pragma mark 当前年月
++(NSString *)currentYearMonth{
+    NSDateFormatter *format = [[NSDateFormatter alloc]init];
+    [format setDateFormat:@"yyyy-MM"];
+    return [format stringFromDate:[NSDate date]];
+}
+
 +(NSString *)currentDate{
     NSDateFormatter *format = [[NSDateFormatter alloc]init];
     [format setDateFormat:@"yyyy年MM月dd日 HH:mm"];
     
     return [format stringFromDate:[NSDate date]];
+}
+
+#pragma mark 今天
++(NSString *)GetCurrentDay{
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd"];
+    NSString *date = [formatter stringFromDate:[NSDate date]];
+    return date;
+}
+
+#pragma mark 明天
++(NSString *)GetTomorrowDay{
+    NSDate *aDate = [NSDate date];
+    NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *components = [gregorian components:NSCalendarUnitWeekday | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:aDate];
+    [components setDay:([components day]+1)];
+    
+    NSDate *beginningOfWeek = [gregorian dateFromComponents:components];
+    NSDateFormatter *dateday = [[NSDateFormatter alloc] init];
+    [dateday setDateFormat:@"yyyy-MM-dd"];
+    return [dateday stringFromDate:beginningOfWeek];
 }
 
 +(NSString *)currentTime{

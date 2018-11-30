@@ -11,16 +11,17 @@
 #import "HomeworkTableViewCell.h"
 #import "SlideMenuView.h"
 #import "HomeworkModel.h"
+#import "MJRefresh.h"
 
 @interface HomeworkViewController ()<SlideMenuViewDelegate,UITableViewDelegate,UITableViewDataSource>{
-    NSInteger selectIndex;
+    NSInteger  selectIndex;
+    NSInteger  page;
 }
 
-@property (nonatomic, strong)SlideMenuView     *titleView;
-@property (nonatomic, strong)UITableView       *homeworkTableView;
-
-@property (nonatomic, strong) NSMutableArray   *checkHomeworksArray;
-@property (nonatomic, strong) NSMutableArray   *tutorialHomeworksArray;
+@property (nonatomic, strong) SlideMenuView     *titleView;
+@property (nonatomic, strong) UITableView       *homeworkTableView;
+@property (nonatomic ,strong) UIImageView       *blankView; //空白页
+@property (nonatomic, strong) NSMutableArray    *homeworksArray;
 
 @end
 
@@ -30,16 +31,28 @@
     [super viewDidLoad];
     
     selectIndex = 0;
+    page = 1;
     
     [self.view addSubview:self.titleView];
     [self.view addSubview:self.homeworkTableView];
+    [self.homeworkTableView addSubview:self.blankView];
+    self.blankView.hidden = YES;
     
     [self loadHomeworkData];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    if ([ZYHelper sharedZYHelper].isUpdateHomework) {
+        [self loadHomeworkData];
+        [ZYHelper sharedZYHelper].isUpdateHomework = NO;
+    }
+}
+
 #pragma mark -- UITableViewDataSource
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return selectIndex==0?self.checkHomeworksArray.count:self.tutorialHomeworksArray.count;
+    return self.homeworksArray.count;
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -54,12 +67,7 @@
     }
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     
-    HomeworkModel *model = nil;
-    if (selectIndex==0) {
-        model = self.checkHomeworksArray[indexPath.section];
-    }else{
-        model = self.tutorialHomeworksArray[indexPath.section];
-    }
+    HomeworkModel *model = self.homeworksArray[indexPath.section];
     [cell displayCellWithHomework:model];
     return cell;
 }
@@ -77,14 +85,11 @@
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    HomeworkModel *model = nil;
-    if (selectIndex==0) {
-        model = self.checkHomeworksArray[indexPath.section];
-    }else{
-        model = self.tutorialHomeworksArray[indexPath.section];
-    }
+    HomeworkModel *model = self.homeworksArray[indexPath.section];
     HomeworkDetailsViewController *detailsVC = [[HomeworkDetailsViewController alloc] init];
-    detailsVC.homework = model;
+    detailsVC.jobId = model.job_id;
+    detailsVC.label = model.label;
+    detailsVC.isReceived =  [model.is_receive integerValue]==2;
     [self.navigationController pushViewController:detailsVC animated:YES];
 }
 
@@ -96,37 +101,43 @@
 }
 
 #pragma mark -- Private Methods
+#pragma mark 加载最新数据
+-(void)loadNewHomeworkListData{
+    page=1;
+    [self loadHomeworkData];
+}
+
+#pragma mark 加载更多数据
+-(void)loadMoreHomeworkListData{
+    page++;
+    [self loadHomeworkData];
+}
+
 #pragma mark 获取数据
 -(void)loadHomeworkData{
-    
-    NSMutableArray *tempCheckArr = [[NSMutableArray alloc] init];
-    NSMutableArray *tempTutorialArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<15; i++) {
-        HomeworkModel *model = [[HomeworkModel alloc] init];
-        model.type = i%2;
-        model.grade = @"一年级";
-        model.subject = @"数学";
-        model.coverImage = @"zuoye";
-        model.state = i%3;
-        model.time_type = i%2;
-        model.check_price = 10.0 + i*0.5;
-        model.perPrice = 1.0 + i*0.5;
-        model.order_time = @"今天 12:30";
-        NSMutableArray *tempImages = [[NSMutableArray alloc] init];
-        for (NSInteger j=0; j<=i; j++) {
-            NSString *imgName = @"zuoye";
-            [tempImages addObject:imgName];
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&label=%ld&page=%ld",kUserTokenValue,selectIndex+1,page];
+    [TCHttpRequest postMethodWithURL:kJobMineAPI body:body success:^(id json) {
+        NSArray *data = [json objectForKey:@"data"];
+        NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in data) {
+            HomeworkModel *model = [[HomeworkModel alloc] init];
+            [model setValues:dict];
+            [tempArr addObject:model];
         }
-        model.images = tempImages;
-        if (model.type==0) {
-            [tempCheckArr addObject:model];
+        if (page==1) {
+            weakSelf.homeworksArray = tempArr;
         }else{
-            [tempTutorialArr addObject:model];
+            [weakSelf.homeworksArray addObjectsFromArray:tempArr];
         }
-    }
-    self.checkHomeworksArray = tempCheckArr;
-    self.tutorialHomeworksArray = tempTutorialArr;
-    [self.homeworkTableView reloadData];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakSelf.homeworkTableView.mj_footer.hidden = data.count<20;
+            weakSelf.blankView.hidden = weakSelf.homeworksArray.count>0;
+            [weakSelf.homeworkTableView reloadData];
+            [weakSelf.homeworkTableView.mj_header endRefreshing];
+            [weakSelf.homeworkTableView.mj_footer endRefreshing];
+        });
+    }];
 }
 
 #pragma mark -- Getters and Setters
@@ -146,30 +157,43 @@
 #pragma mark  辅导列表
 -(UITableView *)homeworkTableView{
     if (!_homeworkTableView) {
-        _homeworkTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.titleView.bottom, kScreenWidth, kScreenHeight-kNavHeight-self.titleView.bottom) style:UITableViewStyleGrouped];
+        _homeworkTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.titleView.bottom, kScreenWidth, kScreenHeight-kNavHeight-10) style:UITableViewStyleGrouped];
         _homeworkTableView.delegate = self;
         _homeworkTableView.dataSource = self;
         _homeworkTableView.showsVerticalScrollIndicator = NO;
         _homeworkTableView.estimatedSectionHeaderHeight=0;
         _homeworkTableView.estimatedSectionFooterHeight=0;
+        
+        //  下拉加载最新
+        MJRefreshNormalHeader *header=[MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(loadNewHomeworkListData)];
+        header.automaticallyChangeAlpha=YES;
+        header.lastUpdatedTimeLabel.hidden=YES;
+        _homeworkTableView.mj_header=header;
+        
+        MJRefreshAutoNormalFooter *footer = [MJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(loadMoreHomeworkListData)];
+        footer.automaticallyRefresh = NO;
+        _homeworkTableView.mj_footer = footer;
+        footer.hidden=YES;
     }
     return _homeworkTableView;
 }
 
-#pragma mark 作业检查
--(NSMutableArray *)checkHomeworksArray{
-    if (!_checkHomeworksArray) {
-        _checkHomeworksArray  = [[NSMutableArray alloc] init];
+#pragma mark 空白页
+-(UIImageView *)blankView{
+    if (!_blankView) {
+        _blankView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth-149)/2.0,70, 149, 127)];
+        _blankView.image = [UIImage imageNamed:@"default_news"];
     }
-    return _checkHomeworksArray;
+    return _blankView;
 }
 
-#pragma mark 作业辅导
--(NSMutableArray *)tutorialHomeworksArray{
-    if (!_tutorialHomeworksArray) {
-        _tutorialHomeworksArray  = [[NSMutableArray alloc] init];
+#pragma mark 作业
+-(NSMutableArray *)homeworksArray{
+    if (!_homeworksArray) {
+        _homeworksArray  = [[NSMutableArray alloc] init];
     }
-    return _tutorialHomeworksArray;
+    return _homeworksArray;
 }
+
 
 @end

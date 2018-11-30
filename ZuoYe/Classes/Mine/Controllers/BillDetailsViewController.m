@@ -52,12 +52,12 @@
     [topView addSubview:amountLabel];
     
     NSString *tempStr = nil;
-    if (self.myBill.bill_type==0) {
+    if ([self.myBill.label integerValue]==3) {
         imgView.image = [UIImage imageNamed:@"bill_recharge"];
         typeLabel.text = @"充值";
         amountLabel.textColor = [UIColor colorWithHexString:@"#FF6161"];
         tempStr = @"+";
-    }else if (self.myBill.bill_type==1){
+    }else if ([self.myBill.label integerValue]==1){
         imgView.image = [UIImage imageNamed:@"bill_inspect"];
         typeLabel.text = @"作业检查";
         amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
@@ -68,23 +68,25 @@
         amountLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         tempStr = @"-";
     }
-    amountLabel.text = [tempStr stringByAppendingString:[NSString stringWithFormat:@"¥%.2f",self.myBill.amount]];
+    amountLabel.text = [tempStr stringByAppendingString:[NSString stringWithFormat:@"¥%.2f",[self.myBill.pay_money doubleValue]]];
     
     UIView *line2 = [[UIView alloc] initWithFrame:CGRectMake(19.0,amountLabel.bottom+40.0, kScreenWidth-37.0, 0.5)];
     line2.backgroundColor = [UIColor colorWithHexString:@"#D8D8D8"];
     [topView addSubview:line2];
     
     NSString *payway =nil;
-    if (self.myBill.pay_type==0) {
+    if ([self.myBill.pay_cate integerValue]==0) {
         payway = @"余额支付";
-    }else if (self.myBill.pay_type==1){
+    }else if ([self.myBill.pay_cate integerValue]==1){
         payway = @"微信支付";
     }else{
         payway = @"支付宝支付";
     }
     
     NSArray *titles = @[@"当前状态",@"支付方式",@"创建时间",@"交易单号"];
-    NSArray *detailValues = @[self.myBill.state,payway,self.myBill.create_time,self.myBill.order_sn];
+    NSString *payTime = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:self.myBill.pay_time format:@"yyyy-MM-dd HH:mm:ss"];
+    NSString *stateStr = [self.myBill.pay_status integerValue]==1?@"交易失败":@"交易成功";
+    NSArray *detailValues = @[stateStr,payway,payTime,self.myBill.pay_no];
     for (NSInteger i=0; i<titles.count; i++) {
         UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(28, line2.bottom+13+i*(20+13), 60, 20)];
         titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];

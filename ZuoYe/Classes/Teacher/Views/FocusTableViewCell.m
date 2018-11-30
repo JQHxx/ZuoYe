@@ -8,7 +8,9 @@
 
 #import "FocusTableViewCell.h"
 
-@interface FocusTableViewCell ()
+@interface FocusTableViewCell (){
+    NSMutableArray  *scoreArray;
+}
 
 @property (strong, nonatomic) UIImageView *headImageView;   //头像
 @property (strong, nonatomic) UILabel *nameLabel;           //姓名
@@ -35,6 +37,7 @@
         
         //头像
         _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(19.0, 14.0, 52, 52)];
+        _headImageView.boderRadius = 26.0;
         [bgView addSubview:_headImageView];
         
         //姓名
@@ -42,6 +45,14 @@
         _nameLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         _nameLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
         [bgView addSubview:_nameLabel];
+        
+        //准备5个心桃 默认隐藏
+        scoreArray = [[NSMutableArray alloc]init];
+        for (int i = 0; i<=4; i++) {
+            UIImageView *scoreImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"score"]];
+            [scoreArray addObject:scoreImage];
+            [bgView addSubview:scoreImage];
+        }
         
         //教授阶段/科目
         _gradeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
@@ -63,17 +74,39 @@
 }
 
 -(void)displayCellWithModel:(TeacherModel *)model{
-    _headImageView.image = [UIImage imageNamed:model.head];
+    if (kIsEmptyString(model.trait)) {
+        _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [_headImageView sd_setImageWithURL:[NSURL URLWithString:model.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
     
-    _nameLabel.text = model.name;
-    CGFloat nameW = [model.name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
+    _nameLabel.text = model.tch_name;
+    CGFloat nameW = [model.tch_name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
     _nameLabel.frame = CGRectMake(self.headImageView.right+14.0, 22.0, nameW, 20);
     
-    _gradeLabel.text = [NSString stringWithFormat:@"%@/%@",model.tech_stage,model.subjects];
-    CGFloat gradeW = [_gradeLabel.text boundingRectWithSize:CGSizeMake(kScreenWidth, 17.0) withTextFont:_gradeLabel.font].width;
+    //加星级
+    CGSize scoreSize = CGSizeMake(13, 13);
+    double scoreNum = [model.score doubleValue];
+    NSInteger oneScroe=(NSInteger)scoreNum;
+    NSInteger num=scoreNum>oneScroe?oneScroe+1:oneScroe;
+    for (int i = 0; i<scoreArray.count; i++) {
+        UIImageView *scoreImage = scoreArray[i];
+        [scoreImage setFrame:CGRectMake(_nameLabel.right+10+(scoreSize.width+4.0)*i,25.0, scoreSize.width, scoreSize.height)];
+        if (i<= num-1) {
+            if ((i==num-1)&&scoreNum>oneScroe) {
+                scoreImage.image=[UIImage imageNamed:@"score_half"];
+            }
+        }else{
+            scoreImage.image=[UIImage imageNamed:@"score_gray"];
+        }
+    }
+    
+    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
+    _gradeLabel.text =  [NSString stringWithFormat:@"%@  %@",gradeStr,model.subject];
+    CGFloat gradeW = [_gradeLabel.text boundingRectWithSize:CGSizeMake(kScreenWidth-200, 17.0) withTextFont:_gradeLabel.font].width;
     _gradeLabel.frame = CGRectMake(self.headImageView.right+14.0, _nameLabel.bottom, gradeW, 17.0);
     
-    if (model.isOnline) {
+    if ([model.online integerValue]==1) {
         [_connectButton setImage:[UIImage imageNamed:@"connection_teacher"] forState:UIControlStateNormal];
     }else{
         [_connectButton setImage:[UIImage imageNamed:@"connection_teacher_gray"] forState:UIControlStateNormal];

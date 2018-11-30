@@ -23,13 +23,15 @@
     self = [super initWithFrame:frame];
     if (self) {
         self.coverImgView = [[UIImageView alloc] initWithFrame:self.contentView.bounds];
+        self.coverImgView.contentMode = UIViewContentModeScaleAspectFill;
+        self.coverImgView.clipsToBounds = YES;
         [self.contentView addSubview:self.coverImgView];
         
-        UIImageView *typeBgImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 6, 50, 16)];
+        UIImageView *typeBgImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 6, 52, 16)];
         typeBgImageView.image = [UIImage imageNamed:@"label"];
         [self.contentView addSubview:typeBgImageView];
         
-        self.typelabel= [[UILabel alloc] initWithFrame:CGRectMake(5, 7, 40, 13)];
+        self.typelabel= [[UILabel alloc] initWithFrame:CGRectMake(5, 7, 45, 13)];
         self.typelabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:9];
         self.typelabel.textColor = [UIColor whiteColor];
         [self.contentView addSubview:self.typelabel];
@@ -56,11 +58,22 @@
 
 #pragma mark
 -(void)configCellWithHomework:(HomeworkModel *)model{
-    self.coverImgView.image = [UIImage imageNamed:model.coverImage];
-    self.typelabel.text = model.type ==0 ?@"作业检查":@"作业辅导";
-    self.timeLabel.hidden = model.time_type;
-    self.timeLabel.text = model.order_time;
-    self.stateLabel.text = model.state == 0?@"待接单":@"已接单";
+    if (kIsArray(model.images)&& model.images.count>0) {
+        [self.coverImgView sd_setImageWithURL:[NSURL URLWithString:model.images[0]] placeholderImage:[UIImage imageNamed:@"home_task_loading"]];
+    }else{
+        self.coverImgView.image = [UIImage imageNamed:@"home_task_loading"];
+    }
+    
+    if ([model.label integerValue]==1) {
+        self.typelabel.text = [NSString stringWithFormat:@"检查【%@】",[model.subject substringToIndex:1]];
+        self.timeLabel.hidden = YES;
+        self.stateLabel.text = [model.is_receive integerValue]>1?@"已检查":@"待检查";
+    }else{
+        self.typelabel.text = [NSString stringWithFormat:@"辅导【%@】",[model.subject substringToIndex:1]];
+        self.timeLabel.hidden = ![model.yuyue boolValue];
+        self.timeLabel.text = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:model.start_time format:@"MM/dd HH:mm"];
+        self.stateLabel.text = [model.is_receive integerValue]>1?@"已接单":@"待接单";
+    }
 }
 
 @end

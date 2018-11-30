@@ -21,8 +21,8 @@
     
     UILabel    *introLabel;
     UILabel    *commentCountLabel;
-    
-    UIButton   *foucusBtn;
+    UIButton   *moreBtn;   //更多评论
+    UIButton   *focusBtn;
 }
 
 @property (nonatomic ,strong) UIScrollView          *rootScrollView;
@@ -32,6 +32,7 @@
 @property (nonatomic, strong) UIView                *commentHeaderView;  //评论头部视图
 @property (nonatomic ,strong) UITableView           *teacherDetailsView;
 @property (nonatomic ,strong) UIView                *bottomView;
+
 
 @end
 
@@ -81,82 +82,115 @@
 #pragma mark 更多评论
 -(void)getMoreCommentAction:(UIButton *)sender{
     CommentListViewController *commentVC = [[CommentListViewController alloc] init];
+    commentVC.tch_id = teacher.tch_id;
     [self.navigationController pushViewController:commentVC animated:YES];
 }
 
 #pragma mark 关注
 -(void)concernTeacherForClickAction:(UIButton *)sender{
     sender.selected = !sender.selected;
+    NSInteger attention =0;
     if (sender.selected) {
-        [foucusBtn setImage:nil forState:UIControlStateNormal];
+        attention = 1;
+        [focusBtn setImage:nil forState:UIControlStateNormal];
     }else{
-        [foucusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];
+        attention = 2;
+        [focusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];
     }
+    
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&tid=%@&attention=%ld",kUserTokenValue,self.tch_id,attention];
+    [TCHttpRequest postMethodWithURL:kTeacherAttentionAPI body:body success:^(id json) {
+        if (weakSelf.isFocusIn) {
+            [ZYHelper sharedZYHelper].isUpdateFocusTeacher = YES;
+        }
+        [weakSelf loadTeacherInfo];
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            if (attention==1) {
+                [weakSelf.view makeToast:@"已成功关注" duration:1.0 position:CSToastPositionCenter];
+                [focusBtn setImage:nil forState:UIControlStateNormal];
+            }else{
+                [weakSelf.view makeToast:@"已取消关注" duration:1.0 position:CSToastPositionCenter];
+                [focusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];
+            }
+        });
+    }];
 }
 
 #pragma mark -- Event Response
 #pragma mark 连线
 -(void)connectTeacherAction{
-    ConnectionSettingViewController *connectSetVC = [[ConnectionSettingViewController alloc] init];
-    connectSetVC.teacherModel = teacher;
-    [self.navigationController pushViewController:connectSetVC animated:YES];
+    BOOL isOnline = [teacher.online boolValue];
+    if (isOnline) {
+        ConnectionSettingViewController *connectSetVC = [[ConnectionSettingViewController alloc] init];
+        connectSetVC.teacherModel = teacher;
+        [self.navigationController pushViewController:connectSetVC animated:YES];
+    }else{
+        [self.view makeToast:@"老师当前不在线，请稍后再试" duration:1.0 position:CSToastPositionCenter];
+    }
 }
 
 #pragma mark -- Private Methods
 #pragma mark 加载老师数据
 -(void)loadTeacherInfo{
-    teacher.head = @"photo";
-    teacher.name = @"小美老师";
-    teacher.grade = @"一年级";
-    teacher.subjects = @"英语";
-    teacher.level = @"高级教师";
-    teacher.schoolAge = 6;
-    teacher.graduated_school = @"华中师范大学";
-    teacher.score = 4.5;
-    teacher.student_count = 2832;
-    teacher.fans_count = 28233;
-    teacher.price = 1.5;
-    teacher.tutoring_time =12223;
-    teacher.check_number =34424;
-    teacher.identity_authentication = YES;
-    teacher.teacher_qualification = YES;
-    teacher.education_certification = NO;
-    teacher.technical_skill = NO;
-    teacher.intro = @"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。";
-    teacher.comment_count = 1233;
-    
-    self.headerView.teacher = teacher;
-    
-    //个人简介
-    introLabel.text = teacher.intro;
-    CGFloat introHeight = [teacher.intro boundingRectWithSize:CGSizeMake(kScreenWidth-30, CGFLOAT_MAX) withTextFont:introLabel.font].height;
-    introLabel.frame = CGRectMake(16,36, kScreenWidth-26, introHeight);
-    self.introView.frame = CGRectMake(0,self.headerView.bottom+10, kScreenWidth, introHeight+50);
-    
-    //评论头部
-    commentCountLabel.text = [NSString stringWithFormat:@"评论（%ld）",teacher.comment_count];
-    self.commentHeaderView.frame = CGRectMake(0, self.introView.bottom+10, kScreenWidth, 40);
-    
-    NSArray *names = @[@"小美老师",@"张三老师",@"李四老师",@"王五老师",@"小明老师"];
-    NSArray *comments = @[@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。"];
-    CGFloat commentHeight= 0.0;
-    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<names.count; i++) {
-        CommentModel *model = [[CommentModel alloc] init];
-        model.head_image = @"photo";
-        model.name = names[i];
-        model.score = (double)(i+5)*0.5;
-        model.create_time = [NSString stringWithFormat:@"2018-08-%ld %02ld:%02ld",i+12,i*3,i*5+3];
-        model.comment = comments[i];
-        CGFloat commentH=[model.comment boundingRectWithSize:CGSizeMake(kScreenWidth-97.0, CGFLOAT_MAX) withTextFont:[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12]].height;
-        commentHeight += commentH+60;
-        [tempArr addObject:model];
-    }
-    commentArray = tempArr;
-    [self.teacherDetailsView reloadData];
-    self.teacherDetailsView.frame = CGRectMake(0, self.commentHeaderView.bottom, kScreenWidth, commentHeight);
-    self.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherDetailsView.top+self.teacherDetailsView.height);
-    
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&tid=%@",kUserTokenValue,self.tch_id];
+    [TCHttpRequest postMethodWithURL:kGetTeacherDetailsAPI body:body success:^(id json) {
+        NSDictionary *data = [json objectForKey:@"data"];
+        
+        //老师信息
+        NSDictionary *tchDict = [data valueForKey:@"teacher"];
+        [teacher setValues:tchDict];
+        
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            weakSelf.rootScrollView.hidden = NO;
+            weakSelf.headerView.teacher = teacher;
+            
+            if (!kIsEmptyString(teacher.intro)) {
+                weakSelf.introView.hidden = NO;
+                introLabel.text = teacher.intro;
+                CGFloat introHeight = [teacher.intro boundingRectWithSize:CGSizeMake(kScreenWidth-30, CGFLOAT_MAX) withTextFont:introLabel.font].height;
+                introLabel.frame = CGRectMake(16,36, kScreenWidth-26, introHeight);
+                weakSelf.introView.frame = CGRectMake(0,self.headerView.bottom+10, kScreenWidth, introHeight+50);
+            }else{
+                weakSelf.introView.hidden = YES;
+                weakSelf.introView.frame = CGRectMake(0,self.headerView.bottom, kScreenWidth, 0);
+            }
+            
+            //评论信息
+            weakSelf.commentHeaderView.hidden = NO;
+            NSDictionary *commentDict = [data valueForKey:@"comment"];
+            NSInteger commentCount = [[commentDict valueForKey:@"num"] integerValue];
+            commentCountLabel.text = [NSString stringWithFormat:@"评论（%ld）",commentCount];
+            weakSelf.commentHeaderView.frame = CGRectMake(0, self.introView.bottom+10, kScreenWidth, 40);
+            moreBtn.hidden = commentCount<3;
+            
+            NSArray *commentsArr = [commentDict valueForKey:@"data"];
+            CGFloat commentHeight= 0.0;
+            NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+            for (NSDictionary *dict in commentsArr) {
+                CommentModel *model = [[CommentModel alloc] init];
+                [model setValues:dict];
+                CGFloat commentH=[model.comment boundingRectWithSize:CGSizeMake(kScreenWidth-97.0, CGFLOAT_MAX) withTextFont:[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:12]].height;
+                commentHeight += commentH+60;
+                [tempArr addObject:model];
+            }
+            commentArray = tempArr;
+            
+            [weakSelf.teacherDetailsView reloadData];
+            weakSelf.teacherDetailsView.frame = CGRectMake(0, self.commentHeaderView.bottom, kScreenWidth, commentHeight);
+            weakSelf.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherDetailsView.top+self.teacherDetailsView.height);
+            
+            if ([teacher.attention integerValue]==1) {
+                focusBtn.selected = YES;
+                [focusBtn setImage:nil forState:UIControlStateNormal];
+            }else{
+                focusBtn.selected = NO;
+                [focusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];
+            }
+        });
+    }];
+   
 }
 
 #pragma mark 初始化
@@ -164,11 +198,14 @@
     [self.view addSubview:self.rootScrollView];
     [self.rootScrollView addSubview:self.headerView];
     [self.rootScrollView addSubview:self.introView];
-     [self.rootScrollView addSubview:self.commentHeaderView];
+    [self.rootScrollView addSubview:self.commentHeaderView];
+    self.introView.hidden = self.commentHeaderView.hidden = YES;
     [self.rootScrollView addSubview:self.teacherDetailsView];
    
     [self.view addSubview:self.backBtn];
     [self.view addSubview:self.bottomView];
+    
+    self.rootScrollView.hidden = YES;
     
 }
 
@@ -176,7 +213,7 @@
 #pragma mark 根滚动视图
 -(UIScrollView *)rootScrollView{
     if (!_rootScrollView) {
-        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0,-0, kScreenWidth, kScreenHeight-kBottomH)];
+        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0,0, kScreenWidth, kScreenHeight-kBottomH)];
         _rootScrollView.backgroundColor = [UIColor bgColor_Gray];
         _rootScrollView.showsVerticalScrollIndicator = NO;
         if (@available(iOS 11.0, *)) {
@@ -243,7 +280,7 @@
         line.backgroundColor  = [UIColor colorWithHexString:@"#D8D8D8"];
         [_commentHeaderView addSubview:line];
         
-        UIButton *moreBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-80, 5, 70, 30)];
+        moreBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-80, 5, 70, 30)];
         [moreBtn setTitle:@"更多" forState:UIControlStateNormal];
         [moreBtn setImage:[UIImage imageNamed:@"arrow2_personal_information"] forState:UIControlStateNormal];
         moreBtn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
@@ -278,16 +315,16 @@
         rootView.image = [UIImage imageNamed:@"white1"];
         [_bottomView addSubview:rootView];
         
-        foucusBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth/2.0-70)/2.0, 10, 70, 30)];
-        [foucusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];
-        [foucusBtn setTitle:@"关注" forState:UIControlStateNormal];
-        [foucusBtn setTitle:@"已关注" forState:UIControlStateSelected];
-        foucusBtn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
-        [foucusBtn setTitleColor:[UIColor colorWithHexString:@"#FF6161"] forState:UIControlStateNormal];
-        [foucusBtn setTitleColor:[UIColor colorWithHexString:@"#9B9B9B"] forState:UIControlStateSelected];
-        [foucusBtn addTarget:self action:@selector(concernTeacherForClickAction:) forControlEvents:UIControlEventTouchUpInside];
-        foucusBtn.titleEdgeInsets = UIEdgeInsetsMake(4, 10, 4, 0);
-        [_bottomView addSubview:foucusBtn];
+        focusBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth/2.0-70)/2.0, 10, 70, 30)];
+        [focusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];
+        [focusBtn setTitle:@"关注" forState:UIControlStateNormal];
+        [focusBtn setTitle:@"已关注" forState:UIControlStateSelected];
+        focusBtn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        [focusBtn setTitleColor:[UIColor colorWithHexString:@"#FF6161"] forState:UIControlStateNormal];
+        [focusBtn setTitleColor:[UIColor colorWithHexString:@"#9B9B9B"] forState:UIControlStateSelected];
+        [focusBtn addTarget:self action:@selector(concernTeacherForClickAction:) forControlEvents:UIControlEventTouchUpInside];
+        focusBtn.titleEdgeInsets = UIEdgeInsetsMake(4, 10, 4, 0);
+        [_bottomView addSubview:focusBtn];
         
         UIButton *connectBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth/2.0+(kScreenWidth/2.0-70)/2.0, 10, 70, 30)];
         [connectBtn setTitleColor:[UIColor colorWithHexString:@"#FF6161"] forState:UIControlStateNormal];

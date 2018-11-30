@@ -13,9 +13,12 @@
 
 @protocol MyTutorialTableViewCellDelegate<NSObject>
 
--(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell payOrderOrConnectTeacherWithTutorial:(TutorialModel *)model;
-
--(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell replayVideoWithTutorial:(TutorialModel *)model;
+//去付款
+-(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell payOrderActionWithTutorial:(TutorialModel *)model;
+//再次连线
+-(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell connectTeacherWithTutorial:(TutorialModel *)model;
+//取消订单
+-(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell cancelOrderWithTutorial:(TutorialModel *)model;
 
 @end
 
@@ -24,8 +27,8 @@
 
 @property (nonatomic, weak) id<MyTutorialTableViewCellDelegate>delegate;
 
-@property (nonatomic, strong) UIButton      *replayBtn;            //回放
 @property (nonatomic, strong) UIButton       *payButton;           //付款
+@property (nonatomic, strong) UIButton       *cancelButton;       //取消订单
 @property (nonatomic, strong) UIButton       *connectButton;       //连线
 @property (nonatomic, strong) TutorialModel  *tutorial;
 

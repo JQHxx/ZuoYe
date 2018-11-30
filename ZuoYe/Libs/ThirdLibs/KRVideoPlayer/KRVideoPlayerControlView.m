@@ -8,7 +8,7 @@
 
 #import "KRVideoPlayerControlView.h"
 
-static const CGFloat kVideoControlBarHeight = 40.0;
+static const CGFloat kVideoControlBarHeight = 50.0;
 static const CGFloat kVideoControlAnimationTimeInterval = 0.3;
 static const CGFloat kVideoControlTimeLabelFontSize = 10.0;
 static const CGFloat kVideoControlBarAutoFadeOutTimeInterval = 5.0;
@@ -42,9 +42,9 @@ static const CGFloat kVideoControlBarAutoFadeOutTimeInterval = 5.0;
         [self.bottomBar addSubview:self.playButton];
         [self.bottomBar addSubview:self.pauseButton];
         self.pauseButton.hidden = YES;
-        [self.bottomBar addSubview:self.fullScreenButton];
-        [self.bottomBar addSubview:self.shrinkScreenButton];
-        self.shrinkScreenButton.hidden = YES;
+//        [self.bottomBar addSubview:self.fullScreenButton];
+//        [self.bottomBar addSubview:self.shrinkScreenButton];
+//        self.shrinkScreenButton.hidden = YES;
         [self.bottomBar addSubview:self.progressSlider];
         [self.bottomBar addSubview:self.timeLabel];
         [self addSubview:self.indicatorView];

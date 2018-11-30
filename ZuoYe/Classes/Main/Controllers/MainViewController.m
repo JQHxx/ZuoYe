@@ -7,41 +7,48 @@
 //
 
 #import "MainViewController.h"
-#import "TakePicturesViewController.h"
 #import "TeacherDetailsViewController.h"
 #import "ConnectionSettingViewController.h"
 #import "MessagesViewController.h"
 #import "HomeworkViewController.h"
 #import "HomeworkDetailsViewController.h"
-#import "TeacherTableViewCell.h"
-#import "TeacherModel.h"
-#import "SlideMenuView.h"
-#import "MyHomeworkView.h"
-#import "HomeworkModel.h"
-
 #import "STPopupController.h"
 #import "CheckResultViewController.h"
-#import "MyConnecttingViewController.h"
-#import "TutorialViewController.h"
+#import "MessagesViewController.h"
+#import "UserHelpViewController.h"
+#import "BaseWebViewController.h"
+#import "TakePhotoViewController.h"
+#import "BaseNavigationController.h"
+#import <NIMSDK/NIMSDK.h>
+#import "SDCycleScrollView.h"
+#import "SlideMenuView.h"
+#import "MyHomeworkView.h"
+#import "TeacherTableViewCell.h"
+#import "TeacherModel.h"
+#import "HomeworkModel.h"
+#import "BannerModel.h"
 
 #define kCellHeight 85.0
 
-
-
-@interface MainViewController ()<UITableViewDelegate,UITableViewDataSource,SlideMenuViewDelegate,UIScrollViewDelegate,MyHomeworkViewDelegate>{
-    NSMutableArray   *teachersArray;
+@interface MainViewController ()<UITableViewDelegate,UITableViewDataSource,SlideMenuViewDelegate,UIScrollViewDelegate,MyHomeworkViewDelegate,SDCycleScrollViewDelegate,UITabBarControllerDelegate,NIMConversationManagerDelegate>{
+    NSMutableArray   *bannersArray;   //广告位
+    NSMutableArray   *teachersArray;  //老师信息
+    
     NSArray          *titles;
     NSInteger        selectIndex;
+    NSInteger        sessionUnreadCount;
 }
 
+@property (nonatomic , strong) UILabel         *badgeLabel;          //红点
 @property (nonatomic , strong) UIImageView     *bgImageView;         //头部背景
 @property (nonatomic , strong) UIView          *navBarView;          //导航栏
 @property (nonatomic , strong) UIScrollView    *rootScrollView;
+@property (nonatomic ,strong) SDCycleScrollView *bannerScrollView; //广告图
 @property (nonatomic , strong) MyHomeworkView  *myHomeworkView;    //我的作业
-@property (nonatomic , strong) UIView          *bannerView;            //广告位
 @property (nonatomic , strong) UITableView     *teacherTableView;      //老师列表
 @property (nonatomic , strong) SlideMenuView   *subjectsView;   //科目
 @property (nonatomic , strong) SlideMenuView   *subjectsCoverView;
+
 
 
 @end
@@ -53,15 +60,44 @@
     
     self.isHiddenNavBar = YES;
     
-    
+    bannersArray = [[NSMutableArray alloc] init];
     teachersArray = [[NSMutableArray alloc] init];
-//    titles = @[@"语文",@"数学",@"英语",@"物理",@"化学",@"生物",@"历史",@"地理",@"道德与法治"];
     titles = @[@"语文",@"数学",@"英语"];
     selectIndex = 0;
+    sessionUnreadCount = 0;
+    
+    self.tabBarController.delegate = self;
+    
+    [[NIMSDK sharedSDK].conversationManager addDelegate:self];
     
     [self initMainView];
     
-    [self loadTeacherData];
+    [self loadHomeAllData];
+    [self loadUnReadMessageData];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    if ([ZYHelper sharedZYHelper].isUpdateHome) {
+        [self refreshHomeData];
+        [ZYHelper sharedZYHelper].isUpdateHome = NO;
+    }
+    if ([ZYHelper sharedZYHelper].isUpdateMessageUnread) {
+        [self loadUnReadMessageData];
+        [ZYHelper sharedZYHelper].isUpdateMessageUnread = NO;
+    }
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshHomeData) name:kOrderCheckSuccessNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshHomeData) name:kHomeworkAcceptNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshHomeData) name:kGuideCancelNotification object:nil];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kOrderCheckSuccessNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kHomeworkAcceptNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kGuideCancelNotification object:nil];
 }
 
 #pragma mark 状态栏
@@ -97,7 +133,7 @@
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
     TeacherModel *model = teachersArray[indexPath.row];
     TeacherDetailsViewController *detailsVC = [[TeacherDetailsViewController alloc] init];
-    detailsVC.id = model.id;
+    detailsVC.tch_id = model.tch_id;
     detailsVC.hidesBottomBarWhenPushed = YES;
     [self.navigationController pushViewController:detailsVC animated:YES];
 }
@@ -121,11 +157,11 @@
 -(void)releaseZuoyeOrderAction:(UIButton *)sender{
     MyLog(@"辅导类型：%@",sender.tag==0?@"作业检查":@"作业辅导");
     
-    TakePicturesViewController *takePicturesVC = [[TakePicturesViewController alloc] init];
-    takePicturesVC.isConnectionSetting = NO;
-    takePicturesVC.hidesBottomBarWhenPushed = YES;
-    takePicturesVC.type = sender.tag==0 ?TutoringTypeReview:TutoringTypeHelp;
-    [self.navigationController pushViewController:takePicturesVC animated:YES];
+    TakePhotoViewController *takePhotosVC = [[TakePhotoViewController alloc] init];
+    takePhotosVC.isConnectionSetting = NO;
+    takePhotosVC.type = sender.tag==0 ?TutoringTypeReview:TutoringTypeHelp;
+    takePhotosVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:takePhotosVC animated:YES];
 }
 
 #pragma mark SlideMenuViewDelegate
@@ -136,6 +172,7 @@
     }else{
         self.subjectsView.currentIndex = index;
     }
+    [self loadTeachersData];
 }
 
 #pragma mark MyHomeworkViewDelegate
@@ -149,33 +186,81 @@
 #pragma mark 选中作业
 -(void)myHomeworkView:(MyHomeworkView *)homeworkView didSelectCellForHomework:(HomeworkModel *)model{
     HomeworkDetailsViewController *homeworkDetailsVC = [[HomeworkDetailsViewController alloc] init];
+    homeworkDetailsVC.jobId = model.job_id;
+    homeworkDetailsVC.label = model.label;
+    homeworkDetailsVC.isReceived = [model.is_receive integerValue]==2;
     homeworkDetailsVC.hidesBottomBarWhenPushed = YES;
-    homeworkDetailsVC.homework = model;
     [self.navigationController pushViewController:homeworkDetailsVC animated:YES];
+}
+
+#pragma mark SDCycleScrollViewDelegate
+- (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView didSelectItemAtIndex:(NSInteger)index{
+    BannerModel *banner = bannersArray[index];
+    NSInteger bannerCate = [banner.cate integerValue];
+    if (bannerCate==1) {
+        BaseWebViewController *webVC = [[BaseWebViewController alloc] init];
+        webVC.urlStr = banner.url;
+        webVC.webTitle = banner.name;
+        webVC.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:webVC animated:YES];
+    }else if(bannerCate==2){
+        NSString *url=banner.url;
+        UIApplication *application = [UIApplication sharedApplication];
+        NSURL *URL = [NSURL URLWithString:url];
+        if (@available(iOS 10.0, *)) {
+            [application openURL:URL options:@{} completionHandler:^(BOOL success) {
+                MyLog(@"iOS10 Open %@: %d",url,success);
+            }];
+        } else {
+            // Fallback on earlier versions
+            BOOL success = [application openURL:URL];
+            MyLog(@"Open %@: %d",url,success);
+        }
+    }
+}
+
+#pragma mark NIMConversationManagerDelegate
+#pragma mark 增加最近会话的回调
+-(void)didAddRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
+    MyLog(@"didAddRecentSession-- totalUnreadCount:%ld",totalUnreadCount);
+    sessionUnreadCount = totalUnreadCount;
+    [self loadUnReadMessageData];
+}
+
+#pragma mark 最近会话修改的回调
+-(void)didUpdateRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
+    MyLog(@"更新会话 didUpdateRecentSession -- totalUnreadCount:%ld",totalUnreadCount);
+    sessionUnreadCount = totalUnreadCount;
+    [self loadUnReadMessageData];
+}
+
+#pragma mark 已读回调
+-(void)allMessagesRead{
+    
+}
+
+#pragma mark - UITabBarControllerDelegate
+-(BOOL)tabBarController:(UITabBarController *)tabBarController shouldSelectViewController:(UIViewController *)viewController{
+    if ([tabBarController.selectedViewController isEqual:[tabBarController.viewControllers firstObject]]) {
+        // 判断再次选中的是否为当前的控制器
+        if ([viewController isEqual:tabBarController.selectedViewController]) {
+            // 执行操作
+            selectIndex = 0;
+            self.subjectsView.currentIndex = selectIndex;
+            self.subjectsCoverView.currentIndex = selectIndex;
+            [self loadHomeAllData];
+            return NO;
+        }
+    }
+    return YES;
 }
 
 #pragma mark -- Event Response
 #pragma mark 帮助
 -(void)leftNavigationItemAction{
-    /*
-    CheckResultViewController *resultVC = [[CheckResultViewController alloc] init];
-    
-    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:resultVC];
-    popupVC.style = STPopupStyleFormSheet;
-    popupVC.navigationBarHidden = YES;
-    [popupVC presentInViewController:self];
-     
-    
-    
-    MyConnecttingViewController *myConnecttingVC  = [[MyConnecttingViewController alloc] init];
-    myConnecttingVC.hidesBottomBarWhenPushed = YES;
-    [self.navigationController pushViewController:myConnecttingVC animated:YES];
-     
-     */
-    
-    TutorialViewController *tutorialVC = [[TutorialViewController alloc] init];
-    tutorialVC.hidesBottomBarWhenPushed = YES;
-    [self.navigationController pushViewController:tutorialVC animated:YES];
+    UserHelpViewController *userHelpVC = [[UserHelpViewController alloc] init];
+    userHelpVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:userHelpVC animated:YES];
 }
 
 #pragma mark 消息
@@ -188,13 +273,15 @@
 #pragma mark 连线老师
 -(void)connectTeacherAction:(UIButton *)sender{
     TeacherModel *model = teachersArray[sender.tag];
-    
-    ConnectionSettingViewController  *connectionSettingVC = [[ConnectionSettingViewController alloc] init];
-    connectionSettingVC.hidesBottomBarWhenPushed = YES;
-    connectionSettingVC.teacherModel = model;
-    [self.navigationController pushViewController:connectionSettingVC animated:YES];
+    if ([model.online boolValue]) {
+        ConnectionSettingViewController  *connectionSettingVC = [[ConnectionSettingViewController alloc] init];
+        connectionSettingVC.hidesBottomBarWhenPushed = YES;
+        connectionSettingVC.teacherModel = model;
+        [self.navigationController pushViewController:connectionSettingVC animated:YES];
+    }else{
+        [self.view makeToast:@"老师当前不在线，请稍后再试" duration:1.0 position:CSToastPositionCenter];
+    }
 }
-
 
 #pragma mark 滑动切换菜单
 -(void)swipTeacherTableView:(UISwipeGestureRecognizer *)gesture{
@@ -220,70 +307,149 @@
     }
     self.subjectsView.currentIndex = selectIndex;
     self.subjectsCoverView.currentIndex = selectIndex;
+     [self loadTeachersData];
+}
+
+#pragma mark notification
+#pragma mark 刷新首页
+-(void)refreshHomeData{
+    selectIndex = 0;
+    self.subjectsView.currentIndex = selectIndex;
+    self.subjectsCoverView.currentIndex = selectIndex;
     
+    [self loadHomeAllData];
 }
 
 #pragma mark -- Private Methods
 #pragma mark LoadData
--(void)loadTeacherData{
-    self.myHomeworkView.homeworkCount = 100;
-    
-    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<10; i++) {
-        HomeworkModel *model = [[HomeworkModel alloc] init];
-        model.type = i%2;
-        model.coverImage = @"zuoye";
-        model.state = i%3;
-        model.time_type = i%2;
-        model.order_time = @"今天 12:30";
-        model.grade = @"一年级";
-        model.subject = @"数学";
-        if (model.state>0) {
-            TeacherModel *teacher = [[TeacherModel alloc] init];
-            teacher.head = @"photo";
-            teacher.name = @"小明老师";
-            teacher.score = 4.0;
-            teacher.grade = @"一年级";
-            teacher.tech_stage = @"小学";
-            teacher.subjects = @"数学";
-            model.teacher = teacher;
+-(void)loadHomeAllData{
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@",kUserTokenValue];
+    [TCHttpRequest postMethodWithURL:kHomeAPI body:body success:^(id json) {
+        NSDictionary *data = [json objectForKey:@"data"];
+        //广告图
+        NSArray *bannerList = [data objectForKey:@"banner"];
+         NSMutableArray *tempBannerImgArr  = [[NSMutableArray alloc] init];
+        if (kIsArray(bannerList)&&bannerList.count>0) {
+            NSMutableArray *tempBannerArr = [[NSMutableArray alloc] init];
+            for (NSDictionary *bannerDict in bannerList) {
+                BannerModel *banner = [[BannerModel alloc] init];
+                [banner setValues:bannerDict];
+                [tempBannerArr addObject:banner];
+                [tempBannerImgArr addObject:banner.pic];
+            }
+            bannersArray = tempBannerArr;
+            
+         }
+        
+        //我的作业
+        NSArray *homeworksArr = [data objectForKey:@"job"];
+        NSMutableArray *homeworktTempArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in homeworksArr) {
+            HomeworkModel *homework = [[HomeworkModel alloc] init];
+            [homework setValues:dict];
+            [homeworktTempArr addObject:homework];
         }
-        [tempArr addObject:model];
-    }
-    self.myHomeworkView.homeworksArray  = tempArr;
-    
-    
-    
-    NSArray *names =@[@"小美老师",@"张三老师",@"李四老师",@"王五老师",@"小芳老师",@"王五老师",@"小芳老师",@"王五老师",@"小芳老师"];
-    NSArray *levels = @[@"特级教师",@"高级教师",@"中级教师",@"初级教师",@"普通教师",@"初级教师",@"普通教师",@"初级教师",@"普通教师"];
-    for (NSInteger i=0; i<names.count; i++) {
-        TeacherModel *model = [[TeacherModel alloc] init];
-        model.head = @"photo";
-        model.name = names[i];
-        model.level = levels[i];
-        model.score = 5.0 - i*0.2;
-        model.count = 1500 + i*50;
-        model.price = 2.0 - 0.2*i;
-        model.grade = @"一年级";
-        model.subjects = @"数学";
-        [teachersArray addObject:model];
-    }
-    [self.teacherTableView reloadData];
-    self.teacherTableView.frame=CGRectMake(0, self.subjectsView.bottom, kScreenWidth, teachersArray.count*kCellHeight);
-    self.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherTableView.top+self.teacherTableView.height);
+
+        //老师
+        NSArray *teachers = [data objectForKey:@"teacher"];
+        NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in teachers) {
+            TeacherModel *model = [[TeacherModel alloc] init];
+            [model setValues:dict];
+            [tempArr addObject:model];
+        }
+        teachersArray = tempArr;
+        
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            weakSelf.bannerScrollView.imageURLStringsGroup = tempBannerImgArr;
+            if (bannersArray.count>0) {
+                weakSelf.bannerScrollView.frame = CGRectMake(13, 0, kScreenWidth-26.0, (kScreenWidth-26.0)*(80.0/349.0));
+            }else{
+                weakSelf.bannerScrollView.frame = CGRectZero;
+            }
+            
+            weakSelf.myHomeworkView.homeworkCount = [[data valueForKey:@"count"] integerValue];
+            weakSelf.myHomeworkView.homeworksArray  = homeworktTempArr;
+            CGFloat tempH = 0.0;
+            if (homeworktTempArr.count>0) {
+                weakSelf.myHomeworkView.hidden = NO;
+                weakSelf.myHomeworkView.frame = CGRectMake(13, self.bannerScrollView.bottom+10, kScreenWidth-26, 150);
+                tempH = self.bannerScrollView.bottom+20+150;
+            }else{
+                weakSelf.myHomeworkView.hidden = YES;
+                weakSelf.myHomeworkView.frame = CGRectMake(13, self.bannerScrollView.bottom, kScreenWidth-26, 0);
+                tempH =  self.bannerScrollView.bottom+10;
+            }
+            weakSelf.subjectsView.frame = CGRectMake(0, tempH, kScreenWidth, 45.0);
+            weakSelf.subjectsCoverView.frame = CGRectMake(0, self.navBarView.bottom+196, kScreenWidth, 45.0);
+            [weakSelf.teacherTableView reloadData];
+            weakSelf.teacherTableView.frame=CGRectMake(0, self.subjectsView.bottom, kScreenWidth, teachersArray.count*kCellHeight);
+            weakSelf.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherTableView.top+self.teacherTableView.height);
+        });
+    }];
+}
+
+#pragma mark 获取老师信息
+-(void)loadTeachersData{
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&subject=%ld",kUserTokenValue,selectIndex+1];
+    [TCHttpRequest postMethodWithURL:kHomeTeachersAPI body:body success:^(id json) {
+        NSArray *teachersData = [json objectForKey:@"data"];
+        NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in teachersData) {
+            TeacherModel *model = [[TeacherModel alloc] init];
+            [model setValues:dict];
+            [tempArr addObject:model];
+        }
+        teachersArray = tempArr;
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [weakSelf.teacherTableView reloadData];
+            weakSelf.teacherTableView.frame=CGRectMake(0, self.subjectsView.bottom, kScreenWidth, teachersArray.count*kCellHeight);
+            weakSelf.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherTableView.top+self.teacherTableView.height);
+        });
+    }];
+}
+
+#pragma mark 获取未读消息信息
+-(void)loadUnReadMessageData{
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@",kUserTokenValue];
+    [TCHttpRequest postMethodWithoutLoadingForURL:kMessageUnreadAPI body:body success:^(id json) {
+        NSDictionary *data = [json objectForKey:@"data"];
+        NSInteger count = [[data valueForKey:@"count"] integerValue];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakSelf.badgeLabel.hidden = count+sessionUnreadCount<1;
+        });
+    }];
+}
+
+#pragma mark 获取我的钱包信息
+-(void)loadMyWalletData{
+    NSString *body = [NSString stringWithFormat:@"token=%@",kUserTokenValue];
+    [TCHttpRequest postMethodWithoutLoadingForURL:kWalletMineAPI body:body success:^(id json) {
+        NSDictionary *data = [json objectForKey:@"data"];
+        NSNumber *credit = [data valueForKey:@"credit"];
+        MyLog(@"mycredit:%.2f",[credit doubleValue]);
+        if (!kIsEmptyObject(credit)) {
+            [NSUserDefaultsInfos putKey:kUserCredit andValue:credit];
+        }
+    }];
 }
 
 #pragma mark 初始化界面
 -(void)initMainView{
     [self.view addSubview:self.bgImageView];
     [self.view addSubview:self.navBarView];
+    [self.view addSubview:self.badgeLabel];
+    self.badgeLabel.hidden = YES;
     
     //作业检查和作业辅导
-    NSArray *btnImages = @[@"home_coach",@"home_inspect"];
+    NSArray *btnImages = @[@"home_inspect",@"home_coach"];
     NSArray *titles = @[@"作业检查",@"作业辅导"];
-    CGFloat kCapWidth = kScreenWidth-2*102-2*56;
+    CGFloat kCapWidth = (kScreenWidth-2*102-60)/2.0;
     for (NSInteger i=0; i<btnImages.count; i++) {
-        UIButton *btn = [[UIButton alloc] initWithFrame:CGRectMake(56+(102+kCapWidth)*i,self.navBarView.bottom+24, 102, 133)];
+        UIButton *btn = [[UIButton alloc] initWithFrame:CGRectMake(kCapWidth+(102+60)*i,self.navBarView.bottom+24, 102, 133)];
         [btn setImage:[UIImage imageNamed:btnImages[i]] forState:UIControlStateNormal];
         [btn setTitle:titles[i] forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
@@ -297,7 +463,7 @@
     }
     
     [self.view addSubview:self.rootScrollView];
-    [self.rootScrollView addSubview:self.bannerView];
+    [self.rootScrollView addSubview:self.bannerScrollView];
     [self.rootScrollView addSubview:self.myHomeworkView];
     [self.rootScrollView addSubview:self.subjectsView];
     [self.rootScrollView addSubview:self.teacherTableView];
@@ -313,6 +479,16 @@
         _bgImageView.image = [UIImage imageNamed:@"background1"];
     }
     return _bgImageView;
+}
+
+#pragma mark 红色标记
+-(UILabel *)badgeLabel{
+    if (!_badgeLabel) {
+        _badgeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-22, KStatusHeight+7, 8, 8)];
+        _badgeLabel.boderRadius = 4.0;
+        _badgeLabel.backgroundColor = [UIColor colorWithHexString:@"#F50000"];
+    }
+    return _badgeLabel;
 }
 
 #pragma mark 导航栏
@@ -352,20 +528,22 @@
 }
 
 #pragma mark 广告位
--(UIView *)bannerView{
-    if (!_bannerView) {
-        _bannerView = [[UIView alloc] initWithFrame:CGRectMake(13,0, kScreenWidth-26.0, (kScreenWidth-26.0)*(80.0/349.0))];
-        UIImageView *imgView = [[UIImageView alloc] initWithFrame:_bannerView.bounds];
-        imgView.image = [UIImage imageNamed:@"banner"];
-        [_bannerView addSubview:imgView];
+-(SDCycleScrollView *)bannerScrollView{
+    if (!_bannerScrollView) {
+        _bannerScrollView = [SDCycleScrollView cycleScrollViewWithFrame:CGRectMake(13, 0, kScreenWidth-26.0, (kScreenWidth-26.0)*(80.0/349.0)) delegate:self placeholderImage:[UIImage imageNamed:@"banner_default"]];
+        _bannerScrollView.pageControlStyle = SDCycleScrollViewPageContolStyleClassic;
+        _bannerScrollView.autoScrollTimeInterval = 4;
+        _bannerScrollView.currentPageDotColor = kSystemColor;
+        _bannerScrollView.boderRadius = 6.0;
+        _bannerScrollView.pageDotColor = [UIColor lightGrayColor];
     }
-    return _bannerView;
+    return _bannerScrollView;
 }
 
 #pragma mark 我的作业
 -(MyHomeworkView *)myHomeworkView{
     if (!_myHomeworkView) {
-        _myHomeworkView = [[MyHomeworkView alloc] initWithFrame:CGRectMake(13, self.bannerView.bottom+10, kScreenWidth-26, 150)];
+        _myHomeworkView = [[MyHomeworkView alloc] initWithFrame:CGRectMake(13, self.bannerScrollView.bottom+10, kScreenWidth-26, 150)];
         _myHomeworkView.viewDelegete = self;
     }
     return _myHomeworkView;
@@ -409,6 +587,7 @@
         _teacherTableView.dataSource = self;
         _teacherTableView.showsVerticalScrollIndicator = NO;
         _teacherTableView.scrollEnabled = NO;
+        _teacherTableView.backgroundColor = [UIColor bgColor_Gray];
         
         UISwipeGestureRecognizer *swipGestureLeft = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipTeacherTableView:)];
         swipGestureLeft.direction = UISwipeGestureRecognizerDirectionLeft;
@@ -419,6 +598,10 @@
         [_teacherTableView addGestureRecognizer:swipGestureRight];
     }
     return _teacherTableView;
+}
+
+-(void)dealloc{
+    [[NIMSDK sharedSDK].conversationManager removeDelegate:self];
 }
 
 @end

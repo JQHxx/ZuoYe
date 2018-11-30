@@ -7,10 +7,11 @@
 //
 
 #import "BaseViewController.h"
-#import "HomeworkModel.h"
 
 @interface HomeworkDetailsViewController : BaseViewController
 
-@property (nonatomic ,strong) HomeworkModel *homework;
+@property (nonatomic ,strong) NSNumber *jobId;
+@property (nonatomic ,strong) NSNumber *label;
+@property (nonatomic ,assign) BOOL     isReceived; //是否接单
 
 @end

@@ -10,5 +10,7 @@
 
 @interface CommentViewController : BaseViewController
 
+@property (nonatomic, copy ) NSString *orderId;
+@property (nonatomic, copy ) NSNumber *tid;
 
 @end

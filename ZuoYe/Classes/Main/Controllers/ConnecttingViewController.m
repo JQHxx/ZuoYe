@@ -7,7 +7,6 @@
 //
 
 #import "ConnecttingViewController.h"
-#import "TutorialViewController.h"
 
 @interface ConnecttingViewController ()
 
@@ -17,7 +16,7 @@
 @property (nonatomic ,strong) UIImageView   *headImageView;     //头像
 @property (nonatomic ,strong) UILabel       *nameLabel;         //姓名
 @property (nonatomic ,strong) UILabel       *gradeLabel;        //年级
-
+@property (nonatomic ,strong) UILabel       *priceLabel;        //辅导价格
 @property (nonatomic ,strong) UIImageView   *animationImageView;  //呼叫动画
 @property (nonatomic ,strong) UIButton      *cancelBtn;   //取消连线
 
@@ -31,8 +30,8 @@
     [super viewDidLoad];
     self.isHiddenNavBar = YES;
     
-    
     [self initConnecttingView];
+    [self.animationImageView startAnimating];
     
 }
 
@@ -44,8 +43,24 @@
 #pragma mark -- Event Response
 #pragma mark 取消连线
 -(void)cancelConnecttingAction{
-    TutorialViewController *tutoringVC = [[TutorialViewController alloc] init];
-    [self.navigationController pushViewController:tutoringVC animated:YES];
+     kSelfWeak;
+    if (self.isOrderIn||self.isHomeworkIn) {
+         [self.view makeToast:@"你取消了与对方的语音通话请求" duration:1.0 position:CSToastPositionCenter];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [weakSelf hangUp];
+        });
+    }else{
+       
+        NSString *body = [NSString stringWithFormat:@"token=%@&third_id=%@&sure=%d&jobid=%@",kUserTokenValue,self.teacher.third_id,2,self.teacher.job_id];
+        [TCHttpRequest postMethodWithURL:kConnectTeacherAPI body:body success:^(id json) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.animationImageView stopAnimating];
+                weakSelf.animationImageView.image = [UIImage imageNamed:@"effect1"];
+                [weakSelf.view makeToast:@"你取消了与对方的语音通话请求" duration:1.0 position:CSToastPositionCenter];
+            });
+            [weakSelf hangUp];
+        }];
+    }
 }
 
 #pragma mark -- Private Methods
@@ -62,6 +77,7 @@
     
     [self.view addSubview:self.nameLabel];
     [self.view addSubview:self.gradeLabel];
+    [self.view addSubview:self.priceLabel];
     [self.view addSubview:self.animationImageView];
     [self.view addSubview:self.cancelBtn];
 }
@@ -80,11 +96,6 @@
 -(UIView *)navBarView{
     if (!_navBarView) {
         _navBarView=[[UIView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, kNavHeight)];
-        
-        UIButton *leftBtn=[[UIButton alloc] initWithFrame:CGRectMake(5,KStatusHeight + 2, 40, 40)];
-        [leftBtn setImage:[UIImage imageNamed:@"return_white"] forState:UIControlStateNormal];
-        [leftBtn addTarget:self action:@selector(leftNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
-        [_navBarView addSubview:leftBtn];
         
         UILabel  *titleLabel =[[UILabel alloc] initWithFrame:CGRectMake((kScreenWidth-180)/2, KStatusHeight, 180, 44)];
         titleLabel.textColor=[UIColor whiteColor];
@@ -110,7 +121,12 @@
 -(UIImageView *)headImageView{
     if (!_headImageView) {
         _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth - 110)/2.0,105, 110, 110)];
-        _headImageView.image = [UIImage imageNamed:self.model.head];
+        _headImageView.boderRadius = 55.0;
+        if (kIsEmptyString(self.teacher.trait)) {
+            _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+        }else{
+            [_headImageView sd_setImageWithURL:[NSURL URLWithString:self.teacher.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+        }
     }
     return _headImageView;
 }
@@ -121,7 +137,7 @@
         _nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(40, self.headImageView.bottom+21, kScreenWidth-80, 25)];
         _nameLabel.textAlignment = NSTextAlignmentCenter;
         _nameLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:18];
-        _nameLabel.text = self.model.name;
+        _nameLabel.text = self.teacher.tch_name;
         _nameLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
     }
     return _nameLabel;
@@ -134,16 +150,37 @@
         _gradeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
         _gradeLabel.textColor = [UIColor colorWithHexString:@"#808080"];
         _gradeLabel.textAlignment = NSTextAlignmentCenter;
-        _gradeLabel.text = [NSString stringWithFormat:@"%@/%@",self.model.grade,self.model.subjects];
+        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:self.teacher.grade];
+        _gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,self.teacher.subject];
     }
     return _gradeLabel;
+}
+
+#pragma mark 辅导价格
+-(UILabel *)priceLabel{
+    if (!_priceLabel) {
+        _priceLabel = [[UILabel alloc] initWithFrame:CGRectMake(40, self.gradeLabel.bottom+4, kScreenWidth-80, 20)];
+        _priceLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
+        _priceLabel.textColor = [UIColor colorWithHexString:@"#FF6161"];
+        _priceLabel.textAlignment = NSTextAlignmentCenter;
+        _priceLabel.text = [NSString stringWithFormat:@"作业辅导 %.2f元/分钟",[self.teacher.guide_price doubleValue]];
+    }
+    return _priceLabel;
 }
 
 #pragma mark 呼叫动画
 -(UIImageView *)animationImageView{
     if (!_animationImageView) {
-        _animationImageView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth-80.0)/2, self.gradeLabel.bottom+107, 80,80)];
-        _animationImageView.image = [UIImage imageNamed:@"connection"];
+        CGRect viewRect = kScreenWidth<375.0?CGRectMake((kScreenWidth-120.0)/2, self.priceLabel.bottom+20, 120,120):CGRectMake((kScreenWidth-180.0)/2, self.gradeLabel.bottom+40, 180,180);
+        _animationImageView = [[UIImageView alloc] initWithFrame:viewRect];
+        NSMutableArray *imgesArr = [[NSMutableArray alloc] init];
+        for (NSInteger i=0; i<3; i++) {
+            UIImage *image = [UIImage imageNamed:[NSString stringWithFormat:@"effect%ld",i+1]];
+            [imgesArr addObject:image];
+        }
+        _animationImageView.animationImages = imgesArr;
+        _animationImageView.animationDuration =2.0;
+        _animationImageView.animationRepeatCount = 0;
     }
     return _animationImageView;
 }
@@ -151,7 +188,7 @@
 #pragma mark 取消连线
 -(UIButton *)cancelBtn{
     if (!_cancelBtn) {
-        _cancelBtn = [[UIButton alloc] initWithFrame:CGRectMake(47.0,kScreenHeight-(kScreenWidth-95.0)*(128.0/588.0)-22.0,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
+        _cancelBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0,kScreenHeight-80,280,60)];
         [_cancelBtn setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_cancelBtn setTitle:@"取消连线" forState:UIControlStateNormal];
         [_cancelBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];

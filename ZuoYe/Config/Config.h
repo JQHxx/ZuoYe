@@ -17,6 +17,8 @@
 #define kIOSVersion    ([UIDevice currentDevice].systemVersion.floatValue)
 // appDelegate
 #define kAppDelegate   (AppDelegate *)[[UIApplication  sharedApplication] delegate]
+// keyWindow
+#define kKeyWindow     [UIApplication sharedApplication].keyWindow
 //iPhone x判断
 #define isIPhoneX ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? [[UIScreen mainScreen] currentMode].size.height==2436 : NO)
 //block weakself
@@ -26,7 +28,7 @@
 #define kScreenHeight     [UIScreen mainScreen].bounds.size.height
 #define kScreenWidth      [UIScreen mainScreen].bounds.size.width
 #define kTabHeight        (isIPhoneX ? (49+ 34) : 49)
-#define kNavHeight        (isIPhoneX ? 88 : 64)+6.0
+#define kNavHeight        (isIPhoneX ? 88 : 64)
 #define KStatusHeight     (isIPhoneX ? 44 : 20)
 
 
@@ -36,6 +38,12 @@
 #define kbgView               [UIColor colorWithHexString:@"#f0f0f0"]
 #define kBackgroundColor      kRGBColor(238,241,241)  // 灰色主题背景色
 #define kLineColor            kRGBColor(200, 199, 204)
+
+#define UIColorFromRGBA(rgbValue, alphaValue) [UIColor \
+colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 \
+green:((float)((rgbValue & 0x00FF00) >> 8))/255.0 \
+blue:((float)(rgbValue & 0x0000FF))/255.0 \
+alpha:alphaValue]
 
 //字体
 #define kFontWithSize(size)      [UIFont systemFontOfSize:size]
@@ -59,15 +67,64 @@
 #define MyLog(...)
 #endif
 
+///APP版本号
+#define APP_VERSION     [[NSBundle mainBundle].infoDictionary      objectForKey:@"CFBundleShortVersionString"]
+#define APP_DISPLAY_NAME [[NSBundle mainBundle].infoDictionary objectForKey:@"CFBundleDisplayName"]
+
+#define IOS10_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10.0)
+#define IOS9_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 9.0)
+#define IOS8_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0)
+
+//辅导类型
+typedef enum : NSUInteger {
+    TutoringTypeReview = 1,   //作业检查
+    TutoringTypeHelp = 2,     //作业辅导
+} TutoringType;
+
 
 /*****************第三方平台APPKEY***************/
 
 
+
+//网易云
+#define kNIMSDKAppKey       @"a49dbf59c7655156ae304e4c47a6230a"
+
+//友盟
+#define kUMAppKey           @"5bd2a4f4f1f55655fe00030a"
+#define kWechatAppKey       @"wxcbe14242fcc6be21"     //微信APPID
+#define kWechatAppSecret    @"3251f1716f3f4a3eec70ff8dae7f09e4"  //微信secret
+#define kQQAppKey           @"1107930118"
+#define kSinaAppKey         @"3319626682"
+#define kSinaAppSecret      @"1c3ee53bd6d24d372f40b81d7257ed30"
+
 /********************通知中心**********************/
+#define kPayBackNotification    @"kPayBackNotification"      //充值成功回调通知
+
+#define kAppScheme  @"Zuoye101"
+
+#define kDeviceIDFV               @"kDeviceIDFV"
+#define kIsLogin                  @"kIsLogin"
+#define kUserID                   @"kUserID"
+#define kLogID                    @"kLogID"
+#define kUserToken                @"kUserToken"
+#define kLoginPhone               @"kLoginPhone"
+#define kUserGrade                @"kUserGrade"
+#define kUserThirdID              @"kUserThirdID"
+#define kUserThirdToken           @"kUserThirdToken"
+#define kUserNickname             @"kUserNickname"
+#define kUserHeadPic              @"kUserHeadPic"
+#define kUserCredit               @"kUserCredit"
 
 
+#define kUserIDValue      [NSUserDefaultsInfos getValueforKey:kUserID]
+#define kUserTokenValue   [NSUserDefaultsInfos getValueforKey:kUserToken]
 
+#define kUMAlaisType      @"student"
 
+#define kOrderCheckSuccessNotification  @"kOrderCheckSuccessNotification"
+#define kHomeworkAcceptNotification     @"kHomeworkAcceptNotification"
+#define kGuideCancelNotification        @"kGuideCancelNotification"
+#define kOrderCancelNotification        @"kOrderCancelNotification"
 
 
 #import "Singleton.h"
@@ -79,8 +136,8 @@
 #import "UIFont+FontName.h"
 #import "ZYHelper.h"
 #import "Interface.h"
-#import "HYBNetworking.h"
-
-
-
+#import "NSUserDefaultsInfos.h"
+#import "NSObject+Extend.h"
+#import "UIImageView+WebCache.h"
+#import "TCHttpRequest.h"
 

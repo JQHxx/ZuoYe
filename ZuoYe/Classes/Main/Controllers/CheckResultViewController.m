@@ -10,14 +10,17 @@
 #import "UIViewController+STPopup.h"
 #import "STPopupController.h"
 #import "TutorialPayViewController.h"
+#import "PaySuccessViewController.h"
 #import "PhotosView.h"
-#import "HomeworkModel.h"
+#import "TutorialModel.h"
 
 @interface CheckResultViewController (){
     UIImageView  *headImageView;
     UILabel      *nameLabel;
     UILabel      *gradeLabel;
     UILabel      *priceLabel;
+    
+    TutorialModel  *myTutorial;
 }
 
 @property (nonatomic, strong) UILabel       *titleLabel;            //标题
@@ -44,13 +47,28 @@
     [super viewDidLoad];
     self.isHiddenNavBar = YES;
     
+    myTutorial = [[TutorialModel alloc] init];
+    
     [self initCheckResultView];
     [self loadCheckResultData];
 }
 
 #pragma mark 去付款
 -(void)payCheckOrderAction:(UIButton *)sender{
-    TutorialPayViewController *payVC = [[TutorialPayViewController alloc] init];
+    TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:YES];
+    payVC.orderId = self.oid;
+    payVC.payAmount = [myTutorial.pay_money doubleValue];
+    payVC.label = 1;
+    kSelfWeak;
+    payVC.backBlock = ^(id object) {
+        if (weakSelf.popupController) {
+            [weakSelf.popupController dismissWithCompletion:^{
+                PaySuccessViewController *paySuccessVC = [[PaySuccessViewController alloc] init];
+                paySuccessVC.pay_amount = [object doubleValue];
+                [weakSelf.navigationController pushViewController:paySuccessVC animated:YES];
+            }];
+        }
+    };
     STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
     popupVC.style = STPopupStyleBottomSheet;
     popupVC.navigationBarHidden = YES;
@@ -69,28 +87,26 @@
 
 #pragma mark 加载数据
 -(void)loadCheckResultData{
-    HomeworkModel *model = [[HomeworkModel alloc] init];
-    model.type = 0;
-    model.images = [NSMutableArray arrayWithArray: @[@"homework",@"homework",@"homework",@"homework"]];
-    model.check_price = 12.0;
-    TeacherModel *teacher = [[TeacherModel alloc] init];
-    teacher.head = @"photo";
-    teacher.name = @"小明老师";
-    teacher.score = 4.0;
-    teacher.grade = @"一年级";
-    teacher.tech_stage = @"小学";
-    teacher.subjects = @"数学";
-    model.teacher = teacher;
-    
-    self.photosView.photosArray = model.images;
-    headImageView.image = [UIImage imageNamed:model.teacher.head];
-    nameLabel.text = model.teacher.name;
-    gradeLabel.text = [NSString stringWithFormat:@"%@/%@",model.teacher.grade,model.teacher.subjects];
-    priceLabel.text = [NSString stringWithFormat:@"¥%.2f",model.check_price];
-    NSString *priceStr = [NSString stringWithFormat:@"应付款：%.2f元",model.check_price];
-    NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:priceStr];
-    [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#FF6161"] range:NSMakeRange(4, priceStr.length-4)];
-    self.payAmountLab.attributedText = attributeStr;
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&oid=%@",kUserTokenValue,self.oid];
+    [TCHttpRequest postMethodWithURL:kOrderDetailsAPI body:body success:^(id json) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSDictionary *dict = [json objectForKey:@"data"];
+            [myTutorial setValues:dict];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                weakSelf.photosView.photosArray = [NSMutableArray arrayWithArray:myTutorial.pics];
+                [headImageView sd_setImageWithURL:[NSURL URLWithString:myTutorial.trait] placeholderImage:[UIImage imageNamed:@"head_image"]];
+                nameLabel.text = myTutorial.name;
+                gradeLabel.text = [NSString stringWithFormat:@"%@/%@",myTutorial.grade,myTutorial.subject];
+                priceLabel.text = [NSString stringWithFormat:@"¥%.2f",[myTutorial.price doubleValue]];
+                NSString *priceStr = [NSString stringWithFormat:@"应付款：%.2f元",[myTutorial.pay_money doubleValue]];
+                NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:priceStr];
+                [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#FF6161"] range:NSMakeRange(4, priceStr.length-4)];
+                weakSelf.payAmountLab.attributedText = attributeStr;
+            });
+        });
+    }];
 }
 
 #pragma mark -- Getters
@@ -126,6 +142,7 @@
         
         //头像
         headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 3, 52, 52)];
+        headImageView.boderRadius = 26.0;
         [_teacherView addSubview:headImageView];
         
         nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+13.0, 11.0, 80, 20)];

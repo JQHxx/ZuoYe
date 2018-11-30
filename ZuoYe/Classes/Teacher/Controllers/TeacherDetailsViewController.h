@@ -10,6 +10,8 @@
 
 @interface TeacherDetailsViewController : BaseViewController
 
-@property (nonatomic, assign) NSInteger id;
+@property (nonatomic, assign) BOOL    isFocusIn;
+
+@property (nonatomic, strong) NSNumber *tch_id;
 
 @end

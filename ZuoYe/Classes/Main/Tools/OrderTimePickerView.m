@@ -231,7 +231,7 @@
     NSInteger currentHour = [[NSDate getHourFromDate:currentDate] integerValue];
     NSInteger currentMinute = [[NSDate getMinuteFromDate:currentDate] integerValue];
     
-    if (currentMinute >= 50) currentHour++;
+    if (currentMinute >=35) currentHour++;
     NSArray *allHourArray = [ZYHelper sharedZYHelper].hoursArray;
     return [allHourArray subarrayWithRange:NSMakeRange(currentHour, allHourArray.count - currentHour)];
 }
@@ -241,8 +241,10 @@
     NSDate *currentDate = [NSDate date];
     NSInteger currentMinute = [[NSDate getMinuteFromDate:currentDate] integerValue];
     
-    NSInteger startIndex = currentMinute/ 10 +1;
-    if (currentMinute >= 50) startIndex = 0;
+    NSInteger startIndex =(NSInteger)(currentMinute/ 10.0 +2.5);
+    if (currentMinute >= 35) startIndex = 0;
+    if (currentMinute >= 45) startIndex = 1;
+    if (currentMinute >= 55) startIndex = 2;
     NSArray *allMinuteArray = [ZYHelper sharedZYHelper].minutesArray;
     return [allMinuteArray subarrayWithRange:NSMakeRange(startIndex, allMinuteArray.count - startIndex)];
 }

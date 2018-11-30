@@ -10,11 +10,10 @@
 
 @interface CommentModel : NSObject
 
-@property (nonatomic , copy ) NSString  *head_image;
-@property (nonatomic , copy ) NSString  *name;
-@property (nonatomic ,assign) double    score;
-@property (nonatomic , copy ) NSString  *create_time;
-@property (nonatomic, strong) NSArray   *labels;
+@property (nonatomic , copy ) NSString  *trait;
+@property (nonatomic , copy ) NSString  *username;
+@property (nonatomic ,strong) NSNumber  *score;
+@property (nonatomic ,strong) NSNumber  *create_time;
 @property (nonatomic,  copy ) NSString  *comment;
 
 

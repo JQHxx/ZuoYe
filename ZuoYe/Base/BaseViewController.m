@@ -7,6 +7,7 @@
 //
 
 #import "BaseViewController.h"
+#import "SVProgressHUD.h"
 
 @interface BaseViewController ()<UIImagePickerControllerDelegate,UINavigationControllerDelegate>{
     UIView        *navView;
@@ -40,6 +41,8 @@
 
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
+    
+    [SVProgressHUD dismiss];
 }
 
 #pragma mark 状态栏样式
@@ -194,10 +197,5 @@
     _baseTitle=baseTitle;
     titleLabel.text=baseTitle;
 }
-
--(void)dealloc {
-    MyLog(@"dealloc--%@",NSStringFromClass([self class]));
-}
-
 
 @end

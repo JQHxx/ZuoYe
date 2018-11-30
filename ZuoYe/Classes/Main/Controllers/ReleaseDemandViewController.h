@@ -10,5 +10,7 @@
 
 @interface ReleaseDemandViewController : BaseViewController
 
+@property (nonatomic ,strong) NSMutableArray *photosArray;
+
 
 @end

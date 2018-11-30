@@ -16,7 +16,6 @@
 
 @interface TransactionTypeViewController (){
     NSArray   *typesArray;
-    NSString  *typeStr;
 }
 
 @property (nonatomic, strong) UILabel      *titleLabel;              //标题
@@ -42,14 +41,13 @@
     self.isHiddenNavBar = YES;
     
     typesArray = @[@"全部",@"作业检查",@"作业辅导",@"充值"];
-    typeStr = @"全部";
     
     self.view.topBoderRadius = 8.0;
     
     [self.view addSubview:self.titleLabel];
     [self.view addSubview:self.closeButton];
     
-    UIView *line2 = [[UIView alloc] initWithFrame:CGRectMake(0.0, 45.0, kScreenWidth, 2.0)];
+    UIView *line2 = [[UIView alloc] initWithFrame:CGRectMake(0.0, 45.0, kScreenWidth, 0.5)];
     line2.backgroundColor = [UIColor colorWithHexString:@"#D8D8D8"];
     [self.view addSubview:line2];
     
@@ -67,10 +65,10 @@
 
 #pragma mark 确定选择交易类型
 -(void)confirmSelectedTransactionTypeAction:(UIButton *)sender{
-    MyLog(@"type：%@",typeStr);
+    MyLog(@"type：%ld",self.transationType);
     if (self.popupController) {
         [self.popupController dismissWithCompletion:^{
-            self.backBlock(typeStr);
+            self.backBlock([NSNumber numberWithInteger:self.transationType]);
         }];
     }
 }
@@ -105,6 +103,7 @@
 -(LabelsView *)typeLabelsView{
     if (!_typeLabelsView) {
         _typeLabelsView = [[LabelsView alloc] initWithFrame:CGRectZero];
+        _typeLabelsView.selectedIndex = self.transationType==4?0:self.transationType;
         _typeLabelsView.labelsArray = [NSMutableArray arrayWithArray:typesArray];
         
         kSelfWeak;
@@ -113,7 +112,7 @@
             weakLabelsView.frame = CGRectMake(10, weakSelf.titleLabel.bottom+33.0, kScreenWidth-20, height);
         };
         _typeLabelsView.didClickItem = ^(NSInteger itemIndex) {
-            typeStr = typesArray[itemIndex];
+            weakSelf.transationType = itemIndex==0?4:itemIndex;
         };
     }
     return _typeLabelsView;

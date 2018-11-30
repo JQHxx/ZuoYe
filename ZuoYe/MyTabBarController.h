@@ -10,4 +10,6 @@
 
 @interface MyTabBarController : UITabBarController
 
+-(void)handerUserNotificationWithUserInfo:(NSDictionary *)userInfo;
+
 @end

@@ -7,7 +7,12 @@
 //
 
 #import "BaseViewController.h"
+#import "TeacherModel.h"
+#import "NetCallChatInfo.h"
 
 @interface TutorialViewController : BaseViewController
+
+@property (nonatomic, strong) TeacherModel  *teacher;
+@property (nonatomic, strong)  NetCallChatInfo *callInfo;
 
 @end

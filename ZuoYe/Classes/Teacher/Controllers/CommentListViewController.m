@@ -9,8 +9,11 @@
 #import "CommentListViewController.h"
 #import "CommentTableViewCell.h"
 #import "CommentModel.h"
+#import "MJRefresh.h"
 
-@interface CommentListViewController ()<UITableViewDataSource,UITableViewDelegate>
+@interface CommentListViewController ()<UITableViewDataSource,UITableViewDelegate>{
+    NSInteger page;
+}
 
 @property (nonatomic, strong) UITableView *commentTableView;
 @property (nonatomic, strong) NSMutableArray  *commentArray;
@@ -24,6 +27,7 @@
     self.baseTitle = @"评论";
     
     self.view.backgroundColor = [UIColor bgColor_Gray];
+    page = 1;
     
     [self.view addSubview:self.commentTableView];
     
@@ -56,23 +60,42 @@
 
 
 #pragma mark -- Private methods
+#pragma mark 加载最新评论信息
+-(void)loadNewCommentListData{
+    page=1;
+    [self loadCommentData];
+}
+
+#pragma mark 加载更多评论信息
+-(void)loadMoreCommentListData{
+    page++;
+    [self loadCommentData];
+}
+
 #pragma mark 加载数据
 -(void)loadCommentData{
-    NSArray *names = @[@"小美老师",@"张三老师",@"李四老师",@"王五老师",@"小明老师",@"小美老师",@"张三老师",@"李四老师",@"王五老师",@"小明老师"];
-    NSArray *comments = @[@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。",@"如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。如果你无法简洁的表达你的想法，那只说明你还不够了解它。"];
-    
-    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<names.count; i++) {
-        CommentModel *model = [[CommentModel alloc] init];
-        model.head_image = @"photo";
-        model.name = names[i];
-        model.score = (double)(i+5)*0.5;
-        model.create_time = [NSString stringWithFormat:@"2018-08-%ld %02ld:%02ld",i+12,i*3,i*5+3];
-        model.comment = comments[i];
-        [tempArr addObject:model];
-    }
-    self.commentArray = tempArr;
-    [self.commentTableView reloadData];
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&tid=%@&page=%ld",kUserTokenValue,self.tch_id,page];
+    [TCHttpRequest postMethodWithURL:kGetTeacherCommentsAPI body:body success:^(id json) {
+        NSArray *data = [json objectForKey:@"data"];
+        NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+        for (NSDictionary *dict in data) {
+            CommentModel *model = [[CommentModel alloc] init];
+            [model setValues:dict];
+            [tempArr addObject:model];
+        }
+        if (page==1) {
+            weakSelf.commentArray = tempArr;
+        }else{
+            [weakSelf.commentArray addObjectsFromArray:tempArr];
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakSelf.commentTableView.mj_footer.hidden = tempArr.count<20;
+            [weakSelf.commentTableView reloadData];
+            [weakSelf.commentTableView.mj_header endRefreshing];
+            [weakSelf.commentTableView.mj_footer endRefreshing];
+        });
+    }];
 }
 
 
@@ -84,6 +107,17 @@
         _commentTableView.delegate = self;
         _commentTableView.dataSource = self;
         _commentTableView.tableFooterView = [[UIView alloc] init];
+        
+        //  下拉加载最新
+        MJRefreshNormalHeader *header=[MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(loadNewCommentListData)];
+        header.automaticallyChangeAlpha=YES;
+        header.lastUpdatedTimeLabel.hidden=YES;
+        _commentTableView.mj_header=header;
+        
+        MJRefreshAutoNormalFooter *footer = [MJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(loadMoreCommentListData)];
+        footer.automaticallyRefresh = NO;
+        _commentTableView.mj_footer = footer;
+        footer.hidden=YES;
     }
     return _commentTableView;
 }

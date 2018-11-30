@@ -10,4 +10,6 @@
 
 @interface TransactionTypeViewController : BaseViewController
 
+@property (nonatomic,assign)NSInteger transationType;
+
 @end

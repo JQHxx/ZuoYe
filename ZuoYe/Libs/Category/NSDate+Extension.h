@@ -9,10 +9,33 @@
 #import <Foundation/Foundation.h>
 
 @interface NSDate (Extension)
+
+/**
+ *  @return 当前年
+ */
++ (NSInteger )currentYear;
+
+/**
+ *  @return 当前年月
+ */
++ (NSString *)currentYearMonth;
+
 /**
  *  @return 当前时间
  */
 + (NSString *)currentDate;
+
+/**
+ *  @return 获取今天日期
+ */
++(NSString *)GetCurrentDay;
+
+/**
+ *  @return 获取明天日期
+ */
++(NSString *)GetTomorrowDay;
+
+
 /**
  *  从日期中获取小时
  *

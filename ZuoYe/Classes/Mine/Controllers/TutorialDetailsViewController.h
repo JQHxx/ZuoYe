@@ -11,7 +11,8 @@
 
 @interface TutorialDetailsViewController : BaseViewController
 
-@property (nonatomic, strong) TutorialModel *myTutorial;
+@property (nonatomic, strong) NSString  *orderId;
+@property (nonatomic, assign) NSInteger status;
 
 
 @end

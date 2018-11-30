@@ -8,11 +8,10 @@
 
 #import "PhotoFrameView.h"
 #import "ImageCollectionViewCell.h"
+#import "SDPhotoBrowser.h"
 
 
-
-
-@interface PhotoFrameView ()<UICollectionViewDelegate,UICollectionViewDataSource>{
+@interface PhotoFrameView ()<UICollectionViewDelegate,UICollectionViewDataSource,SDPhotoBrowserDelegate>{
     NSMutableArray  *photosArr;
     BOOL   _isSetting;
 }
@@ -76,10 +75,27 @@
         [self makeToast:@"最多只能上传9张图片" duration:1.0 position:CSToastPositionCenter];
         return;
     }
-    NSInteger selTag = sender.tag == photosArr.count?10001:1000;
-    if ([self.delegate respondsToSelector:@selector(photoFrameViewDidClickForTag:andCell:)]) {
-        [self.delegate photoFrameViewDidClickForTag:selTag andCell:sender.tag];
+    if (sender.tag<photosArr.count) {
+        SDPhotoBrowser *photoBrowser = [SDPhotoBrowser new];
+        photoBrowser.delegate = self;
+        photoBrowser.currentImageIndex = sender.tag;
+        photoBrowser.imageCount = photosArr.count;
+        photoBrowser.sourceImagesContainerView = self.collectionView;
+        [photoBrowser show];
+    }else{
+        if ([self.delegate respondsToSelector:@selector(photoFrameViewAddImage)]) {
+            [self.delegate photoFrameViewAddImage];
+        }
     }
+    
+}
+
+#pragma mark  SDPhotoBrowserDelegate
+// 返回临时占位图片（即原来的小图）
+- (UIImage *)photoBrowser:(SDPhotoBrowser *)browser placeholderImageForIndex:(NSInteger)index{
+    // 不建议用此种方式获取小图，这里只是为了简单实现展示而已
+    ImageCollectionViewCell *cell = (ImageCollectionViewCell *)[self collectionView:self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:index inSection:0]];
+    return cell.imgBtn.currentImage;
 }
 
 #pragma mark -- Public Methods
@@ -104,7 +120,7 @@
     
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     layout.itemSize = CGSizeMake(itemW, itemW);
-    layout.minimumLineSpacing = 0;
+    layout.minimumLineSpacing = 5;
     layout.minimumInteritemSpacing = 0;
     layout.sectionInset = UIEdgeInsetsMake(4, 4, 4, 0);
     

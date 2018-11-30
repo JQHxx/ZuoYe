@@ -9,6 +9,9 @@
 #import "SetupViewController.h"
 #import "FeedbackViewController.h"
 #import "AboutUsViewController.h"
+#import "LoginViewController.h"
+#import "AppDelegate.h"
+#import "BaseNavigationController.h"
 
 @interface SetupViewController ()<UITableViewDelegate,UITableViewDataSource,UIAlertViewDelegate>{
     NSArray  *titlesArray;
@@ -26,7 +29,7 @@
     self.baseTitle = @"设置";
     self.view.backgroundColor = [UIColor bgColor_Gray];
     
-    titlesArray=@[@"清除缓存",@"意见反馈",@"评价一下",@"关于我们"];
+    titlesArray=@[@"清除缓存",@"意见反馈",@"关于我们"];
     
     [self.view addSubview:self.setupTableView];
     [self.view addSubview:self.loginoutButton];
@@ -70,8 +73,6 @@
     }else if (indexPath.row == 1){
         FeedbackViewController *feedbackVC = [[FeedbackViewController alloc] init];
         [self.navigationController pushViewController:feedbackVC animated:YES];
-    }else if (indexPath.row == 2){
-        
     }else{
         AboutUsViewController *aboutUsVC = [[AboutUsViewController alloc] init];
         [self.navigationController pushViewController:aboutUsVC animated:YES];
@@ -81,7 +82,17 @@
 #pragma mark -- Event reponse
 #pragma mark 退出登录
 -(void)loginoutAction:(UIButton *)sender{
-    
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"退出登录" message:@"确定要退出登录吗？" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+        
+    }];
+    UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        [TCHttpRequest signOut];
+        
+    }];
+    [alertController addAction:cancelAction];
+    [alertController addAction:confirmAction];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 #pragma mark -- Private Methods
@@ -143,6 +154,7 @@
         _setupTableView.dataSource=self;
         _setupTableView.showsVerticalScrollIndicator=NO;
         _setupTableView.tableFooterView = [[UIView alloc] init];
+        _setupTableView.scrollEnabled = NO;
     }
     return _setupTableView;
 }
@@ -150,7 +162,7 @@
 #pragma mark 退出登录
 -(UIButton *)loginoutButton{
     if (!_loginoutButton) {
-        _loginoutButton = [[UIButton alloc] initWithFrame:CGRectMake(43.0,kScreenHeight-(kScreenWidth-95.0)*(128.0/588.0)-45.0,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
+        _loginoutButton = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0,kScreenHeight-75.0,280,60)];
         [_loginoutButton setTitle:@"退出登录" forState:UIControlStateNormal];
         [_loginoutButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_loginoutButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];

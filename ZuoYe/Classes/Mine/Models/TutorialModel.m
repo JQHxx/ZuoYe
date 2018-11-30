@@ -11,3 +11,9 @@
 @implementation TutorialModel
 
 @end
+
+@implementation ComplainModel
+
+
+
+@end

@@ -7,13 +7,15 @@
 //
 
 #import "ConnectionSettingViewController.h"
-#import "TakePicturesViewController.h"
+#import "TakePhotoViewController.h"
 #import "ConnecttingViewController.h"
 #import "PhotoFrameView.h"
 #import "TeacherInfoView.h"
+#import "UIButton+Touch.h"
+#import "RechargeViewController.h"
 
 
-@interface ConnectionSettingViewController ()<PhotoFrameViewDelegate,TakePicturesViewControllerDelegate>{
+@interface ConnectionSettingViewController ()<PhotoFrameViewDelegate,TakePhotoViewControllerDelegate>{
     double         checkPrice;
 }
 
@@ -45,26 +47,22 @@
     [self.photosFramView updateCollectViewWithPhotosArr:self.photosArray];
 }
 
-#pragma mark 打开图片 或添加图片
--(void)photoFrameViewDidClickForTag:(NSInteger)tag andCell:(NSInteger)cellRow{
-    if (tag == 10000) { //打开图片
-        
-    }else{ //添加图片
-        [self addHomeworkPhotosAction];
-    }
+#pragma mark 添加图片
+-(void)photoFrameViewAddImage{
+    [self addHomeworkPhotosAction];
 }
 
 #pragma mark  AddPhotoViewDelegate
 #pragma mark 上传图片
 -(void)addHomeworkPhotosAction{
-    TakePicturesViewController *takePicturesVC = [[TakePicturesViewController alloc] init];
+    TakePhotoViewController *takePicturesVC = [[TakePhotoViewController alloc] init];
     takePicturesVC.isConnectionSetting = YES;
     takePicturesVC.controllerDelegate = self;
     [self.navigationController pushViewController:takePicturesVC animated:YES];
 }
 
-#pragma mark TakePicturesViewControllerDelegate
--(void)takePicturesViewContriller:(TakePicturesViewController *)controller didGotPhotos:(NSMutableArray *)photos{
+#pragma mark TakePhotoViewControllerDelegate
+-(void)takePhotoViewContriller:(TakePhotoViewController *)controller didGotPhotos:(NSMutableArray *)photos{
     self.addPhotoView.hidden = YES;
     self.photosFramView.hidden = NO;
     
@@ -79,9 +77,45 @@
 
 #pragma mark 连线老师
 -(void)callTeacherForHelpAction{
-    ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] init];
-    connecttingVC.model = self.teacherModel;
-    [self.navigationController pushViewController:connecttingVC animated:YES];
+    if (self.photosArray.count==0) {
+        [self.view makeToast:@"请先上传您要辅导的作业图片" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    kSelfWeak;
+    NSMutableArray *imgArr = [[ZYHelper sharedZYHelper] imageDataProcessingWithImgArray:self.photosArray];
+    NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:imgArr];
+    NSString *body = [NSString stringWithFormat:@"pic=%@&dir=2",imageArrJsonStr];
+    [TCHttpRequest postMethodWithURL:kUploadPicAPI body:body success:^(id json) {
+        NSArray *imagesUrl = [json objectForKey:@"data"];
+        NSString * imgJsonStr = [TCHttpRequest getValueWithParams:imagesUrl];
+        
+        NSString *body2 = [NSString stringWithFormat:@"token=%@&images=%@&tid=%@",kUserTokenValue,imgJsonStr,weakSelf.teacherModel.tch_id];
+        [TCHttpRequest postMethodWithURL:kConnectSettingAPI body:body2 success:^(id json) {
+            NSInteger status=[[json objectForKey:@"error"] integerValue];
+            NSString *message=[json objectForKey:@"msg"];
+            if (status==3) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
+                });
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    RechargeViewController *rechargeVC = [[RechargeViewController alloc] init];
+                    [weakSelf.navigationController pushViewController:rechargeVC animated:YES];
+                });
+            }else{
+                [ZYHelper sharedZYHelper].isUpdateHome = YES;
+                NSDictionary *data = [json objectForKey:@"data"];
+                TeacherModel *model = [[TeacherModel alloc] init];
+                model = weakSelf.teacherModel;
+                model.job_pic = imagesUrl;
+                model.job_id = data[@"jobid"];
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] initWithCallee:weakSelf.teacherModel.third_id];
+                    connecttingVC.teacher = model;
+                    [weakSelf.navigationController pushViewController:connecttingVC animated:YES];
+                });
+            }
+        }];
+    }];
 }
 
 #pragma mark -- private Methods
@@ -156,12 +190,13 @@
 #pragma mark 连线
 -(UIButton *)connenctBtn{
     if (!_connenctBtn) {
-        _connenctBtn = [[UIButton alloc] initWithFrame:CGRectMake(47.0,kScreenHeight-(kScreenWidth-95.0)*(128.0/588.0)-22.0,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
+        _connenctBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0,kScreenHeight-80,280,55)];
         [_connenctBtn setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_connenctBtn setTitle:@"连线" forState:UIControlStateNormal];
         [_connenctBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         _connenctBtn.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
         [_connenctBtn addTarget:self action:@selector(callTeacherForHelpAction) forControlEvents:UIControlEventTouchUpInside];
+        _connenctBtn.timeInterval=2.0;
     }
     return _connenctBtn;
 }

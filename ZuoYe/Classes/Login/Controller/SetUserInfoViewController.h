@@ -10,4 +10,7 @@
 
 @interface SetUserInfoViewController : BaseViewController
 
+@property (nonatomic, copy ) NSString  *token;
+@property (nonatomic,assign) NSInteger user_id;
+
 @end

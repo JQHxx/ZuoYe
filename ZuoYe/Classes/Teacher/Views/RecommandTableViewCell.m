@@ -40,6 +40,7 @@
         
         //头像
         _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(19.0, 15.0, 52, 52)];
+        _headImageView.boderRadius = 26.0;
         [bgView addSubview:_headImageView];
         
         //姓名
@@ -67,7 +68,6 @@
         [bgView addSubview:_priceLabel];
         
         _connectButton = [[UIButton alloc] initWithFrame:CGRectMake(bgView.width-76, 13.0, 44.0, 60.0)];
-        [_connectButton setImage:[UIImage imageNamed:@"connection_teacher"] forState:UIControlStateNormal];
         [_connectButton setTitle:@"连线老师" forState:UIControlStateNormal];
         [_connectButton setTitleColor:[UIColor colorWithHexString:@"#808080"] forState:UIControlStateNormal];
         _connectButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:10];
@@ -81,23 +81,30 @@
 }
 
 -(void)displayCellWithTeacher:(TeacherModel *)model{
-    _headImageView.image = [UIImage imageNamed:model.head];
+    if (kIsEmptyString(model.trait)) {
+        _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
+    }else{
+        [_headImageView sd_setImageWithURL:[NSURL URLWithString:model.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
+    }
     
-    _nameLabel.text = model.name;
-    CGFloat nameW = [model.name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
+    _nameLabel.text = model.tch_name;
+    CGFloat nameW = [model.tch_name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
     _nameLabel.frame = CGRectMake(self.headImageView.right+13.0, 14.0, nameW, 20);
     
-    _gradeLabel.text = model.grade;
-    CGFloat gradeW = [model.grade boundingRectWithSize:CGSizeMake(kScreenWidth, 17.0) withTextFont:_gradeLabel.font].width;
+    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
+    _gradeLabel.text = gradeStr;
+    CGFloat gradeW = [gradeStr boundingRectWithSize:CGSizeMake(kScreenWidth-200, 17.0) withTextFont:_gradeLabel.font].width;
     _gradeLabel.frame = CGRectMake(self.headImageView.right+13.0, _nameLabel.bottom, gradeW, 17.0);
     
-    _subjectLabel.text = model.subjects;
-    _subjectLabel.frame = CGRectMake(_gradeLabel.right+10.0, _nameLabel.bottom, 80.0, 17.0);
+    _subjectLabel.text = model.subject;
+    _subjectLabel.frame = CGRectMake(_gradeLabel.right+10.0, _nameLabel.bottom, 40.0, 17.0);
     
-    NSString *priceStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",model.price];
+    NSString *priceStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",[model.guide_price doubleValue]];
     NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:priceStr];
     [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:NSMakeRange(5, priceStr.length-5)];
     _priceLabel.attributedText = attributeStr;
+    
+    [_connectButton setImage:[UIImage imageNamed:[model.online boolValue]?@"connection_teacher":@"connection_teacher_gray"] forState:UIControlStateNormal];
 }
 
 - (void)awakeFromNib {

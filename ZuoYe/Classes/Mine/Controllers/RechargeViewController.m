@@ -9,6 +9,11 @@
 #import "RechargeViewController.h"
 #import "PhoneText.h"
 #import "PaywayView.h"
+#import "WXApi.h"
+#import "WXApiObject.h"
+#import "NSDate+Extension.h"
+#import "PaySuccessViewController.h"
+#import <AlipaySDK/AlipaySDK.h>
 
 @interface RechargeViewController ()<UITextFieldDelegate>{
     UIView         *amountTextView;
@@ -17,9 +22,10 @@
     NSInteger      selectedIndex;
     UIButton       *selectItem;
     NSInteger      payway;
+    double         amount;
 }
 
-@property (nonatomic, strong) PhoneText     *amountTextField;
+@property (nonatomic, strong) UITextField   *amountTextField;
 @property (nonatomic, strong) PaywayView    *wepaywayView;    //微信支付
 @property (nonatomic, strong) PaywayView    *alipaywayView;   //支付宝支付
 @property (nonatomic, strong) UIButton      *confirmButton;
@@ -38,6 +44,11 @@
     payway = 0;
     
     [self initRechargeView];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rechargePaySuccessAction) name:kPayBackNotification object:nil];
 }
 
 #pragma mark -- UITextFieldDelegate
@@ -73,14 +84,43 @@
 
 #pragma mark  确认充值
 -(void)confirmRechargeAction:(UIButton *)sender{
-    NSInteger amount = 0;
     if (kIsEmptyString(self.amountTextField.text)) {
-        amount = [amountArray[selectedIndex] integerValue];
+        amount = [amountArray[selectedIndex] doubleValue];
     }else{
-        amount = [self.amountTextField.text integerValue];
+        amount = [self.amountTextField.text doubleValue];
     }
     
-    MyLog(@"amount:%ld,payway:%@",amount,payway==0?@"微信支付":@"支付宝支付");
+    if (payway==0) {   //微信支付
+        NSString *body = [NSString stringWithFormat:@"token=%@&cate=2&money=%.2f",kUserTokenValue,amount];
+        [TCHttpRequest postMethodWithURL:kWalletRechargeAPI body:body success:^(id json) {
+            NSDictionary *payInfo =[json objectForKey:@"data"];
+            PayReq* req             = [[PayReq alloc] init];
+            req.openID              = [payInfo valueForKey:@"appid"];
+            req.partnerId           = [payInfo valueForKey:@"partnerid"];
+            req.prepayId            = [payInfo valueForKey:@"prepayid"];
+            req.nonceStr            = [payInfo valueForKey:@"noncestr"];
+            req.timeStamp           = [[payInfo valueForKey:@"timestamp"] intValue];
+            req.package             = [payInfo valueForKey:@"package"];
+            req.sign                = [payInfo valueForKey:@"sign"];
+            
+            [WXApi sendReq:req];
+        }];
+    }else{ //支付宝支付
+        kSelfWeak;
+        NSString *body = [NSString stringWithFormat:@"token=%@&cate=1&money=%.2f",kUserTokenValue,amount];
+        [TCHttpRequest postMethodWithURL:kWalletRechargeAPI body:body success:^(id json) {
+            NSString *payInfo =[json objectForKey:@"data"];
+            [[AlipaySDK defaultService] payOrder:payInfo fromScheme:kAppScheme callback:^(NSDictionary *resultDic) {
+                NSInteger resultStatus=[[resultDic valueForKey:@"resultStatus"] integerValue];
+                if (resultStatus==9000) {
+                    [weakSelf rechargePaySuccessAction];
+                }else{
+                    NSString *memo=[resultDic valueForKey:@"memo"];
+                    MyLog(@"alipay--error:%@",memo);
+                }
+            }];
+        }];
+    }
 }
 
 #pragma mark 选择充值金额
@@ -101,12 +141,16 @@
     selectedIndex = sender.tag;
 }
 
-#pragma mark -- private methods
-#pragma mark 获取付款信息
--(void)loadPayInfo{
-    
+#pragma mark -- Notification
+#pragma mark 充值成功
+-(void)rechargePaySuccessAction{
+    PaySuccessViewController *paySuccessVC = [[PaySuccessViewController alloc] init];
+    paySuccessVC.isRechargeSuccess = YES;
+    paySuccessVC.pay_amount = amount;
+    [self.navigationController pushViewController:paySuccessVC animated:YES];
 }
 
+#pragma mark -- private methods
 #pragma mark 初始化界面
 -(void)initRechargeView{
     UIView *amountView = [[UIView alloc] initWithFrame:CGRectMake(0, kNavHeight+5, kScreenWidth, 205)];
@@ -145,6 +189,12 @@
         item.layer.borderWidth = 1;
         item.layer.borderColor = [[UIColor colorWithHexString:@"#B4B4B4"] CGColor] ;
         item.tag = i;
+        if (i==0) {
+            item.selected = YES;
+            item.layer.borderColor = [UIColor redColor].CGColor;
+            item.backgroundColor = [UIColor redColor];
+            selectItem = item;
+        }
         [item addTarget:self action:@selector(itemClickAction:) forControlEvents:UIControlEventTouchUpInside];
         [amountView addSubview:item];
     }
@@ -188,12 +238,14 @@
 
 #pragma mark -- Getters
 #pragma mark 充值金额输入
--(PhoneText *)amountTextField{
+-(UITextField *)amountTextField{
     if (!_amountTextField) {
-        _amountTextField = [[PhoneText alloc] initWithFrame:CGRectMake(10,0, kScreenWidth-80, 38)];
+        _amountTextField = [[UITextField alloc] initWithFrame:CGRectMake(10,0, kScreenWidth-80, 38)];
         _amountTextField.placeholder = @"输入充值金额";
         _amountTextField.textColor = [UIColor blackColor];
         _amountTextField.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        _amountTextField.returnKeyType = UIReturnKeyDone;
+        _amountTextField.keyboardType = UIKeyboardTypeDecimalPad;
         _amountTextField.delegate = self;
     }
     return _amountTextField;
@@ -234,6 +286,10 @@
     return _confirmButton;
 }
 
+
+-(void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kPayBackNotification object:nil];
+}
 
 
 @end

@@ -10,4 +10,6 @@
 
 @interface CheckResultViewController : BaseViewController
 
+@property (nonatomic ,copy )NSString *oid;
+
 @end

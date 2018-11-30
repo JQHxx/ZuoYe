@@ -13,20 +13,32 @@
 #import "ConnectionSettingViewController.h"
 #import "KRVideoPlayerController.h"
 #import "STPopupController.h"
+#import "TutorialViewController.h"
 #import "TutorialModel.h"
 #import "SlideMenuView.h"
+#import "PaySuccessViewController.h"
+#import "ConnecttingViewController.h"
+#import "MJRefresh.h"
+#import "TeacherModel.h"
+#import "CancelViewController.h"
+#import "CommentViewController.h"
+#import "RechargeViewController.h"
 
 @interface MyTutorialViewController ()<UITableViewDataSource,UITableViewDelegate,SlideMenuViewDelegate,MyTutorialTableViewCellDelegate>{
     NSArray      *stateArray;
-    NSInteger    selectedIndex;
+    NSArray      *cateArray;
+    
+    NSInteger    typeSelectIndex;
+    NSInteger    orderSelectIndex;
+    NSInteger    page;
 }
 
-@property (nonatomic, strong)SlideMenuView     *titleView;
+@property (nonatomic, strong) SlideMenuView     *titleView;
 @property (nonatomic, strong) SlideMenuView    *orderMenuView;
 @property (nonatomic, strong) UITableView      *tutorialTableView;
+@property (nonatomic ,strong) UIImageView       *blankView; //空白页
 
-@property (nonatomic, strong) NSMutableArray   *checkArray;
-@property (nonatomic, strong) NSMutableArray   *tutorialArray;
+@property (nonatomic, strong) NSMutableArray   *orderListData;
 
 @property (nonatomic, strong) KRVideoPlayerController *videoController;
 
@@ -40,20 +52,37 @@
     
     self.view.backgroundColor = [UIColor bgColor_Gray];
     
-    stateArray = @[@"全部",@"待付款",@"已完成",@"已取消"];
-    selectedIndex = 0;
+    stateArray = @[@"全部",@"进行中",@"待付款",@"已完成",@"已取消"];
+    cateArray = @[@"all",@"doing",@"nopay",@"complete",@"cancel"];
+    typeSelectIndex = 0;
+    orderSelectIndex = 0;
+    page = 1;
     
     [self.view addSubview:self.titleView];
     [self.view addSubview:self.orderMenuView];
     [self.view addSubview:self.tutorialTableView];
+    [self.tutorialTableView addSubview:self.blankView];
+    self.blankView.hidden = YES;
     
     [self loadMyTutorialData];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    if ([ZYHelper sharedZYHelper].isPayOrderSuccess) {
+        [self loadMyTutorialData];
+        [ZYHelper sharedZYHelper].isPayOrderSuccess = NO;
+    }
     
+    if ([ZYHelper sharedZYHelper].isUpdateOrder) {
+        [self loadMyTutorialData];
+        [ZYHelper sharedZYHelper].isUpdateOrder = NO;
+    }
 }
 
 #pragma mark -- UITableViewDataSource
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return selectedIndex==0?self.checkArray.count:self.tutorialArray.count;
+    return self.orderListData.count;
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -69,18 +98,24 @@
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.delegate = self;
     
-    TutorialModel *model = nil;
-    if (selectedIndex==0) {
-        model = self.checkArray[indexPath.section];
-    }else{
-        model = self.tutorialArray[indexPath.section];
-    }
+    TutorialModel *model = self.orderListData[indexPath.section];
     cell.tutorial = model;
     return cell;
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 175;
+    TutorialModel *model = self.orderListData[indexPath.section];
+    if ([model.status integerValue]==0) {
+        return 155;
+    }else if ([model.status integerValue]==3){
+        if ([model.label integerValue]<2) {
+            return 125;
+        }else{
+            return 155;
+        }
+    }else{
+       return  175;
+    }
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
@@ -92,44 +127,128 @@
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    TutorialModel *model = nil;
-    if (selectedIndex==0) {
-        model = self.checkArray[indexPath.section];
-    }else{
-        model = self.tutorialArray[indexPath.section];
-    }
+    TutorialModel *model = self.orderListData[indexPath.section];
     TutorialDetailsViewController *detailsVC = [[TutorialDetailsViewController alloc] init];
-    detailsVC.myTutorial = model;
+    detailsVC.orderId = model.oid;
+    detailsVC.status = [model.status integerValue];
     [self.navigationController pushViewController:detailsVC animated:YES];
 }
 
 #pragma mark -- Delegate
 #pragma mark SlideMenuViewDelegate
 -(void)slideMenuView:(SlideMenuView *)menuView didSelectedWithIndex:(NSInteger)index{
-    selectedIndex = index;
-    [self loadMyTutorialData];
+    if (menuView == self.titleView) {
+        typeSelectIndex = index;
+        orderSelectIndex = 0;
+        self.orderMenuView.currentIndex = orderSelectIndex;
+    }else{
+        orderSelectIndex = index;
+    }
+    [self loadNewOrderData];
 }
 
 #pragma mark MyTutorialTableViewCellDelegate
-#pragma mark 去付款或连线老师
--(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell payOrderOrConnectTeacherWithTutorial:(TutorialModel *)model{
-    if (model.state==0) {
-        TutorialPayViewController *payVC = [[TutorialPayViewController alloc] init];
-        STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
-        popupVC.style = STPopupStyleBottomSheet;
-        popupVC.navigationBarHidden = YES;
-        [popupVC presentInViewController:self];
+#pragma mark 去付款
+-(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell payOrderActionWithTutorial:(TutorialModel *)model{
+    TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:YES];
+    payVC.orderId = model.oid;
+    payVC.duration = [model.job_time integerValue];
+    payVC.guidePrice = model.price;
+    payVC.label = [model.label integerValue]>1?2:1;
+    payVC.payAmount = [model.pay_money doubleValue];
+    kSelfWeak;
+    payVC.backBlock = ^(id object) {
+        if ([model.label integerValue]>1) {
+            CommentViewController *commentVC = [[CommentViewController alloc] init];
+            commentVC.orderId = model.oid;
+            commentVC.tid = model.tch_id;
+            [weakSelf.navigationController pushViewController:commentVC animated:YES];
+        }else{
+            PaySuccessViewController *paySuccessVC = [[PaySuccessViewController alloc] init];
+            paySuccessVC.pay_amount = [object doubleValue];
+            [weakSelf.navigationController pushViewController:paySuccessVC animated:YES];
+        }
+    };
+    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
+    popupVC.style = STPopupStyleBottomSheet;
+    popupVC.navigationBarHidden = YES;
+    [popupVC presentInViewController:self];
+}
+
+#pragma mark 重新连线
+-(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell connectTeacherWithTutorial:(TutorialModel *)model{
+    BOOL isOnline = [model.online boolValue];
+    if (isOnline) {
+        //老师信息
+        TeacherModel *teacher = [[TeacherModel alloc] init];
+        teacher.tch_id = model.tch_id;
+        teacher.tch_name = model.name;
+        teacher.trait = model.trait;
+        teacher.grade = @[model.grade];
+        teacher.subject = model.subject;
+        teacher.third_id = model.third_id;
+        
+        kSelfWeak;
+        if ([model.label integerValue]<2) { //作业检查连线老师
+            teacher.guide_price = model.guide_price;
+            NSString * imgJsonStr = [TCHttpRequest getValueWithParams:model.pics];
+            NSString *body = [NSString stringWithFormat:@"token=%@&images=%@&tid=%@&price=%@",kUserTokenValue,imgJsonStr,model.tch_id,model.guide_price];
+            [TCHttpRequest postMethodWithURL:kConnectSettingAPI body:body success:^(id json) {
+                NSInteger status=[[json objectForKey:@"error"] integerValue];
+                NSString *message=[json objectForKey:@"msg"];
+                if (status==3) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
+                    });
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        RechargeViewController *rechargeVC = [[RechargeViewController alloc] init];
+                        [weakSelf.navigationController pushViewController:rechargeVC animated:YES];
+                    });
+                }else{
+                    NSDictionary *data = [json objectForKey:@"data"];
+                    teacher.job_pic = model.pics;
+                    teacher.job_id = data[@"jobid"];
+                    teacher.label = [NSNumber numberWithInteger:3];
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] initWithCallee:teacher.third_id];
+                        connecttingVC.teacher = teacher;
+                        connecttingVC.isOrderIn = NO;
+                        [weakSelf.navigationController pushViewController:connecttingVC animated:YES];
+                    });
+                    
+                }
+            }];
+        }else{ //作业辅导连线
+            if ([model.status integerValue]==0) {
+                teacher.guide_price = model.price;
+                teacher.job_pic = model.job_pic;
+                teacher.job_id = model.jobid;
+                teacher.orderId = model.oid;
+                teacher.label = model.label;
+                ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] initWithCallee:model.third_id];
+                connecttingVC.teacher = teacher;
+                connecttingVC.isOrderIn = YES;
+                [self.navigationController pushViewController:connecttingVC animated:YES];
+            }else{
+                teacher.guide_price = model.guide_price;
+                ConnectionSettingViewController  *connectionSettingVC = [[ConnectionSettingViewController alloc] init];
+                connectionSettingVC.teacherModel = teacher;
+                [self.navigationController pushViewController:connectionSettingVC animated:YES];
+            }
+        }
     }else{
-        ConnectionSettingViewController *connectSettingVC = [[ConnectionSettingViewController alloc] init];
-        connectSettingVC.teacherModel = model.teacher;
-        [self.navigationController pushViewController:connectSettingVC animated:YES];
+        [self.view makeToast:@"老师当前不在线，请稍后再试" duration:1.0 position:CSToastPositionCenter];
     }
 }
 
-#pragma mark 回放
--(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell replayVideoWithTutorial:(TutorialModel *)model{
-    NSURL *videoURL = [[NSBundle mainBundle] URLForResource:@"150511_JiveBike" withExtension:@"mov"];
-    [self playVideoWithURL:videoURL];
+
+#pragma mark 取消订单
+-(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell cancelOrderWithTutorial:(TutorialModel *)model{
+    CancelViewController *cancelVC = [[CancelViewController alloc] init];
+    cancelVC.jobid = model.jobid;
+    cancelVC.myTitle = [model.label integerValue]<2?@"取消检查":@"取消辅导";
+    cancelVC.type = [model.label integerValue]<2?CancelTypeOrderCheck:CancelTypeOrderCocah;
+    [self.navigationController pushViewController:cancelVC animated:YES];
 }
 
 #pragma mark -- Event Response
@@ -137,17 +256,17 @@
     switch (gesture.direction) {
         case UISwipeGestureRecognizerDirectionLeft:
         {
-            selectedIndex++;
-            if (selectedIndex>stateArray.count-1) {
-                selectedIndex=stateArray.count;
+            orderSelectIndex++;
+            if (orderSelectIndex>stateArray.count-1) {
+                orderSelectIndex=stateArray.count;
                 return;
             }
         }break;
         case UISwipeGestureRecognizerDirectionRight:
         {
-            selectedIndex--;
-            if (selectedIndex<0) {
-                selectedIndex=0;
+            orderSelectIndex--;
+            if (orderSelectIndex<0) {
+                orderSelectIndex=0;
                 return;
             }
         }
@@ -155,50 +274,53 @@
             break;
     }
     
-    self.orderMenuView.currentIndex = selectedIndex;
+    self.orderMenuView.currentIndex = orderSelectIndex;
+    [self loadNewOrderData];
 }
 
 
 #pragma mark -- Private Methods
+#pragma mark 加载最新数据
+-(void)loadNewOrderData{
+    page = 1;
+    [self loadMyTutorialData];
+}
+
+#pragma mark 加载更多数据
+-(void)loadMoreOrderData{
+    page++;
+    [self loadMyTutorialData];
+}
+
+
 #pragma mark 加载数据
 -(void)loadMyTutorialData{
-    NSArray *names = @[@"小美老师",@"小芳老师",@"张三老师",@"李四老师",@"王五老师",@"赵六老师"];
-    NSMutableArray *tempCheckArr = [[NSMutableArray alloc] init];
-    NSMutableArray *tempTutorialArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<names.count; i++) {
-        TutorialModel *model = [[TutorialModel alloc] init];
-        model.type = i%2;
-        model.datetime = [NSString stringWithFormat:@"2018-08-%02ld %02ld:%02ld",15+i,10+i,i*5];
-        model.state = i%3;
-        model.head_image = @"photo";
-        model.name = names[i];
-        model.level = @"高级教师";
-        model.grade = @"一年级";
-        model.subject = @"数学";
-        model.check_price = (double)i*5+10;
-        model.per_price = 1.0 + i*0.1;
-        model.duration = 85+i*10;
-        model.pay_price = (double)(i*15+5);
-        model.order_sn = @"201878906547812";
-        model.payway = i%3;
-        model.video_cover = @"zuoye";
-        model.payTime = [NSString stringWithFormat:@"2018-08-%02ld %02ld:%02ld",15+i,10+i,i*5];
-        
-        model.teacher.name = names[i];
-        model.teacher.level = @"高级教师";
-        model.teacher.grade = @"一年级";
-        model.teacher.subjects = @"数学";
-        
-        if (model.type==0) {
-          [tempCheckArr addObject:model];
-        }else{
-            [tempTutorialArr addObject:model];
-        }
-        
-    }
-    self.checkArray = tempCheckArr;
-    self.tutorialArray = tempTutorialArr;
-    [self.tutorialTableView reloadData];
+    kSelfWeak;
+    NSString *body = [NSString stringWithFormat:@"token=%@&label=%ld&cate=%@&page=%ld",kUserTokenValue,typeSelectIndex+1,cateArray[orderSelectIndex],page];
+    [TCHttpRequest postMethodWithURL:kOrderListAPI body:body success:^(id json) {
+         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSArray *ordersData = [json objectForKey:@"data"];
+            NSMutableArray *tempArr = [[NSMutableArray alloc] init];
+            for (NSDictionary *dict in ordersData) {
+                TutorialModel *model = [[TutorialModel alloc] init];
+                [model setValues:dict];
+                [tempArr addObject:model];
+            }
+            if (page==1) {
+                _orderListData = tempArr;
+            }else{
+                [_orderListData addObjectsFromArray:tempArr];
+            }
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                weakSelf.tutorialTableView.mj_footer.hidden = ordersData.count<20;
+                weakSelf.blankView.hidden = _orderListData.count>0;
+                [weakSelf.tutorialTableView reloadData];
+                [weakSelf.tutorialTableView.mj_header  endRefreshing];
+                [weakSelf.tutorialTableView.mj_footer endRefreshing];
+            });
+         });
+    }];
 }
 
 #pragma mark -- getters
@@ -208,7 +330,7 @@
         _titleView = [[SlideMenuView alloc] initWithFrame:CGRectMake((kScreenWidth -200)/2, KStatusHeight, 200, kNavHeight-KStatusHeight) btnTitleFont:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16] color:[UIColor colorWithHexString:@"#4A4A4A"] selColor:[UIColor colorWithHexString:@"#FF6161"] showLine:NO];
         _titleView.isShowUnderLine = YES;
         _titleView.myTitleArray = @[@"作业检查",@"作业辅导"];
-        _titleView.currentIndex = selectedIndex;
+        _titleView.currentIndex = typeSelectIndex;
         _titleView.backgroundColor = [UIColor clearColor];
         _titleView.delegate = self;
     }
@@ -220,7 +342,7 @@
     if (!_orderMenuView) {
         _orderMenuView = [[SlideMenuView alloc] initWithFrame:CGRectMake(0, kNavHeight+5, kScreenWidth, 40) btnTitleFont:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:13] color:[UIColor colorWithHexString:@"#9B9B9B "] selColor:nil showLine:NO];
         _orderMenuView.myTitleArray = stateArray;
-        _orderMenuView.currentIndex = 0;
+        _orderMenuView.currentIndex = orderSelectIndex;
         _orderMenuView.delegate = self;
         _orderMenuView.backgroundColor = [UIColor whiteColor];
     }
@@ -230,7 +352,7 @@
 #pragma mark  辅导列表
 -(UITableView *)tutorialTableView{
     if (!_tutorialTableView) {
-        _tutorialTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.orderMenuView.bottom+5, kScreenWidth, kScreenHeight-kNavHeight-45) style:UITableViewStyleGrouped];
+        _tutorialTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.orderMenuView.bottom+5, kScreenWidth, kScreenHeight-kNavHeight-55) style:UITableViewStyleGrouped];
         _tutorialTableView.delegate = self;
         _tutorialTableView.dataSource = self;
         _tutorialTableView.showsVerticalScrollIndicator = NO;
@@ -244,30 +366,43 @@
         UISwipeGestureRecognizer *rightSwipGesture = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipOrderTableView:)];
         rightSwipGesture.direction = UISwipeGestureRecognizerDirectionRight;
         [_tutorialTableView addGestureRecognizer:rightSwipGesture];
+        
+        
+        //  下拉加载最新
+        MJRefreshNormalHeader *header=[MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(loadNewOrderData)];
+        header.automaticallyChangeAlpha=YES;
+        header.lastUpdatedTimeLabel.hidden=YES;
+        _tutorialTableView.mj_header=header;
+        
+        MJRefreshAutoNormalFooter *footer = [MJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(loadMoreOrderData)];
+        footer.automaticallyRefresh = NO;
+        _tutorialTableView.mj_footer = footer;
+        footer.hidden=YES;
     }
     return _tutorialTableView;
 }
 
-#pragma mark 检查信息
--(NSMutableArray *)checkArray{
-    if (!_checkArray) {
-        _checkArray = [[NSMutableArray alloc] init];
+#pragma mark 空白页
+-(UIImageView *)blankView{
+    if (!_blankView) {
+        _blankView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth-149)/2.0,70, 149, 127)];
+        _blankView.image = [UIImage imageNamed:@"default_order"];
     }
-    return _checkArray;
+    return _blankView;
 }
 
-#pragma mark 辅导信息
--(NSMutableArray *)tutorialArray{
-    if (!_tutorialArray) {
-        _tutorialArray = [[NSMutableArray alloc] init];
+#pragma mark 订单信息
+-(NSMutableArray *)orderListData{
+    if (!_orderListData) {
+        _orderListData = [[NSMutableArray alloc] init];
     }
-    return _tutorialArray;
+    return _orderListData;
 }
 
 #pragma mark 视屏播放
 - (void)playVideoWithURL:(NSURL *)url{
     if (!self.videoController) {
-        self.videoController = [[KRVideoPlayerController alloc] initWithFrame:CGRectMake(0,(kScreenHeight - kScreenWidth*(9.0/16.0))/2.0, kScreenWidth, kScreenWidth*(9.0/16.0))];
+        self.videoController = [[KRVideoPlayerController alloc] initWithFrame:self.view.bounds];
         __weak typeof(self)weakSelf = self;
         [self.videoController setDimissCompleteBlock:^{
             weakSelf.videoController = nil;

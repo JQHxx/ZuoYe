@@ -10,8 +10,11 @@
 
 @interface LevelModel : NSObject
 
-@property (nonatomic, copy )NSString   *level;
-@property (nonatomic, copy )NSString   *head_image;
-@property (nonatomic, assign)double    price;
+
+@property (nonatomic, strong) NSNumber   *level;
+@property (nonatomic, strong) NSNumber   *price;
+@property (nonatomic,  copy ) NSString   *name;
+@property (nonatomic,  copy ) NSString   *icon;
+@property (nonatomic, assign) BOOL       isSelected;
 
 @end

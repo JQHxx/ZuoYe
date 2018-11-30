@@ -11,6 +11,12 @@
 #import "TeacherViewController.h"
 #import "MineViewController.h"
 #import "BaseNavigationController.h"
+#import "NSObject+Tool.h"
+#import "BaseWebViewController.h"
+#import "TutorialDetailsViewController.h"
+#import "CheckResultViewController.h"
+#import "STPopupController.h"
+#import "HomeworkDetailsViewController.h"
 
 @interface MyTabBarController ()
 
@@ -24,9 +30,8 @@
     [[UITabBarItem appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithHexString:@"#B4B4B4"],NSFontAttributeName:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:10]} forState:UIControlStateNormal];
     [[UITabBarItem appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithHexString:@"#FF7568"],NSFontAttributeName:[UIFont pingFangSCWithWeight:FontWeightStyleSemibold size:10]} forState:UIControlStateSelected];
     
-    self.tabBar.barStyle = UIBarStyleBlack;
-    [self.tabBar setBackgroundImage:[UIImage imageNamed:@"home_white1"]];
-    
+    self.tabBar.barStyle = UIBarStyleDefault;
+    [self setTabbarBackView];
     [self initMyTabBar];
     
 }
@@ -53,5 +58,63 @@
 }
 
 
+-(void)setTabbarBackView{
+    UIView *backView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth, kTabHeight)];
+    backView.backgroundColor = [UIColor whiteColor];
+    // 去除顶部横线
+    [self.tabBar insertSubview:backView atIndex:0];
+    self.tabBar.opaque = YES;
+}
+
+
+#pragma mark - public methods
+#pragma mark 处理消息推送
+-(void)handerUserNotificationWithUserInfo:(NSDictionary *)userInfo{
+    if (kIsDictionary(userInfo)&&userInfo.count>0) {
+        BaseViewController *controller = (BaseViewController *)[self currentViewController];
+        NSString *type = [userInfo valueForKey:@"cate"];
+        if (!kIsEmptyString(type)) {
+            if ([type isEqualToString:@"sys"]||[type isEqualToString:@"check"]) {
+                NSNumber *mid = [userInfo valueForKey:@"mid"];
+                [self setMessageReadWithMid:mid type:type];
+            }
+            
+            if ([type isEqualToString:@"sys"]) {
+                BaseWebViewController *webVC = [[BaseWebViewController alloc] init];
+                webVC.urlStr = userInfo[@"oid"];
+                webVC.webTitle = @"系统消息详情";
+                webVC.hidesBottomBarWhenPushed = YES;
+                [controller.navigationController pushViewController:webVC animated:YES];
+            }else if ([type isEqualToString:@"check"]){
+                CheckResultViewController *checkResultVC = [[CheckResultViewController alloc] init];
+                checkResultVC.oid = userInfo[@"oid"];
+                STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:checkResultVC];
+                popupVC.style = STPopupStyleFormSheet;
+                popupVC.navigationBarHidden = YES;
+                [popupVC presentInViewController:self];
+            }else if ([type isEqualToString:@"checkAccept"]){ //作业检查接单或作业辅导实时接单或取消订单
+                TutorialDetailsViewController *tutorialDetailsVC = [[TutorialDetailsViewController alloc] init];
+                tutorialDetailsVC.orderId = userInfo[@"oid"];
+                tutorialDetailsVC.hidesBottomBarWhenPushed = YES;
+                [controller.navigationController pushViewController:tutorialDetailsVC animated:YES];
+            }else if ([type isEqualToString:@"guidePreAccept"]){//作业辅导预约接单
+                HomeworkDetailsViewController *tutorialDetailsVC = [[HomeworkDetailsViewController alloc] init];
+                tutorialDetailsVC.jobId = userInfo[@"oid"];
+                tutorialDetailsVC.label = [NSNumber numberWithInteger:2];
+                tutorialDetailsVC.isReceived = YES;
+                tutorialDetailsVC.hidesBottomBarWhenPushed = YES;
+                [controller.navigationController pushViewController:tutorialDetailsVC animated:YES];
+            }
+        }
+    }
+}
+
+#pragma mark  设置消息已读
+-(void)setMessageReadWithMid:(NSNumber *)mid type:(NSString *)type{
+    NSString *body = [NSString stringWithFormat:@"token=%@&cate=%@&mid=%@",kUserTokenValue,type,mid];
+    [TCHttpRequest postMethodWithoutLoadingForURL:kMessageReadAPI body:body success:^(id json) {
+        
+    }];
+}
 
 @end

@@ -44,8 +44,6 @@
     [super prepareLayout];
 
     self.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-    self.minimumInteritemSpacing = 20;
-    self.sectionInset = UIEdgeInsetsMake(0, 10, 0, 10);
 }
 
 -(BOOL)shouldInvalidateLayoutForBoundsChange:(CGRect)newBounds{
@@ -58,16 +56,18 @@
     NSArray *curArray = [[NSArray alloc] initWithArray:originalArray copyItems:YES];
     
     // 计算collectionView中心点的y值(这个中心点可不是屏幕的中线点哦，是整个collectionView的，所以是包含在屏幕之外的偏移量的哦)
-    CGFloat centerX = self.collectionView.contentOffset.x + self.collectionView.frame.size.width * 0.5;
-    
+    CGFloat centerX = self.collectionView.contentOffset.x + self.collectionView.width * 0.5;
+
      // 拿到每一个cell的布局属性，在原有布局属性的基础上，进行调整
     for (UICollectionViewLayoutAttributes *attrs in curArray) {
+       
         // cell的中心点y 和 collectionView最中心点的y值 的间距的绝对值
         CGFloat space = ABS(attrs.center.x - centerX);
         // 根据间距值 计算 cell的缩放比例
         // 间距越大，cell离屏幕中心点越远，那么缩放的scale值就小
-        CGFloat scale = 1 - space / self.collectionView.frame.size.width;
+        CGFloat scale = 1.0 - (CGFloat)space / (self.collectionView.width-80.0);
         // 设置缩放比例
+        MyLog(@"attrs--centerX:%.f, center:%.f，space:%.f, scale:%.f",centerX,attrs.center.x,space,scale);
         attrs.transform = CGAffineTransformMakeScale(scale, scale);
     }
     return curArray;

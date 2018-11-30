@@ -48,16 +48,23 @@
     TeacherCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:NSStringFromClass([TeacherCollectionViewCell class]) forIndexPath:indexPath];
     
     LevelModel *model = self.levelsArray[indexPath.row];
-    cell.levelLabel.text = model.level;
-    cell.headImageView.image = [UIImage imageNamed:model.head_image];
-    cell.priceLabel.text = [NSString stringWithFormat:@"%.1f元/分钟",model.price];
+    [cell updateCellWithLevel:model];
     return cell;
 }
 
 -(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
-    LevelModel *model = self.levelsArray[indexPath.row];
-    MyLog(@"didSelectItemAtIndexPath -- 教师等级：%@，价格：%.1f",model.level,model.price);
-    self.selLevelBlock(model);
+    LevelModel *selModel = self.levelsArray[indexPath.row];
+    for (LevelModel *model in self.levelsArray) {
+        if (model.level == selModel.level) {
+            model.isSelected = YES;
+        }else{
+            model.isSelected = NO;
+        }
+    }
+    [self.myCollectionView reloadData];
+    
+    MyLog(@"didSelectItemAtIndexPath -- 教师等级：%@，价格：%.2f",selModel.name,[selModel.price doubleValue]);
+    self.selLevelBlock(selModel);
 }
 
 #pragma mark UICollectionViewDelegateFlowLayout

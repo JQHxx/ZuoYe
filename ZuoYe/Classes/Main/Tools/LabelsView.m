@@ -102,7 +102,7 @@
         item.layer.borderWidth = 0.5;
         item.layer.borderColor = [[UIColor colorWithHexString:@"#979797"] CGColor] ;
         item.tag = i;
-        if (i==0) {
+        if (i==_selectedIndex) {
             item.selected = YES;
             item.layer.borderColor = [UIColor redColor].CGColor;
             selectItem = item;

@@ -16,6 +16,8 @@
         self.layer.doubleSided = NO;
         
         self.coverImgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 227, 340)];
+        self.coverImgView.contentMode = UIViewContentModeScaleAspectFill;
+        self.coverImgView.clipsToBounds = YES;
         [self.contentView addSubview:self.coverImgView];
 
     }

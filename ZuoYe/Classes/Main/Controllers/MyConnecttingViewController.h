@@ -7,7 +7,8 @@
 //
 
 #import "BaseViewController.h"
+#import "BaseConnecttingViewController.h"
 
-@interface MyConnecttingViewController : BaseViewController
+@interface MyConnecttingViewController : BaseConnecttingViewController
 
 @end
