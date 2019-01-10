@@ -101,10 +101,15 @@
         }
     }
     
-    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
-    _gradeLabel.text =  [NSString stringWithFormat:@"%@  %@",gradeStr,model.subject];
+    if (kIsArray(model.grade)&&model.grade.count>0) {
+        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
+        _gradeLabel.text =  [NSString stringWithFormat:@"%@  %@",gradeStr,model.subject];
+    }else{
+        _gradeLabel.text =  [NSString stringWithFormat:@"%@",model.subject];
+    }
     CGFloat gradeW = [_gradeLabel.text boundingRectWithSize:CGSizeMake(kScreenWidth-200, 17.0) withTextFont:_gradeLabel.font].width;
     _gradeLabel.frame = CGRectMake(self.headImageView.right+14.0, _nameLabel.bottom, gradeW, 17.0);
+    
     
     if ([model.online integerValue]==1) {
         [_connectButton setImage:[UIImage imageNamed:@"connection_teacher"] forState:UIControlStateNormal];

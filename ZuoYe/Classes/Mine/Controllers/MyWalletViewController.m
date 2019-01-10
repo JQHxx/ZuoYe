@@ -58,10 +58,19 @@
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"我的钱包"];
+    
     if ([ZYHelper sharedZYHelper].isRechargeSuccess) {
         [self loadMyWalletInfo];
         [ZYHelper sharedZYHelper].isRechargeSuccess = NO;
     }
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"我的钱包"];
 }
 
 -(UIStatusBarStyle)preferredStatusBarStyle{
@@ -144,6 +153,7 @@
 #pragma mark 充值
 -(void)rechargeForAccountAction:(UIButton *)sender{
     RechargeViewController *rechargeVC = [[RechargeViewController alloc] init];
+    rechargeVC.isMyWalletIn = YES;
     [self.navigationController pushViewController:rechargeVC animated:YES];
 }
 

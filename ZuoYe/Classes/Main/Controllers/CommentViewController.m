@@ -43,10 +43,23 @@
     
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    if([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        self.navigationController.interactivePopGestureRecognizer.enabled = NO;
+    }
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    if([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        self.navigationController.interactivePopGestureRecognizer.enabled = NO;
+    }
+}
+
 #pragma mark -- Delegate
 #pragma mark XHStarRateViewDelegate
 -(void)starRateView:(XHStarRateView *)starRateView currentScore:(CGFloat)currentScore{
-    
     score = currentScore;
     MyLog(@"评分,%.1f",score);
 }
@@ -144,9 +157,8 @@
         commentText.font=[UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
         commentText.textColor=[UIColor colorWithHexString:@"#4A4A4A"];
         commentText.delegate=self;
-        commentText.returnKeyType=UIReturnKeyDone;
         commentText.zw_placeHolder = @"请对老师简单评价一下吧";
-        commentText.zw_limitCount = 500;
+        commentText.zw_limitCount = 200;
         [_commentTextView addSubview:commentText];
         
         UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 178.5, kScreenWidth, 0.5)];

@@ -33,6 +33,18 @@
     [self initSetUserInfoView];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"个人信息"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"个人信息"];
+}
+
 #pragma mark 状态栏
 -(UIStatusBarStyle)preferredStatusBarStyle{
     return UIStatusBarStyleLightContent;

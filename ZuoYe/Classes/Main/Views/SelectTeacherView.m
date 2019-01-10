@@ -27,7 +27,7 @@
         layout.sectionInset = UIEdgeInsetsMake(10, 10, 10, 10);
         
         self.myCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height) collectionViewLayout:layout];
-        self.myCollectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+//        self.myCollectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.myCollectionView.showsHorizontalScrollIndicator = NO;
         self.myCollectionView.decelerationRate = UIScrollViewDecelerationRateNormal;
         [self.myCollectionView registerClass:[TeacherCollectionViewCell class] forCellWithReuseIdentifier:NSStringFromClass([TeacherCollectionViewCell class])];
@@ -71,17 +71,6 @@
 #pragma mark 水平排放(变成一排展示)
 -(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
     return CGSizeMake(100, 106);
-}
-
-#pragma mark  使前后项都能居中显示
--(UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
-    NSInteger itemCount = [self collectionView:collectionView numberOfItemsInSection:section];
-    NSIndexPath *firstIndexPath = [NSIndexPath indexPathForItem:0 inSection:section];
-    CGSize firstSize = [self collectionView:collectionView layout:collectionViewLayout sizeForItemAtIndexPath:firstIndexPath];
-    
-    NSIndexPath *lastIndexPath = [NSIndexPath indexPathForItem:itemCount-1 inSection:section];
-    CGSize lastSize = [self collectionView:collectionView layout:collectionViewLayout sizeForItemAtIndexPath:lastIndexPath];
-    return UIEdgeInsetsMake(0, (collectionView.bounds.size.width - firstSize.width)/2, 0, (collectionView.bounds.size.width - lastSize.width)/2);
 }
 
 -(void)setLevelsArray:(NSMutableArray *)levelsArray{

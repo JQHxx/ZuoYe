@@ -37,12 +37,21 @@
     [self initConnecttingView];
     [self loadMyConnecttingView];
     
-    
 }
 
 #pragma mark 状态栏
 -(UIStatusBarStyle)preferredStatusBarStyle{
     return UIStatusBarStyleLightContent;
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [MobClick beginLogPageView:@"被连线中"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"被连线中"];
 }
 
 #pragma mark -- Event Response
@@ -119,16 +128,24 @@
 
 #pragma mark 加载数据
 -(void)loadMyConnecttingView{
+    MyLog(@"price:%@",self.teacher.guide_price);
+    
     if (kIsEmptyString(self.teacher.trait)) {
         _headImageView.image = [UIImage imageNamed:@"default_head_image_small"];
     }else{
         [_headImageView sd_setImageWithURL:[NSURL URLWithString:self.teacher.trait] placeholderImage:[UIImage imageNamed:@"default_head_image_small"]];
     }
     _nameLabel.text = self.teacher.tch_name;
-    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:self.teacher.grade];
-    _gradeLabel.text = [NSString stringWithFormat:@"%@ %@",gradeStr,self.teacher.subject ];
+    
+    if (kIsArray(self.teacher.grade)&&self.teacher.grade.count>0) {
+        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:self.teacher.grade];
+        _gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,self.teacher.subject];
+    }else{
+        _gradeLabel.text = [NSString stringWithFormat:@"%@",self.teacher.subject];
+    }
+   
     self.scoreLabel.text = [NSString stringWithFormat:@"评分 %.1f",[self.teacher.score doubleValue]];
-    self.priceLabel.text = [NSString stringWithFormat:@"%.f元/分钟",[self.teacher.guide_price doubleValue]];
+    self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",[self.teacher.guide_price doubleValue]];
     self.totalTimeLabel.text = [NSString stringWithFormat:@"%ld分钟%ld秒",[self.teacher.guide_time integerValue]/60,[self.teacher.guide_time integerValue]%60];
     self.checkCountLabel.text = [NSString stringWithFormat:@"%@次",self.teacher.check_num];
 }

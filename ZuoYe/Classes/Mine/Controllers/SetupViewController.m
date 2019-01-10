@@ -13,6 +13,8 @@
 #import "AppDelegate.h"
 #import "BaseNavigationController.h"
 
+#define kAppstoreUrl @"https://itunes.apple.com/cn/app/id1440442707"
+
 @interface SetupViewController ()<UITableViewDelegate,UITableViewDataSource,UIAlertViewDelegate>{
     NSArray  *titlesArray;
 }
@@ -29,7 +31,7 @@
     self.baseTitle = @"设置";
     self.view.backgroundColor = [UIColor bgColor_Gray];
     
-    titlesArray=@[@"清除缓存",@"意见反馈",@"关于我们"];
+    titlesArray=@[@"清除缓存",@"意见反馈",@"评价一下",@"关于我们"];
     
     [self.view addSubview:self.setupTableView];
     [self.view addSubview:self.loginoutButton];
@@ -73,6 +75,13 @@
     }else if (indexPath.row == 1){
         FeedbackViewController *feedbackVC = [[FeedbackViewController alloc] init];
         [self.navigationController pushViewController:feedbackVC animated:YES];
+    }else if(indexPath.row == 2){
+        NSURL * url = [NSURL URLWithString:kAppstoreUrl];
+        if ([[UIApplication sharedApplication] canOpenURL:url]){
+            [[UIApplication sharedApplication] openURL:url];
+        }else{
+            MyLog(@"can not open");
+        }
     }else{
         AboutUsViewController *aboutUsVC = [[AboutUsViewController alloc] init];
         [self.navigationController pushViewController:aboutUsVC animated:YES];

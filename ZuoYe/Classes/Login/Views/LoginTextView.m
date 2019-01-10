@@ -24,7 +24,8 @@
         [self addSubview:self.imgView];
         
         self.myText = [[UITextField alloc] initWithFrame:CGRectMake(self.imgView.right+10, 15, frame.size.width -self.imgView.right-40, 22)];
-        self.myText.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        CGFloat fontSize = kScreenWidth<375.0?14:16;
+        self.myText.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:fontSize];
         self.myText.placeholder = placeholder;
         self.myText.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         [self addSubview:self.myText];

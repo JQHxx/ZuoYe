@@ -69,7 +69,15 @@
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"订单支付"];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(payOrderSuccessAction) name:kPayBackNotification object:nil];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"订单支付"];
 }
 
 
@@ -83,13 +91,13 @@
             [self.view makeToast:@"余额不足" duration:1.0 position:CSToastPositionCenter];
             return;
         }
-        NSString *unSignStr = [NSString stringWithFormat:@"cate=3&label=%ld&oid=%@&pay_money=%.2f&token=%@",self.label,self.orderId,payMoney,kUserTokenValue];
+        NSString *unSignStr = [NSString stringWithFormat:@"cate=3&from=iOS&label=%ld&oid=%@&pay_money=%.2f&token=%@",self.label,self.orderId,payMoney,kUserTokenValue];
         NSString *body = [NSString stringWithFormat:@"%@&sign=%@",unSignStr,[unSignStr MD5]];
-        [TCHttpRequest postMethodWithURL:kOrderPayAPI body:body success:^(id json) {
+        [TCHttpRequest postMethodWithURL:kOrderPayAPI body:body success:^(id json) {  
             [weakSelf payOrderSuccessAction];
         }];
     }else if (payway==1){ //微信支付
-        NSString *unSignStr = [NSString stringWithFormat:@"cate=2&label=%ld&oid=%@&pay_money=%.2f&token=%@",self.label,self.orderId,payMoney,kUserTokenValue];
+        NSString *unSignStr = [NSString stringWithFormat:@"cate=2&from=iOS&label=%ld&oid=%@&pay_money=%.2f&token=%@",self.label,self.orderId,payMoney,kUserTokenValue];
         NSString *body = [NSString stringWithFormat:@"%@&sign=%@",unSignStr,[unSignStr MD5]];
         [TCHttpRequest postMethodWithURL:kOrderPayAPI body:body success:^(id json) {
             NSDictionary *payInfo =[json objectForKey:@"data"];
@@ -106,7 +114,7 @@
         }];
         
     }else{  //支付宝支付
-         NSString *unSignStr = [NSString stringWithFormat:@"cate=1&label=%ld&oid=%@&pay_money=%.2f&token=%@",self.label,self.orderId,payMoney,kUserTokenValue];
+         NSString *unSignStr = [NSString stringWithFormat:@"cate=1&from=iOS&label=%ld&oid=%@&pay_money=%.2f&token=%@",self.label,self.orderId,payMoney,kUserTokenValue];
         NSString *body = [NSString stringWithFormat:@"%@&sign=%@",unSignStr,[unSignStr MD5]];
         [TCHttpRequest postMethodWithURL:kOrderPayAPI body:body success:^(id json) {
             NSString *payInfo =[json objectForKey:@"data"];

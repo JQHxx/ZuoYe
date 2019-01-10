@@ -40,6 +40,16 @@
     return UIStatusBarStyleLightContent;
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [MobClick beginLogPageView:@"连线老师中"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"连线老师中"];
+}
+
 #pragma mark -- Event Response
 #pragma mark 取消连线
 -(void)cancelConnecttingAction{
@@ -50,8 +60,7 @@
             [weakSelf hangUp];
         });
     }else{
-       
-        NSString *body = [NSString stringWithFormat:@"token=%@&third_id=%@&sure=%d&jobid=%@",kUserTokenValue,self.teacher.third_id,2,self.teacher.job_id];
+        NSString *body = [NSString stringWithFormat:@"token=%@&third_id=%@&sure=%d&jobid=%@",kUserTokenValue,self.teacher.third_id,3,self.teacher.job_id];
         [TCHttpRequest postMethodWithURL:kConnectTeacherAPI body:body success:^(id json) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [weakSelf.animationImageView stopAnimating];
@@ -70,7 +79,7 @@
     [self.view addSubview:self.navBarView];
     [self.view addSubview:self.rootView];
     
-    UIImageView *bgHeadImageView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth-120)/2.0, 100, 120, 120)];
+    UIImageView *bgHeadImageView = [[UIImageView alloc] initWithFrame:CGRectMake((kScreenWidth-130)/2.0, 95, 130, 130)];
     bgHeadImageView.image = [UIImage imageNamed:@"connection_head_image_white"];
     [self.view addSubview:bgHeadImageView];
     [self.view addSubview:self.headImageView];
@@ -150,8 +159,12 @@
         _gradeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
         _gradeLabel.textColor = [UIColor colorWithHexString:@"#808080"];
         _gradeLabel.textAlignment = NSTextAlignmentCenter;
-        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:self.teacher.grade];
-        _gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,self.teacher.subject];
+        if (kIsArray(self.teacher.grade)&&self.teacher.grade.count>0) {
+            NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:self.teacher.grade];
+            _gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,self.teacher.subject];
+        }else{
+            _gradeLabel.text = [NSString stringWithFormat:@"%@",self.teacher.subject];
+        }
     }
     return _gradeLabel;
 }
@@ -171,7 +184,13 @@
 #pragma mark 呼叫动画
 -(UIImageView *)animationImageView{
     if (!_animationImageView) {
-        CGRect viewRect = kScreenWidth<375.0?CGRectMake((kScreenWidth-120.0)/2, self.priceLabel.bottom+20, 120,120):CGRectMake((kScreenWidth-180.0)/2, self.gradeLabel.bottom+40, 180,180);
+        CGRect viewRect;
+        if (isXDevice) {
+            viewRect = CGRectMake((kScreenWidth-180.0)/2, self.priceLabel.bottom+60, 180,180);
+        }else{
+            viewRect = kScreenWidth<375.0?CGRectMake((kScreenWidth-120.0)/2, self.priceLabel.bottom+20, 120,120):CGRectMake((kScreenWidth-180.0)/2, self.priceLabel.bottom+40, 180,180);
+        }
+        
         _animationImageView = [[UIImageView alloc] initWithFrame:viewRect];
         NSMutableArray *imgesArr = [[NSMutableArray alloc] init];
         for (NSInteger i=0; i<3; i++) {

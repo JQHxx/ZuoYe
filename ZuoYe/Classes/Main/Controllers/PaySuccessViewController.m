@@ -28,17 +28,27 @@
 #pragma mark 返回
 -(void)leftNavigationItemAction{
     for (BaseViewController *controller in self.navigationController.viewControllers) {
-        if ([controller isKindOfClass:[MyWalletViewController class]]) {
-            [ZYHelper sharedZYHelper].isRechargeSuccess = YES;
-            [self.navigationController popToViewController:controller animated:YES];
-            break;
-        }
-        if ([controller isKindOfClass:[MyTutorialViewController class]]) {
-            [ZYHelper sharedZYHelper].isPayOrderSuccess = YES;
-            [self.navigationController popToViewController:controller animated:YES];
-            break;
+        if (self.isRechargeSuccess) {
+            [ZYHelper sharedZYHelper].isUpdateUserInfo = YES;
+            if (self.isMyWalletIn) {
+                if ([controller isKindOfClass:[MyWalletViewController class]]) {
+                    [ZYHelper sharedZYHelper].isRechargeSuccess = YES;
+                    [self.navigationController popToViewController:controller animated:YES];
+                    break;
+                }
+            }else{
+                [self.navigationController popToRootViewControllerAnimated:YES];
+            }
+        }else{
+            if ([controller isKindOfClass:[MyTutorialViewController class]]) {
+                [ZYHelper sharedZYHelper].isPayOrderSuccess = YES;
+                [self.navigationController popToViewController:controller animated:YES];
+                break;
+            }
+            
         }
     }
+    
 }
 
 #pragma mark 初始化界面

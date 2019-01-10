@@ -13,8 +13,6 @@
 #import "CommentTableViewCell.h"
 #import "CommentModel.h"
 
-#define kBottomH kScreenWidth*(52.0/375.0)
-
 @interface TeacherDetailsViewController ()<UITableViewDelegate,UITableViewDataSource>{
     TeacherModel   *teacher;
     NSMutableArray   *commentArray;
@@ -47,6 +45,16 @@
     
     [self initTeacherDetailsView];
     [self loadTeacherInfo];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [MobClick beginLogPageView:@"老师详情"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"老师详情"];
 }
 
 -(UIStatusBarStyle)preferredStatusBarStyle{
@@ -213,7 +221,8 @@
 #pragma mark 根滚动视图
 -(UIScrollView *)rootScrollView{
     if (!_rootScrollView) {
-        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0,0, kScreenWidth, kScreenHeight-kBottomH)];
+        CGFloat bottomH = isXDevice ?(50+ 24) : 50;
+        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0,0, kScreenWidth, kScreenHeight-bottomH)];
         _rootScrollView.backgroundColor = [UIColor bgColor_Gray];
         _rootScrollView.showsVerticalScrollIndicator = NO;
         if (@available(iOS 11.0, *)) {
@@ -296,7 +305,8 @@
 #pragma mark
 -(UITableView *)teacherDetailsView{
     if (!_teacherDetailsView) {
-        _teacherDetailsView = [[UITableView alloc] initWithFrame:CGRectMake(0,self.headerView.bottom+10, kScreenWidth, kScreenHeight-kBottomH-self.headerView.bottom) style:UITableViewStylePlain];
+        CGFloat bottomH = isXDevice ?(50+ 24) : 50;
+        _teacherDetailsView = [[UITableView alloc] initWithFrame:CGRectMake(0,self.headerView.bottom+10, kScreenWidth, kScreenHeight-bottomH-self.headerView.bottom) style:UITableViewStylePlain];
         _teacherDetailsView.dataSource = self;
         _teacherDetailsView.delegate = self;
         _teacherDetailsView.showsVerticalScrollIndicator = NO;
@@ -309,11 +319,9 @@
 #pragma mark 底部视图
 -(UIView *)bottomView{
     if (!_bottomView) {
-        _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, kScreenHeight-kBottomH, kScreenWidth,kBottomH)];
         
-        UIImageView *rootView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, kScreenWidth,kBottomH)];
-        rootView.image = [UIImage imageNamed:@"white1"];
-        [_bottomView addSubview:rootView];
+        CGFloat bottomH = isXDevice ?(50+ 24) : 50;
+        _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, kScreenHeight-bottomH, kScreenWidth,bottomH)];
         
         focusBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth/2.0-70)/2.0, 10, 70, 30)];
         [focusBtn setImage:[UIImage imageNamed:@"teacher_details_follow"] forState:UIControlStateNormal];

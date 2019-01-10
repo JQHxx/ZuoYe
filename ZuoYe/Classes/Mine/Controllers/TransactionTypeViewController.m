@@ -55,6 +55,18 @@
     [self.view addSubview:self.confirmButton];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"交易类型"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"交易类型"];
+}
+
 #pragma mark -- Event Response
 #pragma mark 关闭
 -(void)closeTansactionViewAction:(UIButton *)sender{
@@ -121,7 +133,7 @@
 #pragma mark 确定
 -(UIButton *)confirmButton{
     if (!_confirmButton) {
-        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(43.0,self.titleLabel.bottom+102.0,kScreenWidth-95.0,(kScreenWidth-95.0)*(128.0/588.0))];
+        _confirmButton = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0, self.titleLabel.bottom+92.0, 280, 60)];
         [_confirmButton setTitle:@"确定" forState:UIControlStateNormal];
         [_confirmButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];

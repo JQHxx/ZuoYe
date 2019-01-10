@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <UMAnalytics/MobClick.h>
 
 typedef void(^BaseReturnBackBlock)(id object);
 

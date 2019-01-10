@@ -33,6 +33,18 @@
     [self initRegisterSuccessView];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"设置新密码"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"设置新密码"];
+}
+
 #pragma mark -- Event response
 #pragma mark 完成设置
 -(void)confirmSetPwdAction{

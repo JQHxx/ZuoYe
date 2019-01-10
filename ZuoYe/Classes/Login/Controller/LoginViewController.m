@@ -9,7 +9,6 @@
 #import "LoginViewController.h"
 #import "RegisterViewController.h"
 #import "MyTabBarController.h"
-#import "UserAgreementViewController.h"
 #import "GetCodeViewController.h"
 #import "AppDelegate.h"
 #import "CustomTextView.h"
@@ -37,6 +36,18 @@
     self.isHiddenNavBar = YES;
     
     [self initLoginView];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"登录"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"登录"];
 }
 
 #pragma mark 状态栏
@@ -186,7 +197,7 @@
 #pragma mark 初始化界面
 -(void)initLoginView{
     UIImageView *imgView=[[UIImageView alloc] initWithFrame:self.view.bounds];
-    imgView.image = [UIImage imageNamed:isIPhoneX?@"login_background_x":@"login_background"];
+    imgView.image = [UIImage imageNamed:isXDevice?@"login_background_x":@"login_background"];
     [self.view addSubview:imgView];
     
     [self.view addSubview:self.phoneTextView];
@@ -251,7 +262,9 @@
 #pragma mark 登录
 -(UIButton *)loginButton{
     if (!_loginButton) {
-        _loginButton = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0, self.passwordTextView.bottom+38, 280, 60)];
+        CGFloat originX = kScreenWidth<375?48:(kScreenWidth-280)/2.0;
+        CGFloat btnW = kScreenWidth<375?kScreenWidth-95:280;
+        _loginButton = [[UIButton alloc] initWithFrame:CGRectMake(originX, self.passwordTextView.bottom+38, btnW, 60)];
         [_loginButton setImage:[UIImage imageNamed:@"button_login"] forState:UIControlStateNormal];
         [_loginButton addTarget:self action:@selector(loginAction) forControlEvents:UIControlEventTouchUpInside];
     }

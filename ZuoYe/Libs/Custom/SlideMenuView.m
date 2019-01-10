@@ -110,8 +110,9 @@
     UIButton *btn = _items[0];
     
     if (self.isShowUnderLine) {
-        _line = [[UIView alloc] initWithFrame:CGRectMake(10.0f, self.height - 3.0f, btn.width - 20.0f, 3.0f)];
+        _line = [[UIView alloc] initWithFrame:CGRectMake(10.0f, self.height - 5.0f, btn.width - 20.0f,4.0f)];
         _line.backgroundColor = self.titleSelectColor;
+        _line.boderRadius = 2.0;
         [self.myScrollView addSubview:_line];
     }
 }

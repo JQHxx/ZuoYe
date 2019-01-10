@@ -9,16 +9,16 @@
 #import "HomeworkDetailsViewController.h"
 #import "HomeworkViewController.h"
 #import "CancelViewController.h"
-#import "PhotosView.h"
 #import "TeacherModel.h"
 #import "HomeworkModel.h"
-#import "YBPopupMenu.h"
 #import <NIMSDK/NIMSDK.h>
-#import "NIMSessionViewController.h"
 #import "ConnecttingViewController.h"
 #import "NSDate+Extension.h"
+#import "iCarousel.h"
+#import "ZYCustomPageControl.h"
+#import "SDPhotoBrowser.h"
 
-@interface HomeworkDetailsViewController ()<YBPopupMenuDelegate,NIMConversationManagerDelegate>{
+@interface HomeworkDetailsViewController ()<iCarouselDelegate,iCarouselDataSource,SDPhotoBrowserDelegate>{
     UILabel     *typeLabel;
     UILabel     *gradeLabel;
     UIImageView *orderImgView;
@@ -35,17 +35,18 @@
     
     BOOL       isShowMore;
     
-    UILabel    *menuBadgeLbl;
-    
     UIButton  *contactButton;
 }
 
 @property (nonatomic, strong) UIButton     *rightItem;
-@property (nonatomic ,strong) UILabel      *badgeLabel;          //红点
 @property (nonatomic ,strong) UIScrollView *rootScrollView;
-@property (nonatomic ,strong) UIView     *homeworkView;
-@property (nonatomic ,strong) PhotosView *photosView;
-@property (nonatomic ,strong) UIView     *teacherView;
+@property (nonatomic ,strong) UIView       *homeworkView;
+@property (nonatomic ,strong) iCarousel    *photosCarousel;
+@property (nonatomic, strong) UIView       *selectView;
+@property (nonatomic ,strong) ZYCustomPageControl *pageControl;
+@property (nonatomic ,strong) UIView        *teacherView;
+
+@property (nonatomic ,strong) NSMutableArray *jobPicsArray;
 
 @end
 
@@ -60,70 +61,96 @@
     
     self.view.backgroundColor = [UIColor bgColor_Gray];
     
-    [[NIMSDK sharedSDK].conversationManager addDelegate:self];
-    
     model = [[HomeworkModel alloc] init];
     
     [self initHomeworkDetailsView];
     [self loadHomeworkDetailData];
 }
 
-#pragma mark -- Delegate
-#pragma mark YBPopupMenuDelegate
--(void)ybPopupMenuDidSelectedAtIndex:(NSInteger)index ybPopupMenu:(YBPopupMenu *)ybPopupMenu{
-    if(index==0){
-        CancelViewController *cancelVC = [[CancelViewController alloc] init];
-        cancelVC.jobid = self.jobId;
-        cancelVC.type = 1;
-        cancelVC.myTitle = [model.label integerValue]<2?@"取消检查":@"取消辅导";
-        [self.navigationController pushViewController:cancelVC animated:YES];
-    }else{
-        NIMSession *session = [NIMSession session:model.third_id type:NIMSessionTypeP2P];
-        NIMSessionViewController *sessionVC = [[NIMSessionViewController alloc] initWithSession:session];
-        [self.navigationController pushViewController:sessionVC animated:YES];
+#pragma mark -- iCarouselDataSource
+-(NSInteger)numberOfItemsInCarousel:(iCarousel *)carousel{
+    return self.jobPicsArray.count;
+}
+
+-(UIView *)carousel:(iCarousel *)carousel viewForItemAtIndex:(NSInteger)index reusingView:(UIView *)view{
+    if (view==nil) {
+        
+        CGFloat viewHeight = isXDevice ? kScreenHeight-kNavHeight-333:kScreenHeight-kNavHeight-263;
+        view = [[UIView alloc] initWithFrame:CGRectMake(0, 0,kScreenWidth-148, viewHeight)];
+        
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:view.bounds];
+        imageView.tag = 1000+index;
+        imageView.userInteractionEnabled = YES;
+        [view addSubview:imageView];
+        
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(lookOverFullImageAction:)];
+        [imageView addGestureRecognizer:tap];
+    }
+    UIImageView *imageView = [view viewWithTag:1000+index];
+    NSString *imgUrl = [self.jobPicsArray objectAtIndex:index];
+    [imageView sd_setImageWithURL:[NSURL URLWithString:imgUrl] placeholderImage:[UIImage imageNamed:@"task_details_loading"]];
+    
+    return view;
+}
+
+
+
+#pragma mark -- iCarouselDelegate
+- (void)carouselDidEndScrollingAnimation:(iCarousel *)carousel{
+    MyLog(@"___1 %ld",carousel.currentItemIndex);
+    UIView *view = carousel.currentItemView;
+    self.selectView = view;
+    self.pageControl.currentPage = carousel.currentItemIndex;
+}
+
+- (void)carouselDidScroll:(iCarousel *)carousel{
+    MyLog(@"___2 %ld",carousel.currentItemIndex);
+    if (self.selectView != carousel.currentItemView) {
+        self.selectView.backgroundColor = [UIColor clearColor];
+        UIView *view = carousel.currentItemView;
+        view.backgroundColor = [UIColor whiteColor];
+        self.pageControl.currentPage = carousel.currentItemIndex;
     }
 }
 
-#pragma mark NIMConversationManagerDelegate
-#pragma mark 增加最近会话的回调
--(void)didAddRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
-    MyLog(@"TutorialViewController didAddRecentSession-- totalUnreadCount:%ld",totalUnreadCount);
-    self.badgeLabel.hidden = totalUnreadCount<1;
+-(CATransform3D)carousel:(iCarousel *)carousel itemTransformForOffset:(CGFloat)offset baseTransform:(CATransform3D)transform{
+    static CGFloat max_sacle = 1.0f;
+    static CGFloat min_scale = 0.8f;
+    if (offset <= 1 && offset >= -1) {
+        float tempScale = offset < 0 ? 1+offset : 1-offset;
+        float slope = (max_sacle - min_scale) / 1;
+        
+        CGFloat scale = min_scale + slope*tempScale;
+        transform = CATransform3DScale(transform, scale, scale, 1);
+    }else{
+        transform = CATransform3DScale(transform, min_scale, min_scale, 1);
+    }
+    return CATransform3DTranslate(transform, offset * self.photosCarousel.itemWidth * 1.4, 0.0, 0.0);
 }
 
-#pragma mark 最近会话修改的回调
--(void)didUpdateRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
-    MyLog(@"TutorialViewController 更新会话 didUpdateRecentSession -- totalUnreadCount:%ld",totalUnreadCount);
-    self.badgeLabel.hidden = totalUnreadCount<1;
+
+#pragma mark - SDPhotoBrowserDelegate
+#pragma mark 返回临时占位图片（即原来的小图）
+- (UIImage *)photoBrowser:(SDPhotoBrowser *)browser placeholderImageForIndex:(NSInteger)index{
+    UIImageView *imageView = [self.selectView viewWithTag:index+1000];
+    return imageView.image;
 }
 
-#pragma mark 已读回调
--(void)allMessagesRead{
-    self.badgeLabel.hidden = YES;
+#pragma mark
+-(NSURL *)photoBrowser:(SDPhotoBrowser *)browser highQualityImageURLForIndex:(NSInteger)index{
+    NSString *imgUrl = self.jobPicsArray[index];
+    return [NSURL URLWithString:imgUrl];
 }
 
 #pragma mark -- Event Response
 #pragma mark 取消
 -(void)rightNavigationItemAction{
     if (isShowMore) {
-        NSArray *titles = @[@"取消辅导",@"消息"];
-        kSelfWeak;
-        [YBPopupMenu showRelyOnView:self.rightItem titles:titles icons:@[@"",@"",@""] menuWidth:100 otherSettings:^(YBPopupMenu *popupMenu) {
-            popupMenu.priorityDirection = YBPopupMenuPriorityDirectionTop;
-            popupMenu.borderWidth = 0.5;
-            popupMenu.borderColor = [UIColor colorWithHexString:@"0xeeeeeee"];
-            popupMenu.delegate = self;
-            popupMenu.textColor = [UIColor colorWithHexString:@"0x626262"];
-            popupMenu.fontSize = 14;
-            
-            if (menuBadgeLbl==nil) {
-                menuBadgeLbl=[[UILabel alloc] initWithFrame:CGRectMake(50,65, 8, 8)];
-                menuBadgeLbl.backgroundColor=[UIColor redColor];
-                menuBadgeLbl.boderRadius = 4;
-                [popupMenu addSubview:menuBadgeLbl];
-            }
-            menuBadgeLbl.hidden=weakSelf.badgeLabel.hidden;
-        }];
+        CancelViewController *cancelVC = [[CancelViewController alloc] init];
+        cancelVC.jobid = self.jobId;
+        cancelVC.type = 1;
+        cancelVC.myTitle = @"取消辅导";
+        [self.navigationController pushViewController:cancelVC animated:YES];
     }else{
         if ([model.is_receive integerValue]<2) {
             kSelfWeak;
@@ -179,11 +206,25 @@
     teacher.job_pic = model.images;
     teacher.grade = @[model.grade];
     teacher.third_id = model.third_id;
+    teacher.tch_id = model.tch_id;
    
     ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] initWithCallee:teacher.third_id];
     connecttingVC.isHomeworkIn = YES;
     connecttingVC.teacher = teacher;
     [self.navigationController pushViewController:connecttingVC animated:YES];
+}
+
+#pragma mark 查看大图
+-(void)lookOverFullImageAction:(UITapGestureRecognizer *)sender{
+    NSInteger selectIndex = sender.view.tag-1000;
+    MyLog(@"selectIndex:%ld",selectIndex);
+    
+    SDPhotoBrowser *photoBrowser = [SDPhotoBrowser new];
+    photoBrowser.delegate = self;
+    photoBrowser.currentImageIndex = selectIndex;
+    photoBrowser.imageCount = self.jobPicsArray.count;
+    photoBrowser.sourceImagesContainerView = self.photosCarousel;
+    [photoBrowser show];
 }
 
 #pragma mark -- Private Methods
@@ -213,13 +254,17 @@
             [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#4A4A4A"] range:NSMakeRange(0, 5)];
             priceLabel.attributedText = attributeStr;
             
-            weakSelf.photosView.photosArray = [NSMutableArray arrayWithArray:model.images];
+            weakSelf.jobPicsArray = [NSMutableArray arrayWithArray:model.images];
+            
+            weakSelf.pageControl.numberOfPages = weakSelf.jobPicsArray.count;
+            weakSelf.pageControl.hidden = weakSelf.jobPicsArray.count<2;
+            [weakSelf.photosCarousel reloadData];
             
             if ([model.is_receive integerValue]==1) {
                 stateLabel.text = @"待接单";
                 stateImageView.image = [UIImage imageNamed:@"order_wait_receipt"];
                 weakSelf.teacherView.hidden = YES;
-                weakSelf.rootScrollView.contentSize =CGSizeMake(kScreenWidth, weakSelf.photosView.top+weakSelf.photosView.height);
+                weakSelf.rootScrollView.contentSize =CGSizeMake(kScreenWidth, weakSelf.photosCarousel.top+weakSelf.photosCarousel.height);
             }else{
                 stateLabel.text = @"已接单";
                 stateImageView.image = [UIImage imageNamed:@"order_already_received"];
@@ -250,7 +295,7 @@
                 }
                 
                 weakSelf.teacherView.hidden = NO;
-                weakSelf.rootScrollView.contentSize =CGSizeMake(kScreenWidth, weakSelf.teacherView.top+weakSelf.teacherView.height);
+                weakSelf.rootScrollView.contentSize =CGSizeMake(kScreenWidth, weakSelf.teacherView.top+weakSelf.teacherView.height+10);
                 
                 NSNumber *currentTime =[[ZYHelper sharedZYHelper] timeSwitchTimestamp:[NSDate currentFullDate] format:@"yyyy年MM月dd日 HH:mm:ss"];
                 if ([model.start_time integerValue]>[currentTime integerValue]) {
@@ -267,16 +312,15 @@
 -(void)initHomeworkDetailsView{
     if (isShowMore) {
         [self.view addSubview:self.rightItem];
-        [self.view addSubview:self.badgeLabel];
-        self.badgeLabel.hidden = YES;
     }
     
     [self.view addSubview:self.rootScrollView];
     [self.rootScrollView addSubview:self.homeworkView];
-    [self.rootScrollView addSubview:self.photosView];
+    [self.rootScrollView addSubview:self.photosCarousel];
+    [self.rootScrollView addSubview:self.pageControl];
     [self.rootScrollView addSubview:self.teacherView];
     self.teacherView.hidden = YES;
-    self.rootScrollView.contentSize =CGSizeMake(kScreenWidth, self.photosView.top+self.photosView.height);
+    self.rootScrollView.contentSize =CGSizeMake(kScreenWidth, self.photosCarousel.top+self.photosCarousel.height);
     self.rootScrollView.hidden = YES;
 }
 
@@ -284,7 +328,7 @@
 #pragma mark
 -(UIScrollView *)rootScrollView{
     if (!_rootScrollView) {
-        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight-20)];
+        _rootScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight)];
         _rootScrollView.backgroundColor = [UIColor bgColor_Gray];
         _rootScrollView.showsVerticalScrollIndicator = NO;
     }
@@ -299,16 +343,6 @@
         [_rightItem addTarget:self action:@selector(rightNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
     }
     return _rightItem;
-}
-
-#pragma mark 红色标记
--(UILabel *)badgeLabel{
-    if (!_badgeLabel) {
-        _badgeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-16, KStatusHeight+14, 8, 8)];
-        _badgeLabel.boderRadius = 4.0;
-        _badgeLabel.backgroundColor = [UIColor colorWithHexString:@"#F50000"];
-    }
-    return _badgeLabel;
 }
 
 #pragma mark 作业信息
@@ -364,18 +398,41 @@
     return _homeworkView;
 }
 
-#pragma mark 图片
--(PhotosView *)photosView{
-    if (!_photosView) {
-        _photosView = [[PhotosView alloc] initWithFrame:CGRectMake(0, self.homeworkView.bottom+15, kScreenWidth, 360) bgColor:[UIColor bgColor_Gray]];
+#pragma mark 滚动图片
+-(iCarousel *)photosCarousel{
+    if (!_photosCarousel) {
+     
+        CGFloat  tempHeight = isXDevice?kScreenHeight-self.homeworkView.bottom-244:kScreenHeight-self.homeworkView.bottom-156;
+        _photosCarousel = [[iCarousel alloc] initWithFrame:CGRectMake(0, self.homeworkView.bottom, kScreenWidth, tempHeight)];
+        _photosCarousel.delegate = self;
+        _photosCarousel.dataSource = self;
+        _photosCarousel.pagingEnabled = NO;
+        _photosCarousel.bounces = NO;
+        _photosCarousel.type = iCarouselTypeCustom;
     }
-    return _photosView;
+    return _photosCarousel;
+}
+
+#pragma mark
+-(ZYCustomPageControl *)pageControl{
+    if (!_pageControl) {
+        _pageControl = [[ZYCustomPageControl alloc] initWithFrame:CGRectMake(0, self.photosCarousel.bottom-10, kScreenWidth, 5)];
+        _pageControl.currentPage = 0;
+        _pageControl.userInteractionEnabled = NO;
+        _pageControl.inactiveImage = [UIImage imageNamed:@"Oval"];
+        _pageControl.inactiveImageSize = CGSizeMake(5.0, 5.0);
+        _pageControl.currentImage = [UIImage imageNamed:@"Rectangle"];
+        _pageControl.currentImageSize = CGSizeMake(10, 5);
+        _pageControl.currentPageIndicatorTintColor = [UIColor clearColor];
+        _pageControl.pageIndicatorTintColor = [UIColor clearColor];
+    }
+    return _pageControl;
 }
 
 #pragma mark 老师信息
 -(UIView *)teacherView{
     if (!_teacherView) {
-        _teacherView = [[UIView alloc] initWithFrame:CGRectMake(10, self.photosView.bottom+10, kScreenWidth-20, 80)];
+        _teacherView = [[UIView alloc] initWithFrame:CGRectMake(10, self.photosCarousel.bottom+10, kScreenWidth-20, 80)];
         _teacherView.boderRadius=4.0;
         _teacherView.backgroundColor = [UIColor whiteColor];
         
@@ -415,8 +472,12 @@
     return _teacherView;
 }
 
--(void)dealloc{
-    [[NIMSDK sharedSDK].conversationManager removeDelegate:self];
+-(NSMutableArray *)jobPicsArray{
+    if (!_jobPicsArray) {
+        _jobPicsArray = [[NSMutableArray alloc] init];
+    }
+    return _jobPicsArray;
 }
+
 
 @end

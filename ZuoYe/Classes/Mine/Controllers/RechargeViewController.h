@@ -10,4 +10,6 @@
 
 @interface RechargeViewController : BaseViewController
 
+@property (nonatomic,assign) BOOL isMyWalletIn;
+
 @end

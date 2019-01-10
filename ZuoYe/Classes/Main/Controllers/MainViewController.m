@@ -19,7 +19,6 @@
 #import "BaseWebViewController.h"
 #import "TakePhotoViewController.h"
 #import "BaseNavigationController.h"
-#import <NIMSDK/NIMSDK.h>
 #import "SDCycleScrollView.h"
 #import "SlideMenuView.h"
 #import "MyHomeworkView.h"
@@ -30,13 +29,12 @@
 
 #define kCellHeight 85.0
 
-@interface MainViewController ()<UITableViewDelegate,UITableViewDataSource,SlideMenuViewDelegate,UIScrollViewDelegate,MyHomeworkViewDelegate,SDCycleScrollViewDelegate,UITabBarControllerDelegate,NIMConversationManagerDelegate>{
+@interface MainViewController ()<UITableViewDelegate,UITableViewDataSource,SlideMenuViewDelegate,UIScrollViewDelegate,MyHomeworkViewDelegate,SDCycleScrollViewDelegate,UITabBarControllerDelegate>{
     NSMutableArray   *bannersArray;   //广告位
     NSMutableArray   *teachersArray;  //老师信息
     
     NSArray          *titles;
     NSInteger        selectIndex;
-    NSInteger        sessionUnreadCount;
 }
 
 @property (nonatomic , strong) UILabel         *badgeLabel;          //红点
@@ -64,20 +62,21 @@
     teachersArray = [[NSMutableArray alloc] init];
     titles = @[@"语文",@"数学",@"英语"];
     selectIndex = 0;
-    sessionUnreadCount = 0;
     
     self.tabBarController.delegate = self;
-    
-    [[NIMSDK sharedSDK].conversationManager addDelegate:self];
+
     
     [self initMainView];
     
     [self loadHomeAllData];
     [self loadUnReadMessageData];
+    [self loadMyWalletData];
 }
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"首页"];
     
     if ([ZYHelper sharedZYHelper].isUpdateHome) {
         [self refreshHomeData];
@@ -87,7 +86,11 @@
         [self loadUnReadMessageData];
         [ZYHelper sharedZYHelper].isUpdateMessageUnread = NO;
     }
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshHomeData) name:kOrderCheckSuccessNotification object:nil];
+    
+    if ([ZYHelper sharedZYHelper].isRechargeSuccess) {
+        [self loadMyWalletData];
+        [ZYHelper sharedZYHelper].isRechargeSuccess = NO;
+    }
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshHomeData) name:kHomeworkAcceptNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshHomeData) name:kGuideCancelNotification object:nil];
 }
@@ -95,9 +98,11 @@
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kOrderCheckSuccessNotification object:nil];
+    [MobClick endLogPageView:@"首页"];
+
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kHomeworkAcceptNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kGuideCancelNotification object:nil];
+    
 }
 
 #pragma mark 状态栏
@@ -127,6 +132,10 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return kCellHeight;
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath{
+    [cell setSeparatorInset:UIEdgeInsetsMake(0, 25, 0, 26)];
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -179,7 +188,7 @@
 #pragma mark 获取更多作业
 -(void)myHomeworkViewDidShowMoreHomeworkAction{
     HomeworkViewController *homeworkVC = [[HomeworkViewController alloc] init];
-    homeworkVC.hidesBottomBarWhenPushed = YES;
+    homeworkVC.hidesBottomBarWhenPushed =YES;
     [self.navigationController pushViewController:homeworkVC animated:YES];
 }
 
@@ -219,25 +228,6 @@
     }
 }
 
-#pragma mark NIMConversationManagerDelegate
-#pragma mark 增加最近会话的回调
--(void)didAddRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
-    MyLog(@"didAddRecentSession-- totalUnreadCount:%ld",totalUnreadCount);
-    sessionUnreadCount = totalUnreadCount;
-    [self loadUnReadMessageData];
-}
-
-#pragma mark 最近会话修改的回调
--(void)didUpdateRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
-    MyLog(@"更新会话 didUpdateRecentSession -- totalUnreadCount:%ld",totalUnreadCount);
-    sessionUnreadCount = totalUnreadCount;
-    [self loadUnReadMessageData];
-}
-
-#pragma mark 已读回调
--(void)allMessagesRead{
-    
-}
 
 #pragma mark - UITabBarControllerDelegate
 -(BOOL)tabBarController:(UITabBarController *)tabBarController shouldSelectViewController:(UIViewController *)viewController{
@@ -258,9 +248,11 @@
 #pragma mark -- Event Response
 #pragma mark 帮助
 -(void)leftNavigationItemAction{
+  
     UserHelpViewController *userHelpVC = [[UserHelpViewController alloc] init];
     userHelpVC.hidesBottomBarWhenPushed = YES;
     [self.navigationController pushViewController:userHelpVC animated:YES];
+     
 }
 
 #pragma mark 消息
@@ -327,6 +319,14 @@
     NSString *body = [NSString stringWithFormat:@"token=%@",kUserTokenValue];
     [TCHttpRequest postMethodWithURL:kHomeAPI body:body success:^(id json) {
         NSDictionary *data = [json objectForKey:@"data"];
+        
+        //佣金百分比
+        NSNumber  *tchPercent = [data valueForKey:@"tchPercent"];
+        [NSUserDefaultsInfos putKey:kTchPercent andValue:tchPercent];
+        
+        NSNumber *highPercent = [data valueForKey:@"highPercent"];
+        [NSUserDefaultsInfos putKey:kHighPercent andValue:highPercent];
+        
         //广告图
         NSArray *bannerList = [data objectForKey:@"banner"];
          NSMutableArray *tempBannerImgArr  = [[NSMutableArray alloc] init];
@@ -386,6 +386,7 @@
             [weakSelf.teacherTableView reloadData];
             weakSelf.teacherTableView.frame=CGRectMake(0, self.subjectsView.bottom, kScreenWidth, teachersArray.count*kCellHeight);
             weakSelf.rootScrollView.contentSize=CGSizeMake(kScreenWidth, self.teacherTableView.top+self.teacherTableView.height);
+            
         });
     }];
 }
@@ -419,7 +420,7 @@
         NSDictionary *data = [json objectForKey:@"data"];
         NSInteger count = [[data valueForKey:@"count"] integerValue];
         dispatch_async(dispatch_get_main_queue(), ^{
-            weakSelf.badgeLabel.hidden = count+sessionUnreadCount<1;
+            weakSelf.badgeLabel.hidden = count<1;
         });
     }];
 }
@@ -509,7 +510,7 @@
         [_navBarView addSubview:titleLabel];
         
         UIButton *rightBtn=[[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-50, KStatusHeight+2, 40, 40)];
-        [rightBtn setImage:[UIImage drawImageWithName:@"home_news" size:CGSizeMake(24, 24)] forState:UIControlStateNormal];
+        [rightBtn setImage:[UIImage drawImageWithName:@"home_news" size:CGSizeMake(30, 24)] forState:UIControlStateNormal];
         [rightBtn addTarget:self action:@selector(rightNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
         [_navBarView addSubview:rightBtn];
     }
@@ -598,10 +599,6 @@
         [_teacherTableView addGestureRecognizer:swipGestureRight];
     }
     return _teacherTableView;
-}
-
--(void)dealloc{
-    [[NIMSDK sharedSDK].conversationManager removeDelegate:self];
 }
 
 @end

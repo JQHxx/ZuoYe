@@ -7,16 +7,11 @@
 //
 
 #import "TutorialViewController.h"
-#import "CancelViewController.h"
 #import "TutorialPayViewController.h"
 #import "STPopupController.h"
 #import "CommentViewController.h"
 #import <NIMSDK/NIMSDK.h>
 #import <NIMAVChat/NIMAVChat.h>
-#import <ReplayKit/ReplayKit.h>
-#import "RPPreviewViewController+MovieURL.h"
-#import <PhotosUI/PhotosUI.h>
-#import "YX_ReplayManager.h"
 #import "SVProgressHUD.h"
 #import "WhiteboardManager.h"
 #import "WhiteboardLines.h"
@@ -24,22 +19,19 @@
 #import "WhiteboardDrawView.h"
 #import "WhiteboardCmdHandler.h"
 #import "MyTutorialViewController.h"
-#import "NIMSessionViewController.h"
-#import "YBPopupMenu.h"
 #import "SDPhotoBrowser.h"
 
-@interface TutorialViewController ()<UIScrollViewDelegate,NIMNetCallManagerDelegate,RPPreviewViewControllerDelegate,WhiteboardCmdHandlerDelegate,WhiteboardManagerDelegate,NIMLoginManagerDelegate,YBPopupMenuDelegate,NIMConversationManagerDelegate,SDPhotoBrowserDelegate>{
+@interface TutorialViewController ()<UIScrollViewDelegate,NIMNetCallManagerDelegate,WhiteboardCmdHandlerDelegate,WhiteboardManagerDelegate,NIMLoginManagerDelegate,SDPhotoBrowserDelegate>{
     NSInteger     allNum;
     NSInteger     timeCount;
     UILabel       *timeLabel;
     
     BOOL          isOtherEnd;  //对方结束辅导
-    
-    BOOL         isEndCoach;
+    BOOL          isEndCoach;
+    BOOL          isRecordingStop;  //录制停止
 
     NSInteger     currentWhiteboardIndex; //当前白板页码
-    
-    UILabel      *menuBadgeLbl;
+    UILabel       *menuBadgeLbl;
 }
 
 @property (nonatomic, strong ) UIScrollView  *rootScrollView;
@@ -47,8 +39,6 @@
 @property (nonatomic, strong ) UIView        *callView;     //通话确认
 @property (nonatomic, strong ) UIView        *examView;     //审题
 @property (nonatomic, strong ) UIView        *toolBarView;  //底部工具栏
-@property (nonatomic , strong) UILabel         *badgeLabel;          //红点
-@property (nonatomic, strong ) UIButton              *moreBtn;      //更多
 @property (nonatomic, strong ) WhiteboardCmdHandler  *cmdHander;
 @property (nonatomic,  copy  ) NSString  *myUid;      //通信ID
 
@@ -89,15 +79,16 @@
     _myUid = [[NIMSDK sharedSDK].loginManager currentAccount];
     MyLog(@"通信ID：%@",_myUid);
     [[NIMSDK sharedSDK].loginManager addDelegate:self];
-    [[NIMSDK sharedSDK].conversationManager addDelegate:self];
     
     [self initTutorialView];
     [self createWhiteBoard];
-    [self startRecord];
 }
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"作业辅导"];
+    
     [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
@@ -109,6 +100,9 @@
 
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"作业辅导"];
+    
     [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
@@ -127,65 +121,48 @@
     }
 }
 
-#pragma mark YBPopupMenuDelegate
--(void)ybPopupMenuDidSelectedAtIndex:(NSInteger)index ybPopupMenu:(YBPopupMenu *)ybPopupMenu{
-    if(index==0){
-        CancelViewController *cancelVC = [[CancelViewController alloc] init];
-        cancelVC.jobid = self.teacher.job_id;
-        cancelVC.myTitle = @"取消辅导";
-        cancelVC.type = CancelTypeOrderCocah;
-        [self.navigationController pushViewController:cancelVC animated:YES];
-    }else{
-        NIMSession *session = [NIMSession session:self.teacher.third_id type:NIMSessionTypeP2P];
-        NIMSessionViewController *sessionVC = [[NIMSessionViewController alloc] initWithSession:session];
-        [self.navigationController pushViewController:sessionVC animated:YES];
-    }
-}
-
 #pragma mark NIMNetCallManagerDelegate
 #pragma mark 点对点通话建立成功
 -(void)onCallEstablished:(UInt64)callID{
     MyLog(@"点对点通话建立成功--onCallEstablished:%lld",callID);
+    [NSUserDefaultsInfos putKey:kCallingForID andValue:[NSNumber numberWithUnsignedLongLong:callID]];
 }
 
 #pragma mark 通话异常断开
 -(void)onCallDisconnected:(UInt64)callID withError:(NSError *)error{
-    MyLog(@"通话异常断开--error:%@",error.localizedDescription);
-    [[NIMAVChatSDK sharedSDK].netCallManager hangup:self.callInfo.callID];
-    [self.view makeToast:@"通话异常断开，请重新连接" duration:1.0 position:CSToastPositionCenter];
-    kSelfWeak;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [weakSelf backAction];
-    });
-    
+    MyLog(@"通话异常断开--error:%@,callID:%lld",error.localizedDescription,callID);
+    if (!isEndCoach) {
+        if (callID==self.callInfo.callID) {
+            [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
+            [[NIMAVChatSDK sharedSDK].netCallManager hangup:self.callInfo.callID];
+            [self.view makeToast:@"通话异常断开，请重新连接" duration:1.0 position:CSToastPositionCenter];
+            kSelfWeak;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [weakSelf backAction];
+            });
+        }
+    }
 }
 
 #pragma mark 收到对方网络通话控制信息，用于方便通话双方沟通信息
 -(void)onControl:(UInt64)callID from:(NSString *)user type:(NIMNetCallControlType)control{
     MyLog(@"收到对方网络通话控制信息,callID:%lld,user:%@,type:%zd",callID,user,control);
-    
-    if (control== NIMNetCallControlTypeBackground) {
-        [self.timer setFireDate:[NSDate distantFuture]]; //关闭计时器
-        [self.view makeToast:@"对方退到后台" duration:1.0 position:CSToastPositionCenter];
-    }else if (control == NIMNetCallControlTypeFeedabck){
-        [self.timer setFireDate:[NSDate distantPast]]; //开启计时器
-        [self.view makeToast:@"对方回到前台" duration:1.0 position:CSToastPositionCenter];
+    if (callID==self.callInfo.callID) {
+        if (control== NIMNetCallControlTypeBackground) {
+            [self.timer setFireDate:[NSDate distantFuture]]; //关闭计时器
+            [self.view makeToast:@"对方退到后台" duration:1.0 position:CSToastPositionCenter];
+        }else if (control == NIMNetCallControlTypeFeedabck){
+            [self.timer setFireDate:[NSDate distantPast]]; //开启计时器
+            [self.view makeToast:@"对方回到前台" duration:1.0 position:CSToastPositionCenter];
+        }
     }
 }
 
 #pragma mark 对方挂断电话
 -(void)onHangup:(UInt64)callID by:(NSString *)user{
-    MyLog(@"对方挂断电话--onHangup");
-    if (!isEndCoach) {
-        [self.view makeToast:@"对方挂断电话" duration:1.0 position:CSToastPositionCenter];
-        [self backAction];
-    }
+    MyLog(@"对方挂断电话--onHangup,callID:%lld",callID);
 }
 
-#pragma mark - RPPreviewViewControllerDelegate
--(void)previewControllerDidFinish:(RPPreviewViewController *)previewController{
-    [previewController dismissViewControllerAnimated:YES completion:nil];
-}
 
 #pragma mark - WhiteboardManagerDelegate
 #pragma mark 创建互动白板
@@ -237,7 +214,7 @@
         [self startCoach];
     }else if (type == WhiteBoardCmdTypeEndCoach){ //结束辅导
         isOtherEnd = YES;
-        [self endCoach];
+        [self endHomeworkTutoringAction];
     }else if (type == WhiteBoardCmdTypeCancelCoach){ //取消辅导或退出app
         [self.view makeToast:@"对方取消当前辅导" duration:1.0 position:CSToastPositionCenter];
         [[NIMAVChatSDK sharedSDK].netCallManager hangup:self.callInfo.callID];
@@ -277,19 +254,6 @@
     }
 }
 
-#pragma mark NIMConversationManagerDelegate
-#pragma mark 增加最近会话的回调
--(void)didAddRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
-    MyLog(@"TutorialViewController didAddRecentSession-- totalUnreadCount:%ld",totalUnreadCount);
-    self.badgeLabel.hidden = totalUnreadCount<1;
-}
-
-#pragma mark 最近会话修改的回调
--(void)didUpdateRecentSession:(NIMRecentSession *)recentSession totalUnreadCount:(NSInteger)totalUnreadCount{
-    MyLog(@"TutorialViewController 更新会话 didUpdateRecentSession -- totalUnreadCount:%ld",totalUnreadCount);
-    self.badgeLabel.hidden = totalUnreadCount<1;
-}
-
 #pragma mark - SDPhotoBrowserDelegate
 #pragma mark 返回临时占位图片（即原来的小图）
 - (UIImage *)photoBrowser:(SDPhotoBrowser *)browser placeholderImageForIndex:(NSInteger)index{
@@ -315,6 +279,12 @@
     MyLog(@"退出后台 语音发送指令，control:%lld,type:%zd",self.callInfo.callID,NIMNetCallControlTypeBackground);
     [[NIMAVChatSDK sharedSDK].netCallManager control:self.callInfo.callID type:NIMNetCallControlTypeBackground];
     [self.timer setFireDate:[NSDate distantFuture]]; //关闭计时器
+    
+    NSString *unSignStr = [NSString stringWithFormat:@"jobid=%@&temp_time=%ld&token=%@&key=%@",self.teacher.job_id,timeCount,kUserTokenValue,kZySecret];
+    NSString *body = [NSString stringWithFormat:@"jobid=%@&temp_time=%ld&token=%@&sign=%@",self.teacher.job_id,timeCount,kUserTokenValue,[unSignStr MD5]];
+    [TCHttpRequest postMethodWithoutLoadingForURL:kJobGuideTemptimeAPI body:body success:^(id json) {
+        
+    }];
 }
 
 #pragma mark 取消当前辅导
@@ -352,6 +322,7 @@
 
 #pragma mark 返回
 -(void)backAction{
+    [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
     BOOL isOrderIn = NO;
     for (BaseViewController *controller in self.navigationController.viewControllers) {
         if ([controller isKindOfClass:[MyTutorialViewController class]]) {
@@ -397,135 +368,44 @@
     [self startCountTime];
 }
 
-#pragma mark 结束辅导
--(void)endCoach{
-    if (timeCount<1) {
-        timeCount=1;
-    }
-    [self endHomeworkTutoringAction];
-}
-
 #pragma mark -- Event Reponse
-#pragma mark 查看更多（取消辅导和消息）
--(void)getMoreHandleListAction{
-    NSArray *titles =@[@"取消辅导",@"消息"];
-    kSelfWeak;
-    [YBPopupMenu showRelyOnView:self.moreBtn titles:titles icons:@[@"",@"",@""] menuWidth:100 otherSettings:^(YBPopupMenu *popupMenu) {
-        popupMenu.priorityDirection = YBPopupMenuPriorityDirectionTop;
-        popupMenu.borderWidth = 0.5;
-        popupMenu.borderColor = [UIColor colorWithHexString:@"0xeeeeeee"];
-        popupMenu.delegate = self;
-        popupMenu.textColor = [UIColor colorWithHexString:@"0x626262"];
-        popupMenu.fontSize = 14;
-        
-        if (menuBadgeLbl==nil) {
-            menuBadgeLbl=[[UILabel alloc] initWithFrame:CGRectMake(50,65, 8, 8)];
-            menuBadgeLbl.backgroundColor=[UIColor redColor];
-            menuBadgeLbl.boderRadius = 4;
-            [popupMenu addSubview:menuBadgeLbl];
-        }
-        menuBadgeLbl.hidden=weakSelf.badgeLabel.hidden;
-    }];
-}
-
-
 #pragma mark 结束辅导
 -(void)endHomeworkTutoringAction{
+    MyLog(@"结束辅导");
     isEndCoach = YES;
-    if (self.timer) {
-        [self.timer invalidate];
-        self.timer = nil;
-    }
-    kSelfWeak;
-    if ([RPScreenRecorder sharedRecorder].isRecording) {
-        __block BOOL isStopRecording = NO;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[RPScreenRecorder sharedRecorder] stopRecordingWithHandler:^(RPPreviewViewController * _Nullable previewViewController, NSError * _Nullable error) {
-                if (error) {
-                    MyLog(@"结束录制失败----error:%@",error.localizedDescription);
-                    NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,weakSelf.teacher.job_id,timeCount];
-                    [self finishGuideRequestForBody:body];
-                }else{
-                    isStopRecording = YES;
-                    MyLog(@"结束录制成功");
-                    if ([previewViewController respondsToSelector:@selector(movieURL)]) {                                                             
-                        NSURL *videoUrl = [previewViewController.movieURL copy];
-                        if (!videoUrl) {
-                            MyLog(@"获取视频url失败");
-                        }else{
-                            MyLog(@"videoUrl:%@",videoUrl);
-                            //保存到相册
-                            BOOL compatible = UIVideoAtPathIsCompatibleWithSavedPhotosAlbum([videoUrl path]);
-                            if (compatible) {
-                                UISaveVideoAtPathToSavedPhotosAlbum([videoUrl path], self, @selector(savedPhotoImage:didFinishSavingWithError:contextInfo:), nil);
-                            }
-                        }
-                    }
-                }
-            }];
-        });
-       
-    }else{
-        NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,self.teacher.job_id,timeCount];
-        [self finishGuideRequestForBody:body];
-    }
-}
-
-//保存视频完成之后的回调
-- (void)savedPhotoImage:(UIImage*)image didFinishSavingWithError: (NSError *)error contextInfo: (void *)contextInfo{
-    if (error) {
-        MyLog(@"保存视频失败，error:%@",error.localizedDescription);
-    }else{
-        //取出这个视频
-        PHFetchOptions *options = [[PHFetchOptions alloc] init];
-        PHFetchResult *assetsFetchResults = [PHAsset fetchAssetsWithOptions:options];
-        PHAsset *phasset = [assetsFetchResults lastObject];
-        if (phasset) {
-            if (phasset.mediaType == PHAssetMediaTypeVideo) {//是视频文件
-                PHImageManager *manager = [PHImageManager defaultManager];
-                [manager requestAVAssetForVideo:phasset options:nil resultHandler:^(AVAsset * _Nullable asset, AVAudioMix * _Nullable audioMix, NSDictionary * _Nullable info) {
-                    AVURLAsset *urlAsset = (AVURLAsset *)asset;
-                    NSURL *videoURL = urlAsset.URL;
-                    
-                    NSDate* date = [NSDate dateWithTimeIntervalSinceNow:0];
-                    NSTimeInterval time = [date timeIntervalSince1970] * 1000;
-                    NSString *timeString = [NSString stringWithFormat:@"%.0f", time];
-                    NSString *fileName = [NSString stringWithFormat:@"%@_%@",@"tmp",timeString];
-                    NSString *outPath = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:[fileName stringByAppendingString:@".mp4"]];
-                    
-                    MyLog(@"videoURL:%@,outPath:%@",videoURL,outPath);
-                    kSelfWeak;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        //视频压缩
-                        [SVProgressHUD showWithStatus:@"正在压缩视频，请稍后"];
-                        [YX_ReplayManager compressQuailtyWithInputURL:videoURL outputURL:[NSURL fileURLWithPath:outPath] blockHandler:^(AVAssetExportSession *session){
-                            [SVProgressHUD dismiss];
-                            if (session.status==AVAssetExportSessionStatusCompleted) {
-                                NSString *urlStr = [NSString stringWithFormat:kHostTempURL,kUploadVideoAPI];
-                                [[TCHttpRequest sharedTCHttpRequest] uploadVideoWithUrl:urlStr fileKey:@"video" filePath:outPath success:^(id json) { //上传视频
-                                    NSString *videoUrlStr = [json objectForKey:@"data"];
-                                    NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&video=%@&job_time=%ld",kUserTokenValue,weakSelf.teacher.job_id,videoUrlStr,timeCount];
-                                    [weakSelf finishGuideRequestForBody:body];
-                                }];
-                            }else{
-                                MyLog(@"压缩视频文件出错%@",session.error);
-                            }
-                        }];
-                    });
-                }];
-            }
+    if (isOtherEnd) {  //对方结束辅导
+        if (self.timer) {
+            [self.timer invalidate];
+            self.timer = nil;
         }
+        
+        NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,self.teacher.job_id,timeCount+[self.teacher.temp_time integerValue]];
+        [self finishGuideRequestForBody:body];
+    }else{
+        kSelfWeak;
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"结束辅导" message:@"确定要结束作业辅导吗？" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+            
+        }];
+        UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            if (weakSelf.timer) {
+                [weakSelf.timer invalidate];
+                weakSelf.timer = nil;
+            }
+            NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,self.teacher.job_id,timeCount+[self.teacher.temp_time integerValue]];
+            [weakSelf finishGuideRequestForBody:body];
+        }];
+        
+        [alertController addAction:cancelAction];
+        [alertController addAction:confirmAction];
+        [self presentViewController:alertController animated:YES completion:nil];
     }
 }
-
 
 #pragma mark -- Private Methods
 #pragma mark 初始化
 -(void)initTutorialView{
     [self.view addSubview:self.rootScrollView];
-    [self.view addSubview:self.moreBtn];
-    [self.view addSubview:self.badgeLabel];
-    self.badgeLabel.hidden = YES;
     [self.view addSubview:self.countLabel];
     [self.view addSubview:self.callView];
 }
@@ -541,48 +421,14 @@
     timeLabel.text = [NSString stringWithFormat:@"%02ld:%02ld:%02ld",timeCount/3600,timeCount/60,timeCount%60];
 }
 
-#pragma mark 开始录制
--(void)startRecord{
-//    [[NIMAVChatSDK sharedSDK].netCallManager startAudioRecording:[NSURL URLWithString:@""] error:nil];
-    
-     dispatch_async(dispatch_get_main_queue(), ^{
-        RPScreenRecorder *recorder = [RPScreenRecorder sharedRecorder];
-        if ([recorder isAvailable]&&[YX_ReplayManager systemVersionIsAvailable]) {
-            if ([recorder isRecording]) {
-                MyLog(@"正在录制");
-            }
-            recorder.microphoneEnabled = YES;
-            if (@available(iOS 10.0, *)) {
-                [recorder startRecordingWithHandler:^(NSError * _Nullable error) {
-                    if (error) {
-                        MyLog(@"录制失败-----error:%@",error.localizedDescription);
-                    }else{
-                        MyLog(@"开始录制");
-                    }
-                }];
-            } else {
-                if (@available(iOS 9.0, *)) {
-                    [recorder startRecordingWithMicrophoneEnabled:YES handler:^(NSError * _Nullable error) {
-                        if (error) {
-                            MyLog(@"录制失败-----error:%@",error.localizedDescription);
-                        }else{
-                            MyLog(@"开始录制");
-                        }
-                    }];
-                }
-            }
-        }else{
-            MyLog(@"手机系统版本低于9.0，无法进行屏幕录制操作，请升级手机系统");
-        }
-     });
-}
-
 #pragma mark 结束辅导
 -(void)finishGuideRequestForBody:(NSString *)body{
     kSelfWeak;
     [TCHttpRequest postMethodWithURL:kJobGuideCompleteAPI body:body success:^(id json) {
         NSDictionary *data = [json objectForKey:@"data"];
+        [[NIMAVChatSDK sharedSDK].netCallManager hangup:weakSelf.callInfo.callID];
         dispatch_async(dispatch_get_main_queue(), ^{
+            [SVProgressHUD dismiss];
             if (!isOtherEnd) {
                 [kKeyWindow makeToast:@"已结束当前作业辅导" duration:1.0 position:CSToastPositionCenter];
                 [_cmdHander sendPureCmd:WhiteBoardCmdTypeEndCoach]; //发送结束辅导指令
@@ -593,7 +439,7 @@
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:NO];
             payVC.guidePrice = weakSelf.teacher.guide_price;
-            payVC.duration = timeCount;
+            payVC.duration = timeCount+[self.teacher.temp_time integerValue];
             payVC.orderId = data[@"oid"];
             payVC.label = 2;
             payVC.backBlock = ^(id object) {
@@ -608,7 +454,7 @@
             popupVC.navigationBarHidden = YES;
             [popupVC presentInViewController:weakSelf];
         });
-        [[NIMAVChatSDK sharedSDK].netCallManager hangup:weakSelf.callInfo.callID];
+
     }];
 }
 
@@ -637,26 +483,6 @@
         _rootScrollView.contentSize = CGSizeMake(kScreenWidth*allNum, kScreenHeight);
     }
     return _rootScrollView;
-}
-
-#pragma mark 更多
--(UIButton *)moreBtn{
-    if (!_moreBtn) {
-        _moreBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-40, KStatusHeight, 30, 40)];
-        [_moreBtn setImage:[UIImage imageNamed:@"connection_more"] forState:UIControlStateNormal];
-        [_moreBtn addTarget:self action:@selector(getMoreHandleListAction) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _moreBtn;
-}
-
-#pragma mark 红色标记
--(UILabel *)badgeLabel{
-    if (!_badgeLabel) {
-        _badgeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-22, KStatusHeight+7, 8, 8)];
-        _badgeLabel.boderRadius = 4.0;
-        _badgeLabel.backgroundColor = [UIColor colorWithHexString:@"#F50000"];
-    }
-    return _badgeLabel;
 }
 
 #pragma mark 数量
@@ -739,10 +565,10 @@
 
 -(void)dealloc{
     MyLog(@"dealloc--%@",NSStringFromClass([self class]));
-    
+    [[NIMAVChatSDK sharedSDK].netCallManager hangup:self.callInfo.callID];
+    [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
     [[WhiteboardManager sharedWhiteboardManager] leaveCurrentConference];
     [[NIMSDK sharedSDK].loginManager removeDelegate:self];
-    [[NIMSDK sharedSDK].conversationManager removeDelegate:self];
     
     if (self.timer) {
         [self.timer invalidate];

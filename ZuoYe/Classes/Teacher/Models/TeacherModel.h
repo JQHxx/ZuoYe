@@ -33,6 +33,9 @@
 @property (nonatomic,strong) NSNumber  *is_teach_auth;     //教师资质
 @property (nonatomic,strong) NSNumber  *is_skill_auth;     //专业技能
 @property (nonatomic,strong) NSNumber  *attention;         //是否关注 1 关注 0 未关注
+@property (nonatomic,strong) NSNumber  *is_guide;         // 0 正常 0 辅导中
+
+@property (nonatomic ,strong) NSNumber    *temp_time;     //临时辅导时间
 
 
 @property (nonatomic, copy ) NSString  *third_id;

@@ -25,15 +25,17 @@
 #import <UMCommonLog/UMCommonLogHeaders.h>
 #import <UMShare/UMShare.h>
 #import <UMPush/UMessage.h>
+#import "GuidanceViewController.h"
+#import "NTESAVNotifier.h"
+#import <PhotosUI/PhotosUI.h>
 
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h>
 #endif
 
-@interface AppDelegate ()<WXApiDelegate,NIMNetCallManagerDelegate,UNUserNotificationCenterDelegate>{
-    
-}
+@interface AppDelegate ()<WXApiDelegate,NIMNetCallManagerDelegate,UNUserNotificationCenterDelegate,NIMLoginManagerDelegate>
 
+@property (nonatomic,strong) NTESAVNotifier *notifier;
 
 
 @end
@@ -43,27 +45,46 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
-    self.window=[[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    self.window.backgroundColor=[UIColor whiteColor];
-    
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-    
     [self setAppSystemConfigWithOptions:launchOptions];
     [self replyPushNotificationAuthorization:application]; //申请通知权限
     [self loadInitializeData];
     
-    BOOL isLogin=[[NSUserDefaultsInfos getValueforKey:kIsLogin] boolValue];
-    if ( isLogin) {
+    _notifier = [[NTESAVNotifier alloc] init];
+    
+    [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
+    
+    self.window=[[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    self.window.backgroundColor=[UIColor whiteColor];
+    
+    BOOL hasShowGuidance=[[NSUserDefaultsInfos getValueforKey:kShowGuidance] boolValue];
+    if (!hasShowGuidance) {
+        GuidanceViewController *guidanceVC=[[GuidanceViewController alloc] init];
+        self.window.rootViewController=guidanceVC;
+    }else{
+        BOOL isLogin=[[NSUserDefaultsInfos getValueforKey:kIsLogin] boolValue];
         NSString *account = [NSUserDefaultsInfos getValueforKey:kUserThirdID];
         NSString *token = [NSUserDefaultsInfos getValueforKey:kUserThirdToken];
-        [[[NIMSDK sharedSDK] loginManager] autoLogin:account token:token];
-        self.myTabBarController = [[MyTabBarController alloc] init];
-        self.window.rootViewController = self.myTabBarController;
-    } else {
-        LoginViewController *loginVC = [[LoginViewController alloc] init];
-        BaseNavigationController *nav = [[BaseNavigationController alloc] initWithRootViewController:loginVC];
-        self.window.rootViewController = nav;
+        if ( isLogin&&!kIsEmptyString(account)&&!kIsEmptyString(token)) {
+            NIMAutoLoginData *loginData = [[NIMAutoLoginData alloc] init];
+            loginData.account = account;
+            loginData.token = token;
+            [[[NIMSDK sharedSDK] loginManager] autoLogin:loginData];
+            
+            self.myTabBarController = [[MyTabBarController alloc] init];
+            self.window.rootViewController = self.myTabBarController;
+        } else {
+            LoginViewController *loginVC = [[LoginViewController alloc] init];
+            BaseNavigationController *nav = [[BaseNavigationController alloc] initWithRootViewController:loginVC];
+            self.window.rootViewController = nav;
+        }
     }
+    
+    //检查是否从通知启动
+    if(launchOptions){
+        NSDictionary* remoteNotification=[launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+        [self handleRecerceNotificationData:remoteNotification];
+    }
+    
     [self.window makeKeyAndVisible];
     
     return YES;
@@ -103,6 +124,7 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     MyLog(@"applicationWillTerminate");
+    [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
@@ -162,27 +184,12 @@
 #pragma mark -iOS 10之前收到通知
 #pragma mark 接收通知
 -(void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler{
-     MyLog(@"iOS7及以上系统，didReceiveRemoteNotification 收到通知:%@", userInfo);
+     MyLog(@"didReceiveRemoteNotification  ----------------------  后台收到通知:%@", userInfo);
     [UMessage setAutoAlert:NO];
     [UMessage didReceiveRemoteNotification:userInfo];
     
-   if (kIsDictionary(userInfo)&&userInfo.count>0) {
-       NSString *type = [userInfo valueForKey:@"cate"];
-       if (!kIsEmptyString(type)) {
-           if ([type isEqualToString:@"check"]) { //作业检查结果
-               [[NSNotificationCenter defaultCenter] postNotificationName:kOrderCheckSuccessNotification object:nil userInfo:userInfo];
-           }else if ([type isEqualToString:@"checkAccept"]||[type isEqualToString:@"guideNowAccept"]||[type isEqualToString:@"guidePreAccept"]){ //接单消息
-               [[NSNotificationCenter defaultCenter] postNotificationName:kHomeworkAcceptNotification object:nil userInfo:userInfo];
-           }else if([type isEqualToString:@"guideCancel"]){
-               if (self.myTabBarController) {
-                   self.myTabBarController.selectedIndex = 0;
-               }
-               [[NSNotificationCenter defaultCenter] postNotificationName:kGuideCancelNotification object:nil userInfo:userInfo];
-           }else if ([type isEqualToString:@"cancel"]){
-               [[NSNotificationCenter defaultCenter] postNotificationName:kOrderCancelNotification object:nil userInfo:userInfo];
-           }
-       }
-   }
+    [self handleRecerceNotificationData:userInfo];
+
     completionHandler(UIBackgroundFetchResultNewData);
 }
 
@@ -201,28 +208,16 @@
     //收到用户的基本信息
     NSDictionary * userInfo = content.userInfo;
     
-    if (kIsDictionary(userInfo)&&userInfo.count>0) {
-        NSString *type = [userInfo valueForKey:@"cate"];
-        if (!kIsEmptyString(type)) {
-            if ([type isEqualToString:@"check"]) { //作业检查结果
-                [[NSNotificationCenter defaultCenter] postNotificationName:kOrderCheckSuccessNotification object:nil userInfo:userInfo];
-            }else if ([type isEqualToString:@"checkAccept"]||[type isEqualToString:@"guideNowAccept"]||[type isEqualToString:@"guidePreAccept"]){ //接单消息
-                [[NSNotificationCenter defaultCenter] postNotificationName:kHomeworkAcceptNotification object:nil userInfo:userInfo];
-            }else if([type isEqualToString:@"guideCancel"]){
-                [[NSNotificationCenter defaultCenter] postNotificationName:kGuideCancelNotification object:nil userInfo:userInfo];
-            }else if ([type isEqualToString:@"cancel"]){
-                [[NSNotificationCenter defaultCenter] postNotificationName:kOrderCancelNotification object:nil userInfo:userInfo];
-            }
-        }
-    }
-    
+
     if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
-        MyLog(@"iOS10 收到远程通知:%@",userInfo);
+        MyLog(@"iOS10 前台收到远程通知:%@",userInfo);
         //应用处于前台时的远程推送接受
         //关闭U-Push自带的弹出框
         [UMessage setAutoAlert:NO];
         //必须加这句代码
         [UMessage didReceiveRemoteNotification:userInfo];
+        
+        [self handleRecerceNotificationData:userInfo];
     }else{
         // 判断为本地通知
         MyLog(@"iOS10 收到本地通知:{\\\\nbody:%@，\\\\ntitle:%@,\\\\nsubtitle:%@,\\\\nbadge：%@，\\\\nsound：%@，\\\\nuserInfo：%@\\\\n}",content.body,content.title,content.subtitle,content.badge,content.sound,userInfo);
@@ -276,24 +271,42 @@
 -(void)showOrderCheckResultWithNotification:(NSNotification *)notify{
     NSDictionary *userInfo = [notify userInfo];
     [self.myTabBarController handerUserNotificationWithUserInfo:userInfo];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kOrderCheckSuccessNotification object:nil];
 }
 
 #pragma mark -- NIMNetCallManagerDelegate
 #pragma mark 被叫收到呼叫
 -(void)onReceive:(UInt64)callID from:(NSString *)caller type:(NIMNetCallMediaType)type message:(NSString *)extendMessage{
-    NSDictionary *dic =(NSDictionary*)extendMessage;
-    TeacherModel *model = [TeacherModel yy_modelWithJSON:dic];
-    
-    MyLog(@"被叫收到呼叫---caller:%@,type:%zd,extendMessage--%@,",caller,type,dic);
-    //拿到顶部控制器(用来判断当前用户是否在通话中)
-    self.myTabBarController = (MyTabBarController *)self.window.rootViewController;
-    BaseNavigationController *nav = self.myTabBarController.viewControllers[self.myTabBarController.selectedIndex];
-    MyConnecttingViewController *connecttingVC = [[MyConnecttingViewController alloc] initWithCaller:caller callId:callID];
-    connecttingVC.hidesBottomBarWhenPushed = YES;
-    connecttingVC.teacher = model;
-    [nav pushViewController:connecttingVC animated:YES];
+    NSNumber *callingID = [NSUserDefaultsInfos getValueforKey:kCallingForID];
+    if (!kIsEmptyObject(callingID)||[callingID unsignedLongLongValue]>0) {
+        [[NIMAVChatSDK sharedSDK].netCallManager control:callID type:NIMNetCallControlTypeBusyLine];
+    }else{
+        NSDictionary *dic =(NSDictionary*)extendMessage;
+        TeacherModel *model = [TeacherModel yy_modelWithJSON:dic];
+        
+        //震动
+        [_notifier startVibrate];
+      
+        
+        MyLog(@"被叫收到呼叫---caller:%@,type:%zd,extendMessage--%@,",caller,type,dic);
+        //拿到顶部控制器(用来判断当前用户是否在通话中)
+        self.myTabBarController = (MyTabBarController *)self.window.rootViewController;
+        BaseNavigationController *nav = self.myTabBarController.viewControllers[self.myTabBarController.selectedIndex];
+        MyConnecttingViewController *connecttingVC = [[MyConnecttingViewController alloc] initWithCaller:caller callId:callID];
+        connecttingVC.hidesBottomBarWhenPushed = YES;
+        connecttingVC.teacher = model;
+        
+        [nav pushViewController:connecttingVC animated:YES];
+    }
+}
+
+#pragma mark -- NIMLoginManagerDelegate
+#pragma mark 登录网易云回调
+-(void)onLogin:(NIMLoginStep)step{
+    MyLog(@"登录成功");
+}
+
+-(void)onAutoLoginFailed:(NSError *)error{
+    MyLog(@"自动登录失败 onAutoLoginFailed %zd,error:%@",error.code,error.localizedDescription);
 }
 
 #pragma mark -- Private Methods
@@ -312,7 +325,11 @@
     //网易云
     //推荐在程序启动的时候初始化 NIMSDK
     NSString *appKey        = kNIMSDKAppKey;
-    [[NIMSDK sharedSDK] registerWithAppID:appKey cerName:kNIMApnsCername];
+    NIMSDKOption *option    = [NIMSDKOption optionWithAppKey:appKey];
+    option.apnsCername      = kNIMApnsCername;
+    option.pkCername        = kNIMApnsCername;
+    [[NIMSDK sharedSDK] registerWithOption:option];
+    [[[NIMSDK sharedSDK] loginManager] addDelegate:self];
     MyLog(@"App Started SDK Version %@\n SDK Info: %@",[[NIMSDK sharedSDK] sdkVersion],[NIMSDKConfig sharedConfig]);
     [[NIMAVChatSDK sharedSDK].netCallManager addDelegate:self];
     
@@ -322,6 +339,10 @@
     [UMConfigure setEncryptEnabled:YES];//打开加密传输
     [UMConfigure setLogEnabled:YES];//设置打开日志
     [UMConfigure initWithAppkey:kUMAppKey channel:@"App Store"]; //初始化
+    
+    
+    NSString* deviceID =  [UMConfigure deviceIDForIntegration];
+    MyLog(@"集成测试的deviceID:%@",deviceID);
     
     
     //分享
@@ -427,6 +448,34 @@
             
         }];
     }
+}
+
+#pragma mark 处理收到推送
+-(void)handleRecerceNotificationData:(NSDictionary *)userInfo{
+    if (kIsDictionary(userInfo)&&userInfo.count>0) {
+        NSString *type = [userInfo valueForKey:@"cate"];
+        if (!kIsEmptyString(type)) {
+            if ([type isEqualToString:@"check"]) { //作业检查结果
+                [[NSNotificationCenter defaultCenter] postNotificationName:kOrderCheckSuccessNotification object:nil userInfo:userInfo];
+            }else if ([type isEqualToString:@"checkAccept"]||[type isEqualToString:@"guideNowAccept"]||[type isEqualToString:@"guidePreAccept"]){ //接单消息
+                [[NSNotificationCenter defaultCenter] postNotificationName:kHomeworkAcceptNotification object:nil userInfo:userInfo];
+            }else if([type isEqualToString:@"guideCancel"]){
+                if (self.myTabBarController) {
+                    self.myTabBarController.selectedIndex = 0;
+                }
+                [[NSNotificationCenter defaultCenter] postNotificationName:kGuideCancelNotification object:nil userInfo:userInfo];
+            }else if ([type isEqualToString:@"cancel"]){
+                [[NSNotificationCenter defaultCenter] postNotificationName:kOrderCancelNotification object:nil userInfo:userInfo];
+            }
+        }
+    }
+}
+
+-(void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [[[NIMSDK sharedSDK] loginManager] removeDelegate:self];
+    [[NIMAVChatSDK sharedSDK].netCallManager removeDelegate:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kOrderCheckSuccessNotification object:nil];
 }
 
 @end

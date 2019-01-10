@@ -28,7 +28,7 @@
 @property (nonatomic, weak) id<MyTutorialTableViewCellDelegate>delegate;
 
 @property (nonatomic, strong) UIButton       *payButton;           //付款
-@property (nonatomic, strong) UIButton       *cancelButton;       //取消订单
+@property (nonatomic, strong) UIButton       *cancelButton;       //结束辅导
 @property (nonatomic, strong) UIButton       *connectButton;       //连线
 @property (nonatomic, strong) TutorialModel  *tutorial;
 

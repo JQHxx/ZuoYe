@@ -22,6 +22,7 @@
 @property (nonatomic ,   copy ) NSString    *job_pic;       //
 @property (nonatomic , strong ) NSNumber    *is_receive;    //接单状态
 @property (nonatomic , strong ) NSNumber    *yuyue;         //是否预约
+@property (nonatomic , strong ) NSNumber    *tch_id;        //老师姓名
 @property (nonatomic ,   copy ) NSString    *tch_name;       //老师姓名
 @property (nonatomic ,   copy ) NSString    *trait;       //头像
 @property (nonatomic , strong ) NSNumber    *score;       //评分

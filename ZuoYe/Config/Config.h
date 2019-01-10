@@ -19,17 +19,27 @@
 #define kAppDelegate   (AppDelegate *)[[UIApplication  sharedApplication] delegate]
 // keyWindow
 #define kKeyWindow     [UIApplication sharedApplication].keyWindow
-//iPhone x判断
-#define isIPhoneX ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? [[UIScreen mainScreen] currentMode].size.height==2436 : NO)
+
+//iPhoneX判断
+#define IS_IPHONE_X ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(1125, 2436), [[UIScreen mainScreen] currentMode].size) : NO)
+//iPhoneXr判断
+#define IS_IPHONE_Xr ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(750, 1624), [[UIScreen mainScreen] currentMode].size) : NO)
+//iPhoneXs判断
+#define IS_IPHONE_Xs ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(1125, 2436), [[UIScreen mainScreen] currentMode].size) : NO)
+//iPhoneXs Max判断
+#define IS_IPHONE_Xs_Max ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(1125, 2436), [[UIScreen mainScreen] currentMode].size) : NO)
+
+#define isXDevice     (IS_IPHONE_X==YES || IS_IPHONE_Xr == YES || IS_IPHONE_Xs == YES || IS_IPHONE_Xs_Max == YES)
+
 //block weakself
 #define kSelfWeak __weak typeof(self) weakSelf = self
 
 //屏幕尺寸
 #define kScreenHeight     [UIScreen mainScreen].bounds.size.height
 #define kScreenWidth      [UIScreen mainScreen].bounds.size.width
-#define kTabHeight        (isIPhoneX ? (49+ 34) : 49)
-#define kNavHeight        (isIPhoneX ? 88 : 64)
-#define KStatusHeight     (isIPhoneX ? 44 : 20)
+#define kTabHeight        (isXDevice ? (49+ 34) : 49)
+#define kNavHeight        (isXDevice ? 88 : 64)
+#define KStatusHeight     (isXDevice ? 44 : 20)
 
 
 //颜色
@@ -66,6 +76,21 @@ alpha:alphaValue]
 #else
 #define MyLog(...)
 #endif
+
+#define SuppressPerformSelectorLeakWarning(Stuff) \
+do { \
+_Pragma("clang diagnostic push") \
+_Pragma("clang diagnostic ignored \"-Warc-performSelector-leaks\"") \
+Stuff; \
+_Pragma("clang diagnostic pop") \
+} while (0)
+
+#define dispatch_async_main_safe(block)\
+if ([NSThread isMainThread]) {\
+block();\
+} else {\
+dispatch_async(dispatch_get_main_queue(), block);\
+}
 
 ///APP版本号
 #define APP_VERSION     [[NSBundle mainBundle].infoDictionary      objectForKey:@"CFBundleShortVersionString"]
@@ -114,7 +139,10 @@ typedef enum : NSUInteger {
 #define kUserNickname             @"kUserNickname"
 #define kUserHeadPic              @"kUserHeadPic"
 #define kUserCredit               @"kUserCredit"
-
+#define kShowGuidance             @"kShowGuidance"
+#define kTchPercent               @"kTchPercent"
+#define kHighPercent              @"kHighPercent"
+#define kCallingForID             @"kCallingForID"
 
 #define kUserIDValue      [NSUserDefaultsInfos getValueforKey:kUserID]
 #define kUserTokenValue   [NSUserDefaultsInfos getValueforKey:kUserToken]

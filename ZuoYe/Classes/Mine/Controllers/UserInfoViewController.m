@@ -10,6 +10,7 @@
 #import "BRPickerView.h"
 #import "UserModel.h"
 #import <NIMSDK/NIMSDK.h>
+#import "AddressPickerView.h"
 
 @interface UserInfoViewController ()<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>{
     NSArray       *titlesArr;
@@ -95,9 +96,8 @@
 #pragma mark UIImagePickerController
 -(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info{
     [self.imgPicker dismissViewControllerAnimated:YES completion:nil];
-    UIImage* curImage=[info objectForKey:UIImagePickerControllerEditedImage];
+    UIImage* curImage=[info objectForKey:UIImagePickerControllerOriginalImage];
     curImage=[curImage cropImageWithSize:CGSizeMake(80, 80)];
-    self.userModel.head_image = curImage;
     
     NSMutableArray *arr = [NSMutableArray arrayWithObjects:curImage, nil];
     
@@ -234,14 +234,41 @@
 
 #pragma mark 设置所在地区
 -(void)setUserArea{
+    AddressPickerView *addressPickerView = [[AddressPickerView alloc] init];
+    if (!kIsEmptyString(self.userModel.province)&&!(kIsEmptyString(self.userModel.city))) {
+        for (NSInteger i=0;i<addressPickerView.provinces.count;i++) {
+            NSDictionary *dict = addressPickerView.provinces[i];
+            if ([dict[@"state"] isEqualToString:self.userModel.province]) {
+                addressPickerView.province = dict[@"state"];
+                addressPickerView.cities = dict[@"cities"];
+                [addressPickerView.myPickerView selectRow:i inComponent:0 animated:YES];
+            }
+        }
+        for (NSInteger i=0; i<addressPickerView.cities.count; i++) {
+            NSDictionary *cityDict = addressPickerView.cities[i];
+            if ([cityDict[@"city"] isEqualToString:self.userModel.city]) {
+                addressPickerView.city = cityDict[@"city"];
+                addressPickerView.areas = cityDict[@"areas"];
+                [addressPickerView.myPickerView selectRow:i inComponent:1 animated:YES];
+            }
+        }
+        for (NSInteger i=0; i<addressPickerView.areas.count; i++) {
+            NSString *area = addressPickerView.areas[i];
+            if ([area isEqualToString:self.userModel.country]) {
+                addressPickerView.district = area;
+                [addressPickerView.myPickerView selectRow:i inComponent:2 animated:YES];
+            }
+        }
+    }
     kSelfWeak;
-    [BRAddressPickerView showAddressPickerWithTitle:@"所在地区" defaultSelected:@[@0,@0,@0] isAutoSelect:NO resultBlock:^(NSArray *selectAddressArr) {
-        weakSelf.userModel.province = selectAddressArr[0];
-        weakSelf.userModel.city = selectAddressArr[1];
-        weakSelf.userModel.country = selectAddressArr[2];
+    addressPickerView.getAddressCallBack = ^(NSString * _Nonnull province, NSString * _Nonnull city, NSString * _Nonnull town) {
+        weakSelf.userModel.province = province;
+        weakSelf.userModel.city = city;
+        weakSelf.userModel.country = town;
         NSString *body = [NSString stringWithFormat:@"token=%@&province=%@&city=%@&country=%@",kUserTokenValue,weakSelf.userModel.province,weakSelf.userModel.city,weakSelf.userModel.country];
         [weakSelf modifyUserInfoWithParams:body];
-    }];
+    };
+    [self.view addSubview:addressPickerView];
 }
 
 #pragma mark -- Getters

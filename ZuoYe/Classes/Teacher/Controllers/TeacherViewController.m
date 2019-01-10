@@ -47,10 +47,18 @@
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"老师"];
+    
     if ([ZYHelper sharedZYHelper].isUpdateFocusTeacher) {
         [self requestForTeachersData];
         [ZYHelper sharedZYHelper].isUpdateFocusTeacher = NO;
     }
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"老师"];
 }
 
 #pragma mark -- UITableViewDataSource
@@ -112,6 +120,7 @@
 #pragma mark ItemTitleViewDelegate
 -(void)slideMenuView:(SlideMenuView *)menuView didSelectedWithIndex:(NSInteger)index{
     selectIndex = index+1;
+    page=1;
     [self loadNewTeacherListData];
 }
 

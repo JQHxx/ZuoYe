@@ -30,29 +30,38 @@
     [[UITabBarItem appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithHexString:@"#B4B4B4"],NSFontAttributeName:[UIFont pingFangSCWithWeight:FontWeightStyleMedium size:10]} forState:UIControlStateNormal];
     [[UITabBarItem appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithHexString:@"#FF7568"],NSFontAttributeName:[UIFont pingFangSCWithWeight:FontWeightStyleSemibold size:10]} forState:UIControlStateSelected];
     
+    [UITabBar appearance].translucent = NO;
+    
     self.tabBar.barStyle = UIBarStyleDefault;
     [self setTabbarBackView];
     [self initMyTabBar];
     
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showOrderCheckResult:) name:kOrderCheckSuccessNotification object:nil];
+}
+
+
 
 #pragma mark -- Private Methods
 - (void)initMyTabBar{
     MainViewController *mainVC = [[MainViewController alloc] init];
     BaseNavigationController * nav1 = [[BaseNavigationController alloc] initWithRootViewController:mainVC];
+    
     UITabBarItem * mainItem = [[UITabBarItem alloc] initWithTitle:@"首页" image:[[UIImage imageNamed:@"home_gray"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"home"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
-    nav1.tabBarItem = mainItem;
+    [nav1 setTabBarItem:mainItem];
     
     TeacherViewController *teacherVC = [[TeacherViewController alloc] init];
     BaseNavigationController * nav2 = [[BaseNavigationController alloc] initWithRootViewController:teacherVC];
     UITabBarItem * teacherItem = [[UITabBarItem alloc] initWithTitle:@"老师" image:[[UIImage imageNamed:@"teacher_gray"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"teacher"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
-    nav2.tabBarItem = teacherItem;
+    [nav2 setTabBarItem:teacherItem];
     
     MineViewController *mineVC = [[MineViewController alloc] init];
     BaseNavigationController * nav3 = [[BaseNavigationController alloc] initWithRootViewController:mineVC];
     UITabBarItem * mineItem = [[UITabBarItem alloc] initWithTitle:@"我的" image:[[UIImage imageNamed:@"my_gray"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"my"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
-    nav3.tabBarItem = mineItem;
+    [nav3 setTabBarItem:mineItem];
     
     self.viewControllers = @[nav1,nav2,nav3];
 }
@@ -64,6 +73,18 @@
     // 去除顶部横线
     [self.tabBar insertSubview:backView atIndex:0];
     self.tabBar.opaque = YES;
+}
+
+#pragma mark -- 作业检查结果推送
+-(void)showOrderCheckResult:(NSNotification *)notify{
+    NSDictionary *userInfo = [notify userInfo];
+
+    CheckResultViewController *checkResultVC = [[CheckResultViewController alloc] init];
+    checkResultVC.oid = userInfo[@"oid"];
+    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:checkResultVC];
+    popupVC.style = STPopupStyleFormSheet;
+    popupVC.navigationBarHidden = YES;
+    [popupVC presentInViewController:self];
 }
 
 
@@ -115,6 +136,10 @@
     [TCHttpRequest postMethodWithoutLoadingForURL:kMessageReadAPI body:body success:^(id json) {
         
     }];
+}
+
+-(void)dealloc{
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:kOrderCheckSuccessNotification object:nil];
 }
 
 @end

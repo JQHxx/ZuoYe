@@ -102,7 +102,7 @@
         self.cancelButton.layer.borderColor = [UIColor colorWithHexString:@"#9B9B9B"].CGColor;
         self.cancelButton.layer.borderWidth = 1;
         self.cancelButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
-        [self.cancelButton setTitle:@"取消订单" forState:UIControlStateNormal];
+        [self.cancelButton setTitle:@"结束辅导" forState:UIControlStateNormal];
         [self.cancelButton addTarget:self action:@selector(cancelOrderAction:) forControlEvents:UIControlEventTouchUpInside];
         [self.contentView addSubview:self.cancelButton];
         self.cancelButton.hidden = YES;
@@ -158,16 +158,16 @@
     lineView2.hidden = NO;
     
     if ([tutorial.status integerValue]==0) {  //进行中
-        self.cancelButton.hidden = NO;
+        
         self.payButton.hidden = payLab.hidden = YES;
         if ([tutorial.label integerValue]==1) {
             checkPriceLab.hidden = NO;
-            self.connectButton.hidden = YES;
+            self.connectButton.hidden = self.cancelButton.hidden = YES;
             stateLab.text = @"检查中";
             self.cancelButton.frame = CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28);
         }else{
             checkPriceLab.hidden = YES;
-            self.connectButton.hidden = NO;
+            self.connectButton.hidden = self.cancelButton.hidden = NO;
             [self.connectButton setTitle:@"再次连线" forState:UIControlStateNormal];
             self.connectButton.frame =CGRectMake(kScreenWidth-106, lineView2.bottom+8, 88, 28);
             stateLab.text = @"辅导中";

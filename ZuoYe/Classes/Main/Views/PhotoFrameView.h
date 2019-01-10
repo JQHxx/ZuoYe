@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+#define kMaxPhotosCount  6
+
 @protocol PhotoFrameViewDelegate <NSObject>
 
 //删除图片
@@ -18,6 +20,7 @@
 -(void)photoFrameViewAddImage;
 
 @end
+
 
 
 @interface PhotoFrameView : UIView

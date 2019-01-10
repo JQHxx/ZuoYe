@@ -135,9 +135,12 @@
         self.levelLabel.hidden = YES;
     }
     
-    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:teacher.grade];
-    self.gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,teacher.subject];
-    
+    if (kIsArray(teacher.grade)&&teacher.grade.count>0) {
+        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:teacher.grade];
+        _gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,teacher.subject];
+    }else{
+        _gradeLabel.text = [NSString stringWithFormat:@"%@",teacher.subject];
+    }
     
     self.experienceLabel.text = [NSString stringWithFormat:@"%ld年教龄，%@毕业",[teacher.edu_exp integerValue],kIsEmptyString(teacher.college)?@"":teacher.college];
     self.scoreLabel.text = [NSString stringWithFormat:@"好评 %.1f",[teacher.score doubleValue]];
@@ -264,26 +267,26 @@
     return _identityButton;
 }
 
-#pragma mark 教师资质
--(UIButton *)teacherButton{
-    if (!_teacherButton) {
-        _teacherButton = [self createButtonWithFrame:CGRectMake(self.identityButton.right+kCapW,123, kItemW, 25) title:@"教师资质" image:@"authentication_teacher_gray" selImage:@"authentication_teacher"];
-    }
-    return _teacherButton;
-}
-
 #pragma mark 学历认证
 -(UIButton *)educationButton{
     if (!_educationButton) {
-        _educationButton = [self createButtonWithFrame:CGRectMake(self.teacherButton.right+kCapW, 123,kItemW, 25) title:@"学历认证" image:@"authentication_education_gray" selImage:@"authentication_education"];
+        _educationButton = [self createButtonWithFrame:CGRectMake(self.identityButton.right+kCapW, 123,kItemW, 25) title:@"学历认证" image:@"authentication_education_gray" selImage:@"authentication_education"];
     }
     return _educationButton;
+}
+
+#pragma mark 教师资质
+-(UIButton *)teacherButton{
+    if (!_teacherButton) {
+        _teacherButton = [self createButtonWithFrame:CGRectMake(self.educationButton.right+kCapW,123, kItemW, 25) title:@"教师资质" image:@"authentication_teacher_gray" selImage:@"authentication_teacher"];
+    }
+    return _teacherButton;
 }
 
 #pragma mark 专业技能
 -(UIButton *)technicalButton{
     if (!_technicalButton) {
-        _technicalButton = [self createButtonWithFrame:CGRectMake(self.educationButton.right+kCapW,123,kItemW, 25) title:@"专业技能" image:@"authentication_skill_gray" selImage:@"authentication_skill"];
+        _technicalButton = [self createButtonWithFrame:CGRectMake(self.teacherButton.right+kCapW,123,kItemW, 25) title:@"专业技能" image:@"authentication_skill_gray" selImage:@"authentication_skill"];
     }
     return _technicalButton;
 }

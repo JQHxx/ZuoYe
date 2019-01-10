@@ -28,12 +28,15 @@
 #define kHostURL @"https://test.zuoye101.com"
 #define kHostTempURL @"https://test.zuoye101.com%@"
 
-#define kNIMApnsCername     @"work101APS"
+#define kNIMApnsCername     @"zuoye101"
 
 #endif
 
+
+#define  kZySecret   @"fe90839782da56bbd27a34b5b8f93a70"
+
 //用户协议
-#define kUserAgreementURL   @"http://zy.zuoye101.com/agreement.html"
+#define kUserAgreementURL   @"https://zy.zuoye101.com/agreement.html"
 
 #define kUploadDeviceInfoAPI   @"/student/device"            //上传设备信息
 #define kGetGradeAPI           @"/student/job/grade"         //获取年级
@@ -63,6 +66,7 @@
 #define kCancelReasonAPI       @"/student/reason"             //获取取消原因
 #define kJobCheckedAPI         @"/student/job/checked"        //作业检查结果反馈
 #define kJobGuideCompleteAPI   @"/student/job/guided"         //结束辅导
+#define kJobGuideTemptimeAPI   @"/student/job/guide_temp"     //辅导临时时间提交
 
 
 /**老师管理***/
@@ -75,7 +79,6 @@
 #define kHomeTeachersAPI        @"/student/teacher/search"          //根据科目选老师
 #define kConnectSettingAPI      @"/student/online/setting"          //连线设置
 #define kConnectTeacherAPI      @"/student/online/connect"          //连线
-#define kConnectFromTeacherAPI  @"/student/online/fromTeacher"      //老师正在连线
 
 
 /**订单管理**/

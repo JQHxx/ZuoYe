@@ -18,6 +18,8 @@
 #import "SetValueModel.h"
 #import "NSDate+Extension.h"
 #import "RechargeViewController.h"
+#import "RechargeAlertViewController.h"
+#import <UMAnalytics/MobClick.h>
 
 @interface ReleaseDemandViewController ()<UITableViewDelegate,UITableViewDataSource>{
     NSMutableArray  *teacherLevelsArr;  //小学老师等级
@@ -74,6 +76,17 @@
     [self loadLevelsData];
     
 }
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [MobClick beginLogPageView:@"发布作业辅导"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"发布作业辅导"];
+}
+
 
 #pragma mark -- UITableViewDataSource
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -141,6 +154,15 @@
                     model.isSet = YES;
                 }
             }
+            if (!kIsEmptyString(courseStr)&&![coursesArr containsObject:courseStr]) {
+                courseStr = @"";
+                for (SetValueModel *model in self.myValuesArray) {
+                    if (model.value_id==2) {
+                        model.value =  @"请选择科目";
+                        model.isSet = NO;
+                    }
+                }
+            }
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [weakSelf.demandTableView reloadData];
@@ -156,7 +178,9 @@
                     model.isSet = YES;
                 }
             }
-            [weakSelf.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.demandTableView reloadData];
+            });
         }];
    }
     
@@ -172,71 +196,70 @@
 
 #pragma mark  确定发布
 -(void)confirmReleaseDemandAction{
-    double myCredit = [[NSUserDefaultsInfos getValueforKey:kUserCredit] doubleValue];
-    if (myCredit<10.0) {
-        [self.view makeToast:@"可用额度不足，请充值后发布作业" duration:1.5 position:CSToastPositionCenter];
-    }else{
-        if (kIsEmptyString(courseStr)) {
-            [self.view makeToast:@"请先选择科目" duration:1.0 position:CSToastPositionCenter];
-            return;
-        }
-        if (kIsEmptyObject(selLevelModel)||kIsEmptyString(selLevelModel.name)) {
-            [self.view makeToast:@"请先选择老师等级" duration:1.0 position:CSToastPositionCenter];
-            return;
+    kSelfWeak;
+    if (kIsEmptyString(courseStr)) {
+        [self.view makeToast:@"请先选择科目" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    if (kIsEmptyObject(selLevelModel)||kIsEmptyString(selLevelModel.name)) {
+        [self.view makeToast:@"请先选择老师等级" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    
+    [MobClick event:@"10002"];
+    
+    NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:self.photosArray];
+    NSString *body = [NSString stringWithFormat:@"pic=%@&dir=2",imageArrJsonStr];
+    [TCHttpRequest postMethodWithURL:kUploadPicAPI body:body success:^(id json) {
+        NSArray *imagesUrl = [json objectForKey:@"data"];
+        NSString * imgJsonStr = [TCHttpRequest getValueWithParams:imagesUrl];
+        
+        //年级
+        NSArray *grades = [ZYHelper sharedZYHelper].grades;
+        NSInteger gradeInt = [grades indexOfObject:gradeStr]+1;
+        //科目
+        NSArray *subjects = [ZYHelper sharedZYHelper].subjects;
+        NSInteger subjectInt = [subjects indexOfObject:courseStr]+1;
+        //时间
+        NSInteger timsp = [[[ZYHelper sharedZYHelper] timeSwitchTimestamp:orderTime format:@"yyyy-MM-dd HH:mm"] integerValue];
+        
+        NSString *body2 = nil;
+        if (timeType==0) {
+            body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=3&grade=%ld&subject=%ld&price=%.2f",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue]];
+        }else{
+            body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=2&grade=%ld&subject=%ld&price=%.2f&start_time=%ld",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue],timsp];
         }
         
-        kSelfWeak;
-        NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:self.photosArray];
-        NSString *body = [NSString stringWithFormat:@"pic=%@&dir=2",imageArrJsonStr];
-        [TCHttpRequest postMethodWithURL:kUploadPicAPI body:body success:^(id json) {
-            NSArray *imagesUrl = [json objectForKey:@"data"];
-            NSString * imgJsonStr = [TCHttpRequest getValueWithParams:imagesUrl];
-            
-            //年级
-            NSArray *grades = [ZYHelper sharedZYHelper].grades;
-            NSInteger gradeInt = [grades indexOfObject:gradeStr]+1;
-            //科目
-            NSArray *subjects = [ZYHelper sharedZYHelper].subjects;
-            NSInteger subjectInt = [subjects indexOfObject:courseStr]+1;
-            //时间
-            NSInteger timsp = [[[ZYHelper sharedZYHelper] timeSwitchTimestamp:orderTime format:@"yyyy-MM-dd HH:mm"] integerValue];
-            
-            NSString *body2 = nil;
-            if (timeType==0) {
-                body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=3&grade=%ld&subject=%ld&price=%.2f",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue]];
+        [TCHttpRequest postMethodWithURL:kJobPublishAPI body:body2 success:^(id json) {
+            NSInteger status=[[json objectForKey:@"error"] integerValue];
+            NSString *message=[json objectForKey:@"msg"];
+            if (status==3) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
+                });
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    RechargeAlertViewController *rechargeVC = [[RechargeAlertViewController alloc] init];
+                    rechargeVC.type = 1;
+                    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:rechargeVC];
+                    popupVC.style = STPopupStyleFormSheet;
+                    popupVC.navigationBarHidden = YES;
+                    [popupVC presentInViewController:self];
+                });
             }else{
-                body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=2&grade=%ld&subject=%ld&price=%.2f&start_time=%ld",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue],timsp];
+                [ZYHelper sharedZYHelper].isUpdateHome = YES;
+                [ZYHelper sharedZYHelper].isUpdateUserInfo = YES;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.view makeToast:@"作业辅导发布成功" duration:1.0 position:CSToastPositionCenter];
+                });
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    if(weakSelf.popupController){
+                        [weakSelf.popupController dismiss];
+                    }
+                    weakSelf.backBlock([NSNumber numberWithBool:YES]);
+                });
             }
-            
-            [TCHttpRequest postMethodWithURL:kJobPublishAPI body:body2 success:^(id json) {
-                NSInteger status=[[json objectForKey:@"error"] integerValue];
-                NSString *message=[json objectForKey:@"msg"];
-                if (status==3) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
-                    });
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        if(weakSelf.popupController){
-                            [weakSelf.popupController dismiss];
-                        }
-                        weakSelf.backBlock([NSNumber numberWithBool:NO]);
-                    });
-                    
-                }else{
-                    [ZYHelper sharedZYHelper].isUpdateHome = YES;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [weakSelf.view makeToast:@"作业辅导发布成功" duration:1.0 position:CSToastPositionCenter];
-                    });
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        if(weakSelf.popupController){
-                            [weakSelf.popupController dismiss];
-                        }
-                        weakSelf.backBlock([NSNumber numberWithBool:YES]);
-                    });
-                }
-            }];
         }];
-    }
+    }];
 }
 
 #pragma mark -- Private methods

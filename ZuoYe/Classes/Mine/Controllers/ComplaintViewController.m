@@ -7,16 +7,17 @@
 //
 
 #import "ComplaintViewController.h"
-#import "BackScrollView.h"
+#import "UITextView+ZWPlaceHolder.h"
+#import "UITextView+ZWLimitCounter.h"
 
 @interface ComplaintViewController ()<UITextViewDelegate>{
     UIButton    *selectedBtn;
-    UILabel     *promptLabel;
-    UILabel     *countLabel;
     NSInteger   type;   // 投诉类型1=对老师不满意2=对订单有疑问3=其他
+    
+    UITextView  *complaintTextView;
 }
 
-@property (nonatomic, strong) UITextView  *complaintTextView;
+@property (nonatomic, strong) UIView  *complaintView;
 
 
 @end
@@ -29,29 +30,17 @@
     
     type = 1;
     
+    self.view.backgroundColor = [UIColor bgColor_Gray];
+    
   
     [self initComplaintView];
    
 }
 
 #pragma mark--UITextViewDelegate
-- (void)textViewDidChangeSelection:(UITextView *)textView{
-    NSString *tString = [NSString stringWithFormat:@"%lu/200",(unsigned long)textView.text.length];
-    countLabel.text = tString;
-}
-
-- (void)textViewDidChange:(UITextView *)textView{
-    if ([textView.text length]!= 0) {
-        promptLabel.hidden = YES;
-    }else{
-        promptLabel.hidden = NO;
-        NSString *tString = [NSString stringWithFormat:@"%lu/200",(unsigned long)textView.text.length];
-        countLabel.text = tString;
-    }
-}
 
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text{
-    if (textView==self.complaintTextView) {
+    if (textView==complaintTextView) {
         if ([textView.text length]+text.length>200) {
             return NO;
         }else{
@@ -77,12 +66,12 @@
 
 #pragma mark 确认
 -(void)confirmComplaintAction:(UIButton *)sender{
-    if (kIsEmptyString(self.complaintTextView.text)) {
+    if (kIsEmptyString(complaintTextView.text)) {
         [self.view makeToast:@"您的投诉内容不能为空" duration:1.0 position:CSToastPositionCenter];
         return;
     }
     kSelfWeak;
-    NSString *body = [NSString stringWithFormat:@"token=%@&oid=%@&comment=%@&label=%ld",kUserTokenValue,self.oid,self.complaintTextView.text,type];
+    NSString *body = [NSString stringWithFormat:@"token=%@&oid=%@&comment=%@&label=%ld",kUserTokenValue,self.oid,complaintTextView.text,type];
     [TCHttpRequest postMethodWithURL:kOrderComplaintAPI body:body success:^(id json) {
         dispatch_async(dispatch_get_main_queue(), ^{
            [weakSelf.view makeToast:@"您的投诉已提交" duration:1.0 position:CSToastPositionCenter];
@@ -95,13 +84,9 @@
 
 #pragma mark -- Private methods
 -(void)initComplaintView{
-    BackScrollView *rootScrollView = [[BackScrollView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight)];
-    rootScrollView.backgroundColor = [UIColor bgColor_Gray];
-    [self.view addSubview:rootScrollView];
-    
-    UIView *rootView = [[UIView alloc] initWithFrame:CGRectMake(0, 10, kScreenWidth, 260)];
+    UIView *rootView = [[UIView alloc] initWithFrame:CGRectMake(0,kNavHeight+10, kScreenWidth, 260)];
     rootView.backgroundColor = [UIColor whiteColor];
-    [rootScrollView addSubview:rootView];
+    [self.view addSubview:rootView];
     
     UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(18, 10, 80, 22)];
     titleLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:16];
@@ -139,7 +124,7 @@
     line.backgroundColor = [UIColor colorWithHexString:@"#D8D8D8"];
     [rootView addSubview:line];
     
-    [rootView addSubview:self.complaintTextView];
+    [rootView addSubview:self.complaintView];
     
     
     UIButton *confirmButton = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0,rootView.bottom+35+kNavHeight,280.0,60)];
@@ -154,29 +139,25 @@
 
 #pragma mark -- Getters and Setters
 #pragma mark 投诉内容
--(UITextView *)complaintTextView{
-    if (!_complaintTextView) {
-        _complaintTextView = [[UITextView alloc] initWithFrame:CGRectMake(15, 72, kScreenWidth-30, 186)];
-        _complaintTextView.delegate = self;
-        _complaintTextView.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
-        _complaintTextView.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
-        _complaintTextView.returnKeyType = UIReturnKeyDone;
+-(UIView *)complaintView{
+    if (!_complaintView) {
+        _complaintView  = [[UIView alloc] initWithFrame:CGRectMake(0, 72, kScreenWidth, 186)];
+        _complaintView.backgroundColor = [UIColor whiteColor];
         
-        promptLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, 8, 250, 20)];
-        promptLabel.text = @"请简要描述您要投诉的内容";
-        promptLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
-        promptLabel.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
-        [_complaintTextView addSubview:promptLabel];
+        complaintTextView = [[UITextView alloc] initWithFrame:CGRectMake(15, 0, kScreenWidth-30, 186)];
+        complaintTextView.delegate = self;
+        complaintTextView.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        complaintTextView.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
+        complaintTextView.returnKeyType = UIReturnKeyDone;
+        complaintTextView.zw_placeHolder = @"请简要描述您要投诉的内容";
+        complaintTextView.zw_limitCount = 200;
+        [_complaintView addSubview:complaintTextView];
+    
         
-        countLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-120, 155, 80, 20)];
-        countLabel.text = @"0/500";
-        countLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
-        countLabel.textAlignment = NSTextAlignmentRight;
-        countLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
-        [_complaintTextView addSubview:countLabel];
     }
-    return _complaintTextView;
+    return _complaintView;
 }
+
 
 
 

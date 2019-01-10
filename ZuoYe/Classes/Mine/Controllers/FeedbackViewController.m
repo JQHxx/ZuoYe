@@ -7,13 +7,11 @@
 //
 
 #import "FeedbackViewController.h"
-#import "BackScrollView.h"
 #import "UITextView+ZWLimitCounter.h"
 #import "UITextView+ZWPlaceHolder.h"
 
 @interface FeedbackViewController ()<UITextViewDelegate>
 
-@property (nonatomic ,strong) BackScrollView *rootScrollView;
 @property (nonatomic, strong) UITextView *myTextView;
 @property (nonatomic, strong) UIButton   *submitButton;
 
@@ -25,9 +23,8 @@
     [super viewDidLoad];
     self.baseTitle = @"意见反馈";
     
-    [self.view addSubview:self.rootScrollView];
-    [self.rootScrollView addSubview:self.myTextView];
-    [self.rootScrollView addSubview:self.submitButton];
+    [self.view addSubview:self.myTextView];
+    [self.view addSubview:self.submitButton];
 }
 
 #pragma mark--UITextViewDelegate
@@ -62,24 +59,15 @@
 }
 
 #pragma mark -- Getters
-#pragma mark
--(BackScrollView *)rootScrollView{
-    if (!_rootScrollView) {
-        _rootScrollView = [[BackScrollView alloc] initWithFrame:CGRectMake(0, kNavHeight, kScreenWidth, kScreenHeight-kNavHeight)];
-    }
-    return _rootScrollView;
-}
-
 #pragma mark 文字输入
 -(UITextView *)myTextView{
     if (!_myTextView) {
-        _myTextView = [[UITextView alloc] initWithFrame:CGRectMake(10, 10, kScreenWidth-20, 200)];
+        _myTextView = [[UITextView alloc] initWithFrame:CGRectMake(10, kNavHeight+10, kScreenWidth-20, 200)];
         _myTextView.backgroundColor = [UIColor colorWithHexString:@"#F6F6F6"];
         _myTextView.delegate = self;
         _myTextView.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
         _myTextView.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         _myTextView.boderRadius = 4.0;
-        _myTextView.contentSize =CGSizeMake(kScreenWidth-20, 320);
         _myTextView.zw_limitCount = 200;
         _myTextView.zw_placeHolder = @"请简要描述您的问题和意见";
     }

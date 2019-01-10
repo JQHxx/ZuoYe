@@ -23,7 +23,7 @@ static char labHeightKey;
 - (void)zwlimitCounter_swizzled_dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    /*
+    
     @try {
         [self removeObserver:self forKeyPath:@"layer.borderWidth"];
         [self removeObserver:self forKeyPath:@"text"];
@@ -32,7 +32,6 @@ static char labHeightKey;
     } @finally {
         
     }
-     */
     [self zwlimitCounter_swizzled_dealloc];
 }
 - (void)zwlimitCounter_swizzling_layoutSubviews {

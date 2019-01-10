@@ -28,7 +28,7 @@
 @property (nonatomic, strong) LoginTextView      *confirmPwdTextView;         //确认密码
 @property (nonatomic, strong) UserAgreementView  *agreementView;       //用户协议
 @property (nonatomic, strong) UIButton           *selButton;
-@property (nonatomic, strong) UIButton        *registerButton;             //注册
+@property (nonatomic, strong) UIButton           *registerButton;             //注册
 
 
 
@@ -42,6 +42,18 @@
     self.isHiddenNavBar= YES;
     
     [self initRegisterView];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"注册"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"注册"];
 }
 
 #pragma mark -- Event response
@@ -312,7 +324,7 @@
 #pragma mark 验证码
 -(LoginTextView *)securityCodeTextView{
     if (!_securityCodeTextView) {
-        _securityCodeTextView = [[LoginTextView alloc] initWithFrame:CGRectMake(26.0, self.phoneTextView.bottom+10,kScreenWidth-175, 52.0) placeholder:@"请输入验证码" icon:@"register_message" isNumber:YES];
+        _securityCodeTextView = [[LoginTextView alloc] initWithFrame:CGRectMake(26.0, self.phoneTextView.bottom+10,kScreenWidth-155, 52.0) placeholder:@"请输入验证码" icon:@"register_message" isNumber:YES];
         _securityCodeTextView.myText.delegate = self;
     }
     return _securityCodeTextView;
@@ -321,12 +333,13 @@
 #pragma mark 获取验证码
 -(UIButton *)getCodeButton{
     if (!_getCodeButton) {
-        _getCodeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-143.0, self.phoneTextView.bottom+20,112.0, 33)];
+        _getCodeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-120.0, self.phoneTextView.bottom+20,100.0, 33)];
         [_getCodeButton setTitle:@"获取验证码" forState:UIControlStateNormal];
         _getCodeButton.layer.cornerRadius = 4;
         _getCodeButton.layer.borderColor = [UIColor colorWithHexString:@"#FF7568"].CGColor;
         _getCodeButton.layer.borderWidth = 1.0;
-        _getCodeButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        CGFloat fontSize = kScreenWidth<375.0?14:16;
+        _getCodeButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:fontSize];
         [_getCodeButton setTitleColor:[UIColor colorWithHexString:@"#FF7568"] forState:UIControlStateNormal];
         [_getCodeButton addTarget:self action:@selector(getSecurityCodeAction:) forControlEvents:UIControlEventTouchUpInside];
     }
@@ -388,7 +401,9 @@
 #pragma mark 注册
 -(UIButton *)registerButton{
     if (!_registerButton) {
-        _registerButton = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-280)/2.0, self.agreementView.bottom+13.0, 280, 55)];
+        CGFloat originX = kScreenWidth<375?48:(kScreenWidth-280)/2.0;
+        CGFloat btnW = kScreenWidth<375?kScreenWidth-95:280;
+        _registerButton = [[UIButton alloc] initWithFrame:CGRectMake(originX, self.agreementView.bottom+13.0, btnW, 55)];
         [_registerButton setBackgroundImage:[UIImage imageNamed:@"login_bg_btn"] forState:UIControlStateNormal];
         [_registerButton setTitle:@"注册" forState:UIControlStateNormal];
         [_registerButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];

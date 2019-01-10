@@ -95,7 +95,7 @@
     }
     // set the text field value manually
     NSString *newValue = [[textField text] stringByReplacingCharactersInRange:range withString:string];
-    if ([newValue doubleValue]>99.99) {
+    if ([newValue doubleValue]>99.99||[newValue doubleValue]<1.00) {
         return NO;
     }
     newValue = [[newValue componentsSeparatedByCharactersInSet:nonNumberSet]componentsJoinedByString:@""];

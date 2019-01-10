@@ -7,13 +7,13 @@
 //
 
 #import "RechargeViewController.h"
-#import "PhoneText.h"
 #import "PaywayView.h"
 #import "WXApi.h"
 #import "WXApiObject.h"
 #import "NSDate+Extension.h"
 #import "PaySuccessViewController.h"
 #import <AlipaySDK/AlipaySDK.h>
+#import "DecimalTextInput.h"
 
 @interface RechargeViewController ()<UITextFieldDelegate>{
     UIView         *amountTextView;
@@ -23,9 +23,11 @@
     UIButton       *selectItem;
     NSInteger      payway;
     double         amount;
+    
+    BOOL           isEditing;
 }
 
-@property (nonatomic, strong) UITextField   *amountTextField;
+@property (nonatomic, strong) DecimalTextInput   *amountTextField;
 @property (nonatomic, strong) PaywayView    *wepaywayView;    //微信支付
 @property (nonatomic, strong) PaywayView    *alipaywayView;   //支付宝支付
 @property (nonatomic, strong) UIButton      *confirmButton;
@@ -40,7 +42,7 @@
     
     self.view.backgroundColor = [UIColor bgColor_Gray];
     
-    amountArray = @[@"50",@"100",@"200",@"500",@"1000",@"2000"];
+    amountArray = @[@"10",@"20",@"50",@"100",@"150",@"200"];
     payway = 0;
     
     [self initRechargeView];
@@ -53,6 +55,8 @@
 
 #pragma mark -- UITextFieldDelegate
 -(void)textFieldDidBeginEditing:(UITextField *)textField{
+    amount = 0;
+    isEditing = YES;
     [self cancelClickItemAction];
 }
 
@@ -72,6 +76,7 @@
 #pragma mark -- Event reponse
 #pragma mark 选择支付方式
 -(void)choosePaymentAction:(UIButton *)sender{
+    isEditing = NO;
     if (sender.tag==100) {
         self.wepaywayView.isSelected = YES;
         self.alipaywayView.isSelected = NO;
@@ -84,14 +89,18 @@
 
 #pragma mark  确认充值
 -(void)confirmRechargeAction:(UIButton *)sender{
-    if (kIsEmptyString(self.amountTextField.text)) {
+    if (!isEditing) {
         amount = [amountArray[selectedIndex] doubleValue];
     }else{
         amount = [self.amountTextField.text doubleValue];
     }
     
+    if (amount<0.01) {
+        [self.view makeToast:@"请设置充值金额" duration:1.0 position:CSToastPositionCenter];
+    }
+    
     if (payway==0) {   //微信支付
-        NSString *body = [NSString stringWithFormat:@"token=%@&cate=2&money=%.2f",kUserTokenValue,amount];
+        NSString *body = [NSString stringWithFormat:@"token=%@&cate=2&from=iOS&money=%.2f",kUserTokenValue,amount];
         [TCHttpRequest postMethodWithURL:kWalletRechargeAPI body:body success:^(id json) {
             NSDictionary *payInfo =[json objectForKey:@"data"];
             PayReq* req             = [[PayReq alloc] init];
@@ -107,7 +116,7 @@
         }];
     }else{ //支付宝支付
         kSelfWeak;
-        NSString *body = [NSString stringWithFormat:@"token=%@&cate=1&money=%.2f",kUserTokenValue,amount];
+        NSString *body = [NSString stringWithFormat:@"token=%@&cate=1&from=iOS&money=%.2f",kUserTokenValue,amount];
         [TCHttpRequest postMethodWithURL:kWalletRechargeAPI body:body success:^(id json) {
             NSString *payInfo =[json objectForKey:@"data"];
             [[AlipaySDK defaultService] payOrder:payInfo fromScheme:kAppScheme callback:^(NSDictionary *resultDic) {
@@ -146,6 +155,7 @@
 -(void)rechargePaySuccessAction{
     PaySuccessViewController *paySuccessVC = [[PaySuccessViewController alloc] init];
     paySuccessVC.isRechargeSuccess = YES;
+    paySuccessVC.isMyWalletIn = self.isMyWalletIn;
     paySuccessVC.pay_amount = amount;
     [self.navigationController pushViewController:paySuccessVC animated:YES];
 }
@@ -238,13 +248,10 @@
 
 #pragma mark -- Getters
 #pragma mark 充值金额输入
--(UITextField *)amountTextField{
+-(DecimalTextInput *)amountTextField{
     if (!_amountTextField) {
-        _amountTextField = [[UITextField alloc] initWithFrame:CGRectMake(10,0, kScreenWidth-80, 38)];
+        _amountTextField = [[DecimalTextInput alloc] initWithFrame:CGRectMake(10,0, kScreenWidth-80, 38)];
         _amountTextField.placeholder = @"输入充值金额";
-        _amountTextField.textColor = [UIColor blackColor];
-        _amountTextField.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
-        _amountTextField.returnKeyType = UIReturnKeyDone;
         _amountTextField.keyboardType = UIKeyboardTypeDecimalPad;
         _amountTextField.delegate = self;
     }

@@ -10,7 +10,6 @@
 #import "ComplaintViewController.h"
 #import "TutorialPayViewController.h"
 #import "ConnectionSettingViewController.h"
-#import "KRVideoPlayerController.h"
 #import "STPopupController.h"
 #import "TutorialViewController.h"
 #import "PaySuccessViewController.h"
@@ -21,6 +20,7 @@
 #import "CancelViewController.h"
 #import "MyTutorialViewController.h"
 #import "CommentViewController.h"
+#import "NSString+Extend.h"
 
 @interface TutorialDetailsViewController (){
     UILabel       *typeLabel;    //作业类型
@@ -33,8 +33,6 @@
     UILabel       *durationTitleLabel;   //辅导时长标题
     UILabel       *durationLabel;        //辅导时长
     
-    UIImageView  *videoCoverImageView;
-    
     UILabel       *amountTitleLabel;
     UILabel       *amountLabel;      //检查价格或辅导金额
     UILabel       *payAmountLabel;   //付款金额
@@ -45,7 +43,7 @@
     UILabel       *payTimeLabel;       //支付时间
     
     UIButton      *connectServiceBtn;  //联系客服
-    UIButton      *handleBtn;
+    UIButton      *handleBtn;  //再次连线或连线老师
     UIButton      *payButton;  //去付款
     UIButton      *cancelButton; //取消订单
     
@@ -56,14 +54,12 @@
 @property (nonatomic ,strong) UIScrollView *rootScrollView;
 @property (nonatomic ,strong) UIView     *headView;
 @property (nonatomic ,strong) JobPicsView  *jobPicsView;      //作业检查结果
-@property (nonatomic ,strong) UIView     *videoView; //作业辅导视频封面图片
 @property (nonatomic ,strong) UIView     *homeworkView;
 @property (nonatomic ,strong) UIView     *amountView;
 @property (nonatomic ,strong) UIView     *orderView;
 @property (nonatomic ,strong) UIView     *payView;
-@property (nonatomic ,strong) UIView      *bottomView;
+@property (nonatomic ,strong) UIView     *bottomView;
 
-@property (nonatomic, strong) KRVideoPlayerController *videoController;
 
 @end
 
@@ -113,12 +109,6 @@
     }
 }
 
-#pragma mark 回放
--(void)replayTutorialVideoAction:(UIButton *)sender{
-    if (!kIsEmptyString(model.video_url)) {
-      [self playVideoWithURL:[NSURL URLWithString:model.video_url]];
-    }
-}
 
 #pragma mark 联系客服
 -(void)connectSeriveAction:(UIButton *)sender{
@@ -162,6 +152,7 @@
                 teacher.job_id = model.jobid;
                 teacher.orderId = model.oid;
                 teacher.label = model.label;
+                teacher.temp_time = model.temp_time;
                 ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] initWithCallee:model.third_id];
                 connecttingVC.teacher = teacher;
                 connecttingVC.isOrderIn = YES;
@@ -207,11 +198,36 @@
 
 #pragma mark   取消订单
 -(void)cancelCurrentOrderAction{
-    CancelViewController *cancelVC = [[CancelViewController alloc] init];
-    cancelVC.jobid = model.jobid;
-    cancelVC.myTitle = [model.label integerValue]>1?@"取消辅导":@"取消检查";
-    cancelVC.type = [model.label integerValue]>1?CancelTypeOrderCocah:CancelTypeOrderCheck;
-    [self.navigationController pushViewController:cancelVC animated:YES];
+    kSelfWeak;
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"结束辅导" message:@"确定要结束作业辅导吗？" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+        
+    }];
+    UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,model.jobid,[model.temp_time integerValue]];
+        [TCHttpRequest postMethodWithURL:kJobGuideCompleteAPI body:body success:^(id json) {
+            NSDictionary *data = [json objectForKey:@"data"];
+            TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:NO];
+            payVC.guidePrice = model.guide_price;
+            payVC.duration = [model.temp_time integerValue];
+            payVC.orderId = data[@"oid"];
+            payVC.label = 2;
+            payVC.backBlock = ^(id object) {
+                CommentViewController *commentVC = [[CommentViewController alloc] init];
+                commentVC.orderId = data[@"oid"];
+                commentVC.tid = model.tch_id;
+                [weakSelf.navigationController pushViewController:commentVC animated:YES];
+            };
+            
+            STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
+            popupVC.style = STPopupStyleBottomSheet;
+            popupVC.navigationBarHidden = YES;
+            [popupVC presentInViewController:weakSelf];
+        }];
+    }];
+    [alertController addAction:cancelAction];
+    [alertController addAction:confirmAction];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 #pragma mark -- Private Methods
@@ -220,7 +236,6 @@
     [self.view addSubview:self.rootScrollView];
     [self.rootScrollView addSubview:self.headView];
     [self.rootScrollView addSubview:self.jobPicsView];
-    [self.rootScrollView addSubview:self.videoView];
     [self.rootScrollView addSubview:self.homeworkView];
     [self.rootScrollView addSubview:self.amountView];
     [self.rootScrollView addSubview:self.orderView];
@@ -269,24 +284,24 @@
                 //年级/科目
                 gradeLab.text = [NSString stringWithFormat:@"%@/%@",model.grade,model.subject];
                 
+                
                  if ([model.status integerValue]==0||[model.status integerValue]==3) {  //进行中或已取消
-                    weakSelf.homeworkView.hidden = weakSelf.videoView.hidden = weakSelf.amountView.hidden =  weakSelf.payView.hidden =  connectServiceBtn.hidden = YES;
+                    weakSelf.homeworkView.hidden = weakSelf.amountView.hidden =  weakSelf.payView.hidden =  connectServiceBtn.hidden = YES;
                      if ([model.status integerValue]==0) {
-                         cancelButton.hidden = weakSelf.jobPicsView.hidden =  NO;
+                          weakSelf.jobPicsView.hidden =  NO;
                          if ([model.label integerValue]>1) {
                              stateLabel.text = @"辅导中";
-                             handleBtn.hidden = NO;
+                             handleBtn.hidden = cancelButton.hidden = NO;
                              cancelButton.frame = CGRectMake(kScreenWidth-190, 11, 80,30);
                          }else{
                              stateLabel.text = @"检查中";
-                             handleBtn.hidden = YES;
-                             cancelButton.frame = CGRectMake(kScreenWidth-100, 11, 88, 30);
+                            weakSelf.bottomView.hidden = handleBtn.hidden = cancelButton.hidden = YES;
+                             
                          }
                      }else{
                          stateLabel.text =  @"已取消";
                          if ([model.label integerValue]<2) {
-                             handleBtn.hidden = YES;
-                             weakSelf.bottomView.hidden = YES;
+                             weakSelf.bottomView.hidden = handleBtn.hidden = YES;
                          }else{
                              handleBtn.hidden = NO;
                          }
@@ -307,7 +322,7 @@
                     cancelButton.hidden = YES;
                      weakSelf.amountView.hidden = connectServiceBtn.hidden = NO;
                     if ([model.label integerValue]==1) { //作业检查
-                        weakSelf.homeworkView.hidden = weakSelf.videoView.hidden = durationTitleLabel.hidden = durationLabel.hidden = YES;
+                        weakSelf.homeworkView.hidden =  durationTitleLabel.hidden = durationLabel.hidden = YES;
                         weakSelf.jobPicsView.hidden = NO;
                         //设置检查图片
                         if (kIsArray(model.pics)&&model.pics.count>0) {
@@ -325,26 +340,15 @@
                         weakSelf.amountView.frame = CGRectMake(0, weakSelf.jobPicsView.bottom+10, kScreenWidth, 80);
                     }else{ //作业辅导
                         weakSelf.homeworkView.hidden = durationTitleLabel.hidden = durationLabel.hidden = NO;
+
+                        weakSelf.jobPicsView.hidden = NO;
+                        CGFloat imgW = (kScreenWidth-45)/3.0; //图片宽高
+                        NSInteger allNum = model.job_pic.count;
+                        [weakSelf.jobPicsView updateCollectViewWithPhotosArr:[NSMutableArray arrayWithArray:model.job_pic]];
+                        weakSelf.jobPicsView.frame = CGRectMake(0,weakSelf.headView.bottom, kScreenWidth, (imgW+5)*(1+(allNum-1)/3)+10);
                         
-                        
-                        //显示辅导视频封面
-                        if (kIsEmptyString(model.video_url)) {
-                            weakSelf.videoView.hidden =  YES;
-                            weakSelf.jobPicsView.hidden = NO;
-                            CGFloat imgW = (kScreenWidth-45)/3.0; //图片宽高
-                            NSInteger allNum = model.job_pic.count;
-                            [weakSelf.jobPicsView updateCollectViewWithPhotosArr:[NSMutableArray arrayWithArray:model.job_pic]];
-                            weakSelf.jobPicsView.frame = CGRectMake(0,weakSelf.headView.bottom, kScreenWidth, (imgW+5)*(1+(allNum-1)/3)+10);
-                            
-                            weakSelf.homeworkView.frame = CGRectMake(0, weakSelf.jobPicsView.bottom, kScreenWidth, 30);
-                        }else{
-                            weakSelf.jobPicsView.hidden = YES;
-                            weakSelf.videoView.hidden =  NO;
-                            NSString *imgeUrl = [NSString stringWithFormat:@"%@?x-oss-process=video/snapshot,t_3,f_jpg",model.video_url];
-                            [videoCoverImageView sd_setImageWithURL:[NSURL URLWithString:imgeUrl] placeholderImage:[UIImage imageNamed:@"video_playback"]];
-                            weakSelf.homeworkView.frame = CGRectMake(0, weakSelf.videoView.bottom, kScreenWidth, 30);
-                        }
-                        
+                        weakSelf.homeworkView.frame = CGRectMake(0, weakSelf.jobPicsView.bottom, kScreenWidth, 30);
+                       
                         //辅导金额和辅导时长
                         amountTitleLabel.text = @"辅导金额：";
                         NSInteger jobTime = [model.job_time integerValue];
@@ -415,7 +419,7 @@
         
         typeLabel = [[UILabel alloc] initWithFrame:CGRectMake(12, 11,75, 20)];
         typeLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleMedium size:14];
-        typeLabel.textColor = [UIColor colorWithHexString:@"#9B9B9B"];
+        typeLabel.textColor = [UIColor colorWithHexString:@"#4A4A4A"];
         [_headView addSubview:typeLabel];
         
         stateLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth-100, 10,75, 20)];
@@ -430,11 +434,11 @@
         
         UIImageView *bgHeadImageView = [[UIImageView alloc] initWithFrame:CGRectMake(18.0,line.bottom+9.0, 52, 52)];
         bgHeadImageView.backgroundColor = [UIColor colorWithHexString:@"#FFE0D3"];
-        bgHeadImageView.boderRadius = 29.0;
+        bgHeadImageView.boderRadius = 26.0;
         [_headView addSubview:bgHeadImageView];
         
-        headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(20.7, line.bottom+12.9, 46.6, 46.6)];
-        headImageView.boderRadius = 23.3;
+        headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(21, line.bottom+12.0, 46, 46)];
+        headImageView.boderRadius = 23.0;
         [_headView addSubview:headImageView];
         
         nameLab = [[UILabel alloc] initWithFrame:CGRectMake(headImageView.right+16.0,typeLabel.bottom+28.0, 65, 20)];
@@ -465,26 +469,6 @@
         _jobPicsView = [[JobPicsView alloc] initWithFrame:CGRectZero];
     }
     return _jobPicsView;
-}
-
-#pragma mark 作业辅导视频封面
--(UIView *)videoView{
-    if (!_videoView) {
-        _videoView = [[UIView alloc] initWithFrame:CGRectMake(0, self.headView.bottom+10, kScreenWidth, 200)];
-        _videoView.backgroundColor = [UIColor whiteColor];
-        
-        videoCoverImageView = [[UIImageView alloc] initWithFrame:CGRectMake(28, 10, kScreenWidth-56, 180)];
-        videoCoverImageView.image = [UIImage imageNamed:@"video_playback"];
-        videoCoverImageView.contentMode = UIViewContentModeScaleAspectFill;
-        videoCoverImageView.clipsToBounds = YES;
-        [_videoView addSubview:videoCoverImageView];
-        
-        UIButton *videoPlayBtn = [[UIButton alloc] initWithFrame:CGRectMake((kScreenWidth-40)/2.0,(200-40)/2.0,40, 40)];
-        [videoPlayBtn setImage:[UIImage imageNamed:@"play2"] forState:UIControlStateNormal];
-        [videoPlayBtn addTarget:self action:@selector(replayTutorialVideoAction:) forControlEvents:UIControlEventTouchUpInside];
-        [_videoView addSubview:videoPlayBtn];
-    }
-    return _videoView;
 }
 
 #pragma mark 作业辅导信息
@@ -599,16 +583,15 @@
                 payTimeLabel = valueLabel;
             }
         }
-        
     }
     return _payView;
 }
 
-
 #pragma mark 底部视图
 -(UIView *)bottomView{
     if (!_bottomView) {
-        _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, kScreenHeight-50, kScreenWidth, 50)];
+        CGFloat viewH = isXDevice ? 70:50;
+        _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, kScreenHeight-viewH, kScreenWidth, viewH)];
         _bottomView.backgroundColor = [UIColor whiteColor];
         
         connectServiceBtn = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-200, 11, 88, 30)];
@@ -636,7 +619,7 @@
         cancelButton.layer.borderColor = [UIColor colorWithHexString:@"#9B9B9B"].CGColor;
         cancelButton.layer.borderWidth = 1;
         cancelButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
-        [cancelButton setTitle:@"取消订单" forState:UIControlStateNormal];
+        [cancelButton setTitle:@"结束辅导" forState:UIControlStateNormal];
         [cancelButton addTarget:self action:@selector(cancelCurrentOrderAction) forControlEvents:UIControlEventTouchUpInside];
         [_bottomView addSubview:cancelButton];
         
@@ -651,19 +634,6 @@
         [_bottomView addSubview:handleBtn];
     }
     return _bottomView;
-}
-
-#pragma mark 视屏播放
-- (void)playVideoWithURL:(NSURL *)url{
-    if (!self.videoController) {
-        self.videoController = [[KRVideoPlayerController alloc] initWithFrame:self.view.bounds];
-        __weak typeof(self)weakSelf = self;
-        [self.videoController setDimissCompleteBlock:^{
-            weakSelf.videoController = nil;
-        }];
-        [self.videoController showInWindow];
-    }
-    self.videoController.contentURL = url;
 }
 
 

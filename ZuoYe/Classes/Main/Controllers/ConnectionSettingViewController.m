@@ -12,8 +12,10 @@
 #import "PhotoFrameView.h"
 #import "TeacherInfoView.h"
 #import "UIButton+Touch.h"
-#import "RechargeViewController.h"
-
+#import "RechargeAlertViewController.h"
+#import "STPopupController.h"
+#import "UIViewController+STPopup.h"
+#import <UMAnalytics/MobClick.h>
 
 @interface ConnectionSettingViewController ()<PhotoFrameViewDelegate,TakePhotoViewControllerDelegate>{
     double         checkPrice;
@@ -67,8 +69,9 @@
     self.photosFramView.hidden = NO;
     
     [self.photosArray addObjectsFromArray:photos];
-    if (self.photosArray.count>9) {
-        [self.view makeToast:@"最多只能上传9张图片" duration:1.0 position:CSToastPositionCenter];
+    if (self.photosArray.count>kMaxPhotosCount) {
+        NSString *message = [NSString stringWithFormat:@"最多只能上传%ld张图片",kMaxPhotosCount];
+        [self.view makeToast:message duration:1.0 position:CSToastPositionCenter];
         [self.photosArray removeObjectsInArray:photos];
         return;
     }
@@ -81,6 +84,9 @@
         [self.view makeToast:@"请先上传您要辅导的作业图片" duration:1.0 position:CSToastPositionCenter];
         return;
     }
+    
+    [MobClick event:@"10003"];
+    
     kSelfWeak;
     NSMutableArray *imgArr = [[ZYHelper sharedZYHelper] imageDataProcessingWithImgArray:self.photosArray];
     NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:imgArr];
@@ -98,11 +104,16 @@
                     [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
                 });
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    RechargeViewController *rechargeVC = [[RechargeViewController alloc] init];
-                    [weakSelf.navigationController pushViewController:rechargeVC animated:YES];
+                    RechargeAlertViewController *rechargeVC = [[RechargeAlertViewController alloc] init];
+                    rechargeVC.type = 1;
+                    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:rechargeVC];
+                    popupVC.style = STPopupStyleFormSheet;
+                    popupVC.navigationBarHidden = YES;
+                    [popupVC presentInViewController:self];
                 });
             }else{
                 [ZYHelper sharedZYHelper].isUpdateHome = YES;
+                [ZYHelper sharedZYHelper].isUpdateUserInfo = YES;
                 NSDictionary *data = [json objectForKey:@"data"];
                 TeacherModel *model = [[TeacherModel alloc] init];
                 model = weakSelf.teacherModel;
@@ -124,7 +135,7 @@
     [self.view addSubview:self.bgView];
     [self.bgView addSubview:self.infoView];
     
-    UIView *line2 = [[UIView alloc] initWithFrame:CGRectMake(11.0,self.infoView.bottom, kScreenWidth-42.0, 1.0)];
+    UIView *line2 = [[UIView alloc] initWithFrame:CGRectMake(11.0,self.infoView.bottom, kScreenWidth-42.0, 0.5)];
     line2.backgroundColor = [UIColor colorWithHexString:@"#D8D8D8"];
     [self.bgView addSubview:line2];
     
@@ -182,6 +193,7 @@
         _photosFramView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(10.0, kNavHeight+110, kScreenWidth-20,kScreenWidth-48) isSetting:YES];
         _photosFramView.delegate = self;
         _photosFramView.backgroundColor = [UIColor whiteColor];
+        _photosFramView.bottomBoderRadius = 4.0;
     }
     return _photosFramView;
 }

@@ -68,6 +68,7 @@
         [bgView addSubview:_priceLabel];
         
         _connectButton = [[UIButton alloc] initWithFrame:CGRectMake(bgView.width-76, 13.0, 44.0, 60.0)];
+        [_connectButton setImage:[UIImage imageNamed:@"connection_teacher"] forState:UIControlStateNormal];
         [_connectButton setTitle:@"连线老师" forState:UIControlStateNormal];
         [_connectButton setTitleColor:[UIColor colorWithHexString:@"#808080"] forState:UIControlStateNormal];
         _connectButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:10];
@@ -91,13 +92,19 @@
     CGFloat nameW = [model.tch_name boundingRectWithSize:CGSizeMake(kScreenWidth, 20) withTextFont:_nameLabel.font].width;
     _nameLabel.frame = CGRectMake(self.headImageView.right+13.0, 14.0, nameW, 20);
     
-    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
-    _gradeLabel.text = gradeStr;
-    CGFloat gradeW = [gradeStr boundingRectWithSize:CGSizeMake(kScreenWidth-200, 17.0) withTextFont:_gradeLabel.font].width;
-    _gradeLabel.frame = CGRectMake(self.headImageView.right+13.0, _nameLabel.bottom, gradeW, 17.0);
+    if (kIsArray(model.grade)&&model.grade.count>0) {
+        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
+        _gradeLabel.text = gradeStr;
+        CGFloat gradeW = [gradeStr boundingRectWithSize:CGSizeMake(kScreenWidth-200, 17.0) withTextFont:_gradeLabel.font].width;
+        _gradeLabel.frame = CGRectMake(self.headImageView.right+13.0, _nameLabel.bottom, gradeW, 17.0);
+        
+        _subjectLabel.text = model.subject;
+        _subjectLabel.frame = CGRectMake(_gradeLabel.right+10.0, _nameLabel.bottom, 60.0, 17.0);
+    }else{
+        _subjectLabel.text = model.subject;
+        _subjectLabel.frame = CGRectMake(self.headImageView.right+10.0, _nameLabel.bottom, 60.0, 17.0);
+    }
     
-    _subjectLabel.text = model.subject;
-    _subjectLabel.frame = CGRectMake(_gradeLabel.right+10.0, _nameLabel.bottom, 40.0, 17.0);
     
     NSString *priceStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",[model.guide_price doubleValue]];
     NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:priceStr];

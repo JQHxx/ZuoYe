@@ -11,7 +11,6 @@
 #import "MyTutorialTableViewCell.h"
 #import "TutorialPayViewController.h"
 #import "ConnectionSettingViewController.h"
-#import "KRVideoPlayerController.h"
 #import "STPopupController.h"
 #import "TutorialViewController.h"
 #import "TutorialModel.h"
@@ -40,8 +39,6 @@
 
 @property (nonatomic, strong) NSMutableArray   *orderListData;
 
-@property (nonatomic, strong) KRVideoPlayerController *videoController;
-
 
 @end
 
@@ -69,6 +66,9 @@
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"我的订单"];
+    
     if ([ZYHelper sharedZYHelper].isPayOrderSuccess) {
         [self loadMyTutorialData];
         [ZYHelper sharedZYHelper].isPayOrderSuccess = NO;
@@ -78,6 +78,12 @@
         [self loadMyTutorialData];
         [ZYHelper sharedZYHelper].isUpdateOrder = NO;
     }
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"我的订单"];
 }
 
 #pragma mark -- UITableViewDataSource
@@ -144,6 +150,7 @@
     }else{
         orderSelectIndex = index;
     }
+    page = 1;
     [self loadNewOrderData];
 }
 
@@ -225,6 +232,7 @@
                 teacher.job_id = model.jobid;
                 teacher.orderId = model.oid;
                 teacher.label = model.label;
+                teacher.temp_time = model.temp_time;
                 ConnecttingViewController *connecttingVC = [[ConnecttingViewController alloc] initWithCallee:model.third_id];
                 connecttingVC.teacher = teacher;
                 connecttingVC.isOrderIn = YES;
@@ -242,13 +250,40 @@
 }
 
 
-#pragma mark 取消订单
+#pragma mark 结束辅导
 -(void)myTutorialTableViewCell:(MyTutorialTableViewCell *)tableViewCell cancelOrderWithTutorial:(TutorialModel *)model{
-    CancelViewController *cancelVC = [[CancelViewController alloc] init];
-    cancelVC.jobid = model.jobid;
-    cancelVC.myTitle = [model.label integerValue]<2?@"取消检查":@"取消辅导";
-    cancelVC.type = [model.label integerValue]<2?CancelTypeOrderCheck:CancelTypeOrderCocah;
-    [self.navigationController pushViewController:cancelVC animated:YES];
+    kSelfWeak;
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"结束辅导" message:@"确定要结束作业辅导吗？" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+        
+    }];
+    UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,model.jobid,[model.temp_time integerValue]];
+        [TCHttpRequest postMethodWithURL:kJobGuideCompleteAPI body:body success:^(id json) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:NO];
+                payVC.orderId = model.oid;
+                payVC.duration = [model.temp_time integerValue];
+                payVC.guidePrice = model.price;
+                payVC.label = 2;
+                payVC.payAmount = [model.pay_money doubleValue];
+                payVC.backBlock = ^(id object) {
+                    CommentViewController *commentVC = [[CommentViewController alloc] init];
+                    commentVC.orderId = model.oid;
+                    commentVC.tid = model.tch_id;
+                    [weakSelf.navigationController pushViewController:commentVC animated:YES];
+                };
+                
+                STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
+                popupVC.style = STPopupStyleBottomSheet;
+                popupVC.navigationBarHidden = YES;
+                [popupVC presentInViewController:weakSelf];
+            });
+        }];
+    }];
+    [alertController addAction:cancelAction];
+    [alertController addAction:confirmAction];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 #pragma mark -- Event Response
@@ -358,6 +393,7 @@
         _tutorialTableView.showsVerticalScrollIndicator = NO;
         _tutorialTableView.estimatedSectionHeaderHeight=0;
         _tutorialTableView.estimatedSectionFooterHeight=0;
+        _tutorialTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         
         UISwipeGestureRecognizer *leftSwipGesture = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipOrderTableView:)];
         leftSwipGesture.direction = UISwipeGestureRecognizerDirectionLeft;
@@ -397,19 +433,6 @@
         _orderListData = [[NSMutableArray alloc] init];
     }
     return _orderListData;
-}
-
-#pragma mark 视屏播放
-- (void)playVideoWithURL:(NSURL *)url{
-    if (!self.videoController) {
-        self.videoController = [[KRVideoPlayerController alloc] initWithFrame:self.view.bounds];
-        __weak typeof(self)weakSelf = self;
-        [self.videoController setDimissCompleteBlock:^{
-            weakSelf.videoController = nil;
-        }];
-        [self.videoController showInWindow];
-    }
-    self.videoController.contentURL = url;
 }
 
 

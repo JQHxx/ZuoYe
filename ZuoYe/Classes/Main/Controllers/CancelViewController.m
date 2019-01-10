@@ -78,6 +78,7 @@
             if (weakSelf.type== CancelTypeOrderCocah) {
                 [_cmdHander sendPureCmd:WhiteBoardCmdTypeCancelCoach];
             }
+            [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
             dispatch_sync(dispatch_get_main_queue(), ^{
                 [weakSelf.view makeToast:@"您已取消订单"duration:1.0 position:CSToastPositionCenter];
             });

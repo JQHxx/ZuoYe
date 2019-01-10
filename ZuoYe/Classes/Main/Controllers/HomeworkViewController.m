@@ -44,10 +44,17 @@
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     
+    [MobClick beginLogPageView:@"我的作业"];
+    
     if ([ZYHelper sharedZYHelper].isUpdateHomework) {
         [self loadHomeworkData];
         [ZYHelper sharedZYHelper].isUpdateHomework = NO;
     }
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"我的作业"];
 }
 
 #pragma mark -- UITableViewDataSource

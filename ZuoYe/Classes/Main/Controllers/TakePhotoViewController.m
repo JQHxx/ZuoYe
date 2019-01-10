@@ -42,18 +42,21 @@
 @property (nonatomic, assign) AVCaptureDevicePosition    position;
 
 
+
 @property (nonatomic, strong) UIButton    *backButton;  //返回
 
 @property (nonatomic, strong) UIButton    *albumButton;  //相册
 
 @property (nonatomic, strong) UIButton    *handleButton;   //拍照或确认
 
-@property (nonatomic, strong)UIButton     *cancelButton;   //手电筒或取消
+@property (nonatomic, strong) UIButton     *cancelButton;   //手电筒或取消
 
 @property (nonatomic, strong) TKImageView  *tkImageView;  //图片裁剪
 
 /** 图片选择 **/
-@property (nonatomic, strong)PhotoFrameView  *photFrameView;
+@property (nonatomic, strong) PhotoFrameView  *photFrameView;
+
+@property (nonatomic, strong) UILabel      *captureTipsLab;
 
 @end
 
@@ -64,6 +67,7 @@
     
     self.isHiddenNavBar = YES;
     
+    self.view.backgroundColor = [UIColor bgColor_Gray];
     
     allSelectedPhotos = [[NSMutableArray alloc] init];
     
@@ -78,6 +82,15 @@
     [self updateTaKePictureView];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [MobClick beginLogPageView:@"拍照"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"拍照"];
+}
 
 #pragma mark - Delegate
 #pragma make AVCapturePhotoCaptureDelegate
@@ -85,37 +98,39 @@
 -(void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error{
     NSData *imageData = photo.fileDataRepresentation;
     UIImage *aImage= [UIImage imageWithData:imageData];
-    UIImage *resImage = [aImage cropImageWithSize:CGSizeMake(kScreenWidth*2.0, kScreenHeight*2.0)];
-    
-    [self.captureSession stopRunning];
-    
-    isTakingPiture = YES;
-    if (_cancelButton.selected) {
-        _cancelButton.selected = NO;
+    if (!kIsEmptyObject(aImage)) {
+        MyLog(@"aimge width:%.f,height:%.f",aImage.size.width,aImage.size.height);
+        
+        [self.captureSession stopRunning];
+        
+        if (self.captureTipsLab) {
+            [self.captureTipsLab removeFromSuperview];
+            self.captureTipsLab = nil;
+        }
+        
+        isTakingPiture = YES;
+        if (_cancelButton.selected) {
+            _cancelButton.selected = NO;
+        }
+        self.backButton.hidden = self.albumButton.hidden = YES;
+        [_handleButton setImage:[UIImage imageNamed:@"photograph_finish"] forState:UIControlStateNormal];
+        [_cancelButton setImage:[UIImage imageNamed:@"photograph_retract"] forState:UIControlStateNormal];
+        
+        [self.view insertSubview:self.tkImageView belowSubview:_handleButton];
+        self.tkImageView.toCropImage = aImage;
     }
-    [_handleButton setImage:[UIImage imageNamed:@"photograph_finish"] forState:UIControlStateNormal];
-    [_cancelButton setImage:[UIImage imageNamed:@"photograph_retract"] forState:UIControlStateNormal];
-    
-    [self.view insertSubview:self.tkImageView belowSubview:_handleButton];
-    self.tkImageView.toCropImage = resImage;
 }
 
 #pragma mark TZImagePickerControllerDelegate
 -(void)imagePickerController:(TZImagePickerController *)picker didFinishPickingPhotos:(NSArray<UIImage *> *)photos sourceAssets:(NSArray *)assets isSelectOriginalPhoto:(BOOL)isSelectOriginalPhoto{
-    NSMutableArray *tempArr = [[NSMutableArray alloc] init];
-    for (NSInteger i=0; i<photos.count; i++) {
-        UIImage *aImage=[UIImage zipScaleWithImage:photos[i]];
-        [tempArr addObject:aImage];
-    }
+    [allSelectedPhotos addObjectsFromArray:photos];
     
-    [allSelectedPhotos addObjectsFromArray:tempArr];
-    if (allSelectedPhotos.count>9) {
-        [self.view makeToast:@"最多只能上传9张图片" duration:1.0 position:CSToastPositionCenter];
-        [allSelectedPhotos removeObjectsInArray:photos];
-        return;
-    }
+    [self.captureSession stopRunning];
     
-     [self.captureSession stopRunning];
+    if (self.captureTipsLab) {
+        [self.captureTipsLab removeFromSuperview];
+        self.captureTipsLab = nil;
+    }
     
     if (self.isConnectionSetting) {
         if ([self.controllerDelegate respondsToSelector:@selector(takePhotoViewContriller:didGotPhotos:)]) {
@@ -170,13 +185,6 @@
                     [weakSelf.navigationController popToRootViewControllerAnimated:NO];
                 });
             });
-        }else{
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    RechargeViewController *rechargeVC = [[RechargeViewController alloc] init];
-                    [weakSelf.navigationController pushViewController:rechargeVC animated:YES];
-                });
-            });
         }
     };
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -210,7 +218,8 @@
 
 #pragma mark 打开相册
 -(void)openAlbumAction{
-    TZImagePickerController *imagePickerVC = [[TZImagePickerController alloc] initWithMaxImagesCount:9 columnNumber:4 delegate:self];
+    NSInteger count = kMaxPhotosCount - allSelectedPhotos.count;
+    TZImagePickerController *imagePickerVC = [[TZImagePickerController alloc] initWithMaxImagesCount:count columnNumber:4 delegate:self];
     imagePickerVC.allowPickingVideo = NO;
     imagePickerVC.allowTakePicture = NO;
     [self presentViewController:imagePickerVC animated:YES completion:nil];
@@ -236,7 +245,6 @@
         }
     }else{
         AVCapturePhotoSettings *photoSettings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey:AVVideoCodecTypeJPEG}];
-        [photoSettings setFlashMode:AVCaptureFlashModeAuto]; //自动闪关灯
         [self.photoOutput capturePhotoWithSettings:photoSettings delegate:self];
     }
 }
@@ -301,9 +309,6 @@
     
     //开始取景
     [self.captureSession startRunning];
-//    if ([_captureDevice lockForConfiguration:nil]) {
-//        [_captureDevice unlockForConfiguration];
-//    }
 }
 
 #pragma mark 显示图片选择确认
@@ -327,13 +332,16 @@
             self.rigthTitleName = @"确定";
             self.photFrameView.hidden = NO;
             
-            
         }else{ //开始拍照
             self.isHiddenNavBar = YES;
             self.photFrameView.hidden = YES;
             self.handleButton.hidden = self.backButton.hidden = self.albumButton.hidden = self.cancelButton.hidden  = NO;
             
             [self.view.layer insertSublayer:self.previewLayer atIndex:0];
+            
+            
+            [self.view addSubview:self.captureTipsLab];
+            
             [self.captureSession startRunning];
             
             isTakingPiture = NO;
@@ -348,8 +356,8 @@
 -(AVCaptureVideoPreviewLayer *)previewLayer{
     if (!_previewLayer) {
         _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
-        _previewLayer.frame = self.view.bounds;
-        [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+        _previewLayer.frame = CGRectMake(0,-10, kScreenWidth, kScreenHeight+10);
+        [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspect];
         _previewLayer.backgroundColor = [UIColor blackColor].CGColor;
     }
     return _previewLayer;
@@ -358,7 +366,7 @@
 #pragma mark  裁剪图片框
 -(TKImageView *)tkImageView{
     if (!_tkImageView) {
-        _tkImageView = [[TKImageView alloc] initWithFrame:self.view.bounds];
+        _tkImageView = [[TKImageView alloc] initWithFrame:CGRectMake(0, -10, kScreenWidth, kScreenHeight+10)];
         _tkImageView.needScaleCrop = YES;   //允许手指捏和缩放裁剪框
         _tkImageView.maskAlpha = 0.3;
     }
@@ -388,7 +396,8 @@
 #pragma mark 拍照
 -(UIButton *)handleButton{
     if (!_handleButton) {
-        _handleButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth/2.0-32, kScreenHeight-110.0, 64, 64)];
+        CGFloat originY = isXDevice ?kScreenHeight-110.0:kScreenHeight-75.0;
+        _handleButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth/2.0-32, originY, 64, 64)];
         [_handleButton setImage:[UIImage imageNamed:@"photograph"] forState:UIControlStateNormal];
         [_handleButton addTarget:self action:@selector(takePhotoAction:) forControlEvents:UIControlEventTouchUpInside];
         _handleButton.timeInterval = 2.0;
@@ -399,7 +408,8 @@
 #pragma mark 手电筒或取消
 -(UIButton *)cancelButton{
     if (!_cancelButton) {
-        _cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(self.handleButton.right+22.0, kScreenHeight-110.0+16.0,32, 32)];
+        CGFloat originY = isXDevice ?kScreenHeight-110.0:kScreenHeight-75.0;
+        _cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(self.handleButton.right+22.0, originY+16.0,32, 32)];
         [_cancelButton setImage:[UIImage imageNamed:@"photograph_lighting_gray"] forState:UIControlStateNormal];
         [_cancelButton setImage:[UIImage imageNamed:@"photograph_lighting"] forState:UIControlStateSelected];
         [_cancelButton addTarget:self action:@selector(handleFlashlightOrCancelTakePhotoAction:) forControlEvents:UIControlEventTouchUpInside];
@@ -410,11 +420,26 @@
 #pragma mark 图片选择
 -(PhotoFrameView *)photFrameView{
     if (!_photFrameView) {
-        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight+10, kScreenWidth, kScreenHeight-kNavHeight-10) isSetting:NO];
+        _photFrameView = [[PhotoFrameView alloc] initWithFrame:CGRectMake(0,kNavHeight+5, kScreenWidth,kScreenHeight-kNavHeight-5) isSetting:NO];
         _photFrameView.delegate = self;
         _photFrameView.backgroundColor = [UIColor whiteColor];
     }
     return _photFrameView;
+}
+
+#pragma mark 拍照提示
+-(UILabel *)captureTipsLab{
+    if (!_captureTipsLab) {
+        _captureTipsLab = [[UILabel alloc] initWithFrame:CGRectZero];
+        _captureTipsLab.textColor = [UIColor whiteColor];
+        _captureTipsLab.numberOfLines = 0;
+        _captureTipsLab.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:14];
+        _captureTipsLab.textAlignment = NSTextAlignmentCenter;
+        _captureTipsLab.text = @"拍照要求清晰完整\n作业太多请分成多张拍摄";
+        CGFloat tipsHeight = [_captureTipsLab.text boundingRectWithSize:CGSizeMake(kScreenWidth-60, kScreenHeight) withTextFont:_captureTipsLab.font].height;
+        _captureTipsLab.frame = CGRectMake(30, (kScreenHeight-tipsHeight)/2.0, kScreenWidth-60, tipsHeight);
+    }
+    return _captureTipsLab;
 }
 
 @end

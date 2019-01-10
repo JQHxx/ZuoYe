@@ -14,7 +14,8 @@
 #import "SetValueModel.h"
 #import "BRStringPickerView.h"
 #import "NSDate+Extension.h"
-#import "RechargeViewController.h"
+#import "RechargeAlertViewController.h"
+#import <UMAnalytics/MobClick.h>
 
 @interface CheckReleaseViewController ()<UITableViewDelegate ,UITableViewDataSource>{
     NSString         *gradeStr;         //年级
@@ -63,6 +64,16 @@
     [self loadData];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [MobClick beginLogPageView:@"发布作业检查"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [MobClick endLogPageView:@"发布作业检查"];
+}
+
 #pragma mark -- UITableViewDataSource
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return 3;
@@ -106,7 +117,18 @@
                     model.isSet = YES;
                 }
             }
-            [weakSelf.demandTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+            if (!kIsEmptyString(courseStr)&&![coursesArr containsObject:courseStr]) {
+                courseStr = @"";
+                for (SetValueModel *model in self.myValuesArray) {
+                    if (model.value_id==2) {
+                        model.value =  @"请选择科目";
+                        model.isSet = NO;
+                    }
+                }
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.demandTableView reloadData];
+            });
         }];
     }else if (indexPath.row==1){
         kSelfWeak;
@@ -136,62 +158,63 @@
 -(void)confirmReleaseCheckAction{
     [self.view endEditing:YES];
     
-   __block double myCredit = [[NSUserDefaultsInfos getValueforKey:kUserCredit] doubleValue];
-    if (myCredit<checkprice) {
-        [self.view makeToast:@"可用额度不足，请充值后发布作业" duration:1.5 position:CSToastPositionCenter];
-    }else{
-        if (kIsEmptyString(courseStr)) {
-            [self.view makeToast:@"请先选择科目" duration:1.0 position:CSToastPositionCenter];
-            return;
-        }
-        
-        if (checkprice<0.01) {
-            [self.view makeToast:@"检查价格不能为0" duration:1.0 position:CSToastPositionCenter];
-            return;
-        }
-        
-        //年级
-        NSInteger gradeInt = [gradesArr indexOfObject:gradeStr]+1;
-        //科目
-        NSArray *subjects = [ZYHelper sharedZYHelper].subjects;
-        NSInteger subjectInt = [subjects indexOfObject:courseStr]+1;
-        
-        kSelfWeak;
-        NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:self.photosArray];
-        NSString *body = [NSString stringWithFormat:@"pic=%@&dir=2",imageArrJsonStr];
-        [TCHttpRequest postMethodWithURL:kUploadPicAPI body:body success:^(id json) {
-            NSArray *imagesUrl = [json objectForKey:@"data"];
-            NSString * imgJsonStr = [TCHttpRequest getValueWithParams:imagesUrl];
-            NSString *body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=1&grade=%ld&subject=%ld&price=%.2f",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,checkprice];
-            [TCHttpRequest postMethodWithURL:kJobPublishAPI body:body2 success:^(id json) {
-                NSInteger status=[[json objectForKey:@"error"] integerValue];
-                NSString *message=[json objectForKey:@"msg"];
-                if (status==3) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
-                    });
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        if(weakSelf.popupController){
-                            [weakSelf.popupController dismiss];
-                        }
-                        weakSelf.backBlock([NSNumber numberWithBool:NO]);
-                    });
-                    
-                }else{
-                    [ZYHelper sharedZYHelper].isUpdateHome = YES;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [weakSelf.view makeToast:@"作业检查发布成功" duration:1.0 position:CSToastPositionCenter];
-                    });
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        if(weakSelf.popupController){
-                            [weakSelf.popupController dismiss];
-                        }
-                        weakSelf.backBlock([NSNumber numberWithBool:YES]);
-                    });
-                }
-            }];
-        }];
+    if (kIsEmptyString(courseStr)) {
+        [self.view makeToast:@"请先选择科目" duration:1.0 position:CSToastPositionCenter];
+        return;
     }
+    
+    if (checkprice<0.01) {
+        [self.view makeToast:@"检查价格不能为0" duration:1.0 position:CSToastPositionCenter];
+        return;
+    }
+    
+    [MobClick event:@"10001"];
+    
+    kSelfWeak;
+    //年级
+    NSInteger gradeInt = [gradesArr indexOfObject:gradeStr]+1;
+    //科目
+    NSArray *subjects = [ZYHelper sharedZYHelper].subjects;
+    NSInteger subjectInt = [subjects indexOfObject:courseStr]+1;
+    
+    NSString *imageArrJsonStr = [TCHttpRequest getValueWithParams:self.photosArray];
+    NSString *body = [NSString stringWithFormat:@"pic=%@&dir=2",imageArrJsonStr];
+    [TCHttpRequest postMethodWithURL:kUploadPicAPI body:body success:^(id json) {
+        NSArray *imagesUrl = [json objectForKey:@"data"];
+        NSString * imgJsonStr = [TCHttpRequest getValueWithParams:imagesUrl];
+        NSString *body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=1&grade=%ld&subject=%ld&price=%.2f",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,checkprice];
+        [TCHttpRequest postMethodWithURL:kJobPublishAPI body:body2 success:^(id json) {
+            NSInteger status=[[json objectForKey:@"error"] integerValue];
+            NSString *message=[json objectForKey:@"msg"];
+            if (status==3) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.view makeToast:message duration:1.0 position:CSToastPositionCenter];
+                });
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    RechargeAlertViewController *rechargeVC = [[RechargeAlertViewController alloc] init];
+                    rechargeVC.type = 0;
+                    rechargeVC.checkPrice = checkprice;
+                    STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:rechargeVC];
+                    popupVC.style = STPopupStyleFormSheet;
+                    popupVC.navigationBarHidden = YES;
+                    [popupVC presentInViewController:self];
+                });
+                
+            }else{
+                [ZYHelper sharedZYHelper].isUpdateHome = YES;
+                [ZYHelper sharedZYHelper].isUpdateUserInfo = YES;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.view makeToast:@"作业检查发布成功" duration:1.0 position:CSToastPositionCenter];
+                });
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    if(weakSelf.popupController){
+                        [weakSelf.popupController dismiss];
+                    }
+                    weakSelf.backBlock([NSNumber numberWithBool:YES]);
+                });
+            }
+        }];
+    }];
     
     
 }

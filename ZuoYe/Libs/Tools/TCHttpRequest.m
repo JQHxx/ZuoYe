@@ -129,6 +129,7 @@ singleton_implementation(TCHttpRequest)
     NSURLSession *mySession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:queue];
     NSURL *url=[NSURL URLWithString:urlStr];
     NSMutableURLRequest *request=[NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30];
+    [request setHTTPShouldUsePipelining:YES];//开启管道支持
     [request setHTTPMethod:method];
     
     if ([method isEqualToString:@"POST"]) {

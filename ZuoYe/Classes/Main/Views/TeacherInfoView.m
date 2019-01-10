@@ -60,8 +60,13 @@
     
     
     self.nameLabel.text = model.tch_name;
-    NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
-    self.gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,model.subject];
+    if (kIsArray(model.grade)&&model.grade.count>0) {
+        NSString *gradeStr = [[ZYHelper sharedZYHelper] parseToGradeStringForGrades:model.grade];
+        self.gradeLabel.text = [NSString stringWithFormat:@"%@  %@",gradeStr,model.subject];
+    }else{
+        self.gradeLabel.text = [NSString stringWithFormat:@"%@",model.subject];
+    }
+    
     if (!kIsEmptyObject(model.guide_price)) {
         self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",[model.guide_price doubleValue]];
     }

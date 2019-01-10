@@ -70,6 +70,7 @@
         [self.contentView addSubview:_priceLabel];
         
         _connectButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-76, 13.0, 44.0, 60.0)];
+        [_connectButton setImage:[UIImage imageNamed:@"connection_teacher"] forState:UIControlStateNormal];
         [_connectButton setTitle:@"连线老师" forState:UIControlStateNormal];
         [_connectButton setTitleColor:[UIColor colorWithHexString:@"#808080"] forState:UIControlStateNormal];
         _connectButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:10];

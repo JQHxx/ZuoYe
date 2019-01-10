@@ -27,6 +27,7 @@
 @property (nonatomic ,strong)  NSArray    *pics;            //作业检查结果图片数组
 
 @property (nonatomic ,strong) NSNumber    *online;
+@property (nonatomic ,strong) NSNumber    *temp_time;
 
 
 //老师信息

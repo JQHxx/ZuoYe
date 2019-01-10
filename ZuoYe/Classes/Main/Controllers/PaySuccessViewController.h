@@ -12,6 +12,7 @@
 
 @property (nonatomic,assign) BOOL   isTutoring;
 @property (nonatomic,assign) BOOL   isRechargeSuccess;
+@property (nonatomic,assign) BOOL   isMyWalletIn;
 @property (nonatomic,assign) double pay_amount;
 
 @end

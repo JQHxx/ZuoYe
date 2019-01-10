@@ -32,6 +32,18 @@
     [self initGetCodeView];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [MobClick beginLogPageView:@"忘记密码"];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [MobClick endLogPageView:@"忘记密码"];
+}
+
 #pragma mark -- Event response
 #pragma mark 下一步
 -(void)getCodeForNextStepAction{
@@ -203,7 +215,7 @@
 #pragma mark 验证码
 -(LoginTextView *)securityCodeTextView{
     if (!_securityCodeTextView) {
-        _securityCodeTextView = [[LoginTextView alloc] initWithFrame:CGRectMake(26.0, self.phoneTextView.bottom+10,kScreenWidth-175, 52.0) placeholder:@"请输入验证码" icon:@"register_message" isNumber:NO];
+        _securityCodeTextView = [[LoginTextView alloc] initWithFrame:CGRectMake(26.0, self.phoneTextView.bottom+10,kScreenWidth-155, 52.0) placeholder:@"请输入验证码" icon:@"register_message" isNumber:NO];
         _securityCodeTextView.myText.delegate = self;
         [_securityCodeTextView.myText addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
     }
@@ -213,12 +225,13 @@
 #pragma mark 获取验证码
 -(UIButton *)getCodeButton{
     if (!_getCodeButton) {
-        _getCodeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-143.0, self.phoneTextView.bottom+20,112.0, 33)];
+        _getCodeButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-120.0, self.phoneTextView.bottom+20,100.0, 33)];
         [_getCodeButton setTitle:@"获取验证码" forState:UIControlStateNormal];
         _getCodeButton.layer.cornerRadius = 4;
         _getCodeButton.layer.borderColor = [UIColor colorWithHexString:@"#FF7568"].CGColor;
         _getCodeButton.layer.borderWidth = 1.0;
-        _getCodeButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
+        CGFloat fontSize = kScreenWidth<375.0?14:16;
+        _getCodeButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:fontSize];
         [_getCodeButton setTitleColor:[UIColor colorWithHexString:@"#FF7568"] forState:UIControlStateNormal];
         [_getCodeButton addTarget:self action:@selector(getSecurityCodeAction:) forControlEvents:UIControlEventTouchUpInside];
         

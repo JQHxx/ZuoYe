@@ -9,7 +9,8 @@
 #import "BaseViewController.h"
 #import "SVProgressHUD.h"
 
-@interface BaseViewController ()<UIImagePickerControllerDelegate,UINavigationControllerDelegate>{
+
+@interface BaseViewController ()<UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIGestureRecognizerDelegate>{
     UIView        *navView;
     UIButton      *backBtn;
     UILabel       *titleLabel;
@@ -37,10 +38,18 @@
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    
+    if (!kIsEmptyString(self.baseTitle)) {
+        [MobClick beginLogPageView:self.baseTitle];
+    }
 }
 
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
+    
+    if (!kIsEmptyString(self.baseTitle)) {
+        [MobClick endLogPageView:self.baseTitle];
+    }
     
     [SVProgressHUD dismiss];
 }
@@ -76,7 +85,7 @@
     [self.view addSubview:navView];
     
     backBtn=[[UIButton alloc] initWithFrame:CGRectMake(5,KStatusHeight + 2, 40, 40)];
-    [backBtn setImage:[UIImage drawImageWithName:@"return"size:CGSizeMake(10, 17)] forState:UIControlStateNormal];
+    [backBtn setImage:[UIImage drawImageWithName:@"return"size:CGSizeMake(12, 18)] forState:UIControlStateNormal];
     [backBtn setImageEdgeInsets:UIEdgeInsetsMake(0,-10.0, 0, 0)];
     [backBtn addTarget:self action:@selector(leftNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
     [navView addSubview:backBtn];
@@ -87,7 +96,7 @@
     titleLabel.textAlignment=NSTextAlignmentCenter;
     [navView addSubview:titleLabel];
     
-    rightBtn=[[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-50, KStatusHeight+5, 40, 32)];
+    rightBtn=[[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-45, KStatusHeight+5, 40, 40)];
     [rightBtn addTarget:self action:@selector(rightNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
     [navView addSubview:rightBtn];
     
@@ -113,7 +122,6 @@
             self.imgPicker=[[UIImagePickerController alloc]init];
             self.imgPicker.sourceType=UIImagePickerControllerSourceTypeCamera;
             self.imgPicker.delegate=self;
-            self.imgPicker.allowsEditing=YES;
             if ([[[UIDevice currentDevice] systemVersion] floatValue]>=8.0) {
                 self.modalPresentationStyle=UIModalPresentationOverCurrentContext;
             }
@@ -126,7 +134,6 @@
         self.imgPicker=[[UIImagePickerController alloc]init];
         self.imgPicker.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
         self.imgPicker.delegate=self;
-        self.imgPicker.allowsEditing=YES;
         if ([[[UIDevice currentDevice] systemVersion] floatValue]>=8.0) {
             self.modalPresentationStyle=UIModalPresentationOverCurrentContext;
         }
@@ -159,7 +166,7 @@
     _leftImageName=leftImageName;
     if (_leftImageName) {
         backBtn.hidden=NO;
-        [backBtn setImage:[UIImage drawImageWithName:_leftImageName size:CGSizeMake(20, 20)] forState:UIControlStateNormal];
+        [backBtn setImage:[UIImage drawImageWithName:_leftImageName size:CGSizeMake(24, 24)] forState:UIControlStateNormal];
         [backBtn setImageEdgeInsets:UIEdgeInsetsZero];
     }
 }
