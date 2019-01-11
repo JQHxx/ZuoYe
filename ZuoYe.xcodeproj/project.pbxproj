@@ -71,7 +71,6 @@
 		A224127521B7CBD10002E82B /* iosguide03@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A224126B21B7CBD00002E82B /* iosguide03@3x.png */; };
 		A224127621B7CBD10002E82B /* iosguide01@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A224126C21B7CBD00002E82B /* iosguide01@3x.png */; };
 		A224127721B7CBD10002E82B /* iosguide03@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A224126D21B7CBD10002E82B /* iosguide03@2x.png */; };
-		A226079F21E6EA290020AD52 /* FJReplayKit.m in Sources */ = {isa = PBXBuildFile; fileRef = A226079E21E6EA290020AD52 /* FJReplayKit.m */; };
 		A2304B232127CB84001E5C84 /* CommentModel.m in Sources */ = {isa = PBXBuildFile; fileRef = A2304B222127CB84001E5C84 /* CommentModel.m */; };
 		A2304B2B2127F39B001E5C84 /* pub_ic_star@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = A2304B252127F39A001E5C84 /* pub_ic_star@3x.png */; };
 		A2304B2C2127F39B001E5C84 /* pub_ic_star_un@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A2304B262127F39A001E5C84 /* pub_ic_star_un@2x.png */; };
@@ -618,8 +617,6 @@
 		A298BD3621A532DB00C4FBB4 /* NMC.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = A298BCAE21A532B000C4FBB4 /* NMC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A298BD3721A532E100C4FBB4 /* NIMSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A298BCB221A532B100C4FBB4 /* NIMSDK.framework */; };
 		A298BD3821A532E100C4FBB4 /* NIMSDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = A298BCB221A532B100C4FBB4 /* NIMSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A298BD4821A5355400C4FBB4 /* NIMKitEmoticon.bundle in Resources */ = {isa = PBXBuildFile; fileRef = A298BD4721A5355400C4FBB4 /* NIMKitEmoticon.bundle */; };
-		A298BD4A21A5355B00C4FBB4 /* NIMKitResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = A298BD4921A5355B00C4FBB4 /* NIMKitResource.bundle */; };
 		A29B03992196843000B5DE4D /* TKImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = A29B03972196843000B5DE4D /* TKImageView.m */; };
 		A29B039F2196A4D900B5DE4D /* TakePhotoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A29B039E2196A4D900B5DE4D /* TakePhotoViewController.m */; };
 		A2A4C23A217188CF007E527C /* audio_chat_tip_HangUp.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A2A4C239217188CF007E527C /* audio_chat_tip_HangUp.mp3 */; };
@@ -773,15 +770,7 @@
 		A224126B21B7CBD00002E82B /* iosguide03@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "iosguide03@3x.png"; sourceTree = "<group>"; };
 		A224126C21B7CBD00002E82B /* iosguide01@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "iosguide01@3x.png"; sourceTree = "<group>"; };
 		A224126D21B7CBD10002E82B /* iosguide03@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "iosguide03@2x.png"; sourceTree = "<group>"; };
-		A226079D21E6EA290020AD52 /* FJReplayKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FJReplayKit.h; sourceTree = "<group>"; };
-		A226079E21E6EA290020AD52 /* FJReplayKit.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FJReplayKit.m; sourceTree = "<group>"; };
 		A22607A521E6F0860020AD52 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
-		A22607A821E6F0860020AD52 /* SampleHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleHandler.h; sourceTree = "<group>"; };
-		A22607A921E6F0860020AD52 /* SampleHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleHandler.m; sourceTree = "<group>"; };
-		A22607AB21E6F0860020AD52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A22607B421E6F0860020AD52 /* BroadcastSetupViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BroadcastSetupViewController.h; sourceTree = "<group>"; };
-		A22607B521E6F0860020AD52 /* BroadcastSetupViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BroadcastSetupViewController.m; sourceTree = "<group>"; };
-		A22607B721E6F0860020AD52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2304B212127CB84001E5C84 /* CommentModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommentModel.h; sourceTree = "<group>"; };
 		A2304B222127CB84001E5C84 /* CommentModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CommentModel.m; sourceTree = "<group>"; };
 		A2304B252127F39A001E5C84 /* pub_ic_star@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "pub_ic_star@3x.png"; sourceTree = "<group>"; };
@@ -1560,8 +1549,6 @@
 		A298BCAE21A532B000C4FBB4 /* NMC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = NMC.framework; sourceTree = "<group>"; };
 		A298BCB021A532B000C4FBB4 /* NMCVideoFilter.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = NMCVideoFilter.bundle; sourceTree = "<group>"; };
 		A298BCB221A532B100C4FBB4 /* NIMSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = NIMSDK.framework; sourceTree = "<group>"; };
-		A298BD4721A5355400C4FBB4 /* NIMKitEmoticon.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = NIMKitEmoticon.bundle; sourceTree = "<group>"; };
-		A298BD4921A5355B00C4FBB4 /* NIMKitResource.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = NIMKitResource.bundle; sourceTree = "<group>"; };
 		A29B03972196843000B5DE4D /* TKImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TKImageView.m; sourceTree = "<group>"; };
 		A29B03982196843000B5DE4D /* TKImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TKImageView.h; sourceTree = "<group>"; };
 		A29B039D2196A4D900B5DE4D /* TakePhotoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TakePhotoViewController.h; sourceTree = "<group>"; };
@@ -1952,26 +1939,6 @@
 			path = iCarousel;
 			sourceTree = "<group>";
 		};
-		A22607A721E6F0860020AD52 /* BroadcastActitvity */ = {
-			isa = PBXGroup;
-			children = (
-				A22607A821E6F0860020AD52 /* SampleHandler.h */,
-				A22607A921E6F0860020AD52 /* SampleHandler.m */,
-				A22607AB21E6F0860020AD52 /* Info.plist */,
-			);
-			path = BroadcastActitvity;
-			sourceTree = "<group>";
-		};
-		A22607B321E6F0860020AD52 /* BroadcastActitvitySetupUI */ = {
-			isa = PBXGroup;
-			children = (
-				A22607B421E6F0860020AD52 /* BroadcastSetupViewController.h */,
-				A22607B521E6F0860020AD52 /* BroadcastSetupViewController.m */,
-				A22607B721E6F0860020AD52 /* Info.plist */,
-			);
-			path = BroadcastActitvitySetupUI;
-			sourceTree = "<group>";
-		};
 		A2304B242127F390001E5C84 /* Teacher */ = {
 			isa = PBXGroup;
 			children = (
@@ -2340,8 +2307,6 @@
 			isa = PBXGroup;
 			children = (
 				A26A07062114033B00AF3CCB /* ZuoYe */,
-				A22607A721E6F0860020AD52 /* BroadcastActitvity */,
-				A22607B321E6F0860020AD52 /* BroadcastActitvitySetupUI */,
 				A26A07052114033B00AF3CCB /* Products */,
 				A26A075E21144E7400AF3CCB /* Frameworks */,
 			);
@@ -2406,8 +2371,6 @@
 		A26A072B211424BB00AF3CCB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				A298BD4921A5355B00C4FBB4 /* NIMKitResource.bundle */,
-				A298BD4721A5355400C4FBB4 /* NIMKitEmoticon.bundle */,
 				A2E2999C213389EE006B0908 /* Data */,
 				A26A07612114656800AF3CCB /* Images */,
 			);
@@ -2956,8 +2919,6 @@
 				A24EAB36216F44A300549E1D /* WhiteboardCmdHandler.m */,
 				A24EAB38216F44A400549E1D /* WhiteboardManager.h */,
 				A24EAB37216F44A400549E1D /* WhiteboardManager.m */,
-				A226079D21E6EA290020AD52 /* FJReplayKit.h */,
-				A226079E21E6EA290020AD52 /* FJReplayKit.m */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -3670,7 +3631,6 @@
 				A26E51502148A65100828430 /* order_time@2x.png in Resources */,
 				A28BC1D221A945390007C220 /* audio_connect.mp3 in Resources */,
 				A2EDF238219429D500A1DE2B /* label@2x.png in Resources */,
-				A298BD4A21A5355B00C4FBB4 /* NIMKitResource.bundle in Resources */,
 				A29894702147648800A80065 /* home_using_help@2x.png in Resources */,
 				A26E51662148A65100828430 /* connection_cancel@2x.png in Resources */,
 				A269D8C52154CE760099D10F /* default_head_image_small@2x.png in Resources */,
@@ -3713,7 +3673,6 @@
 				A245B2A821928BAC007E5AE2 /* default_work@3x.png in Resources */,
 				A23ECDC0218087BD00627ED3 /* more@2x.png in Resources */,
 				A29894602147648800A80065 /* score_gray@2x.png in Resources */,
-				A298BD4821A5355400C4FBB4 /* NIMKitEmoticon.bundle in Resources */,
 				A26D72B42146669300941CEB /* login_password_hide@3x.png in Resources */,
 				A29894A62147674D00A80065 /* authentication_skill_gray@2x.png in Resources */,
 				A26E51542148A65100828430 /* release_time@3x.png in Resources */,
@@ -3869,7 +3828,6 @@
 				A27CC569215A25AE009D7680 /* NSObject+SBJSON.m in Sources */,
 				A266A42E2125154C00D1445E /* XHStarRateView.m in Sources */,
 				A25DF14F214A562100345C64 /* HomeworkTableViewCell.m in Sources */,
-				A226079F21E6EA290020AD52 /* FJReplayKit.m in Sources */,
 				A25A63B82187E6F300EBF2C0 /* SDWaitingView.m in Sources */,
 				A2801209211C371000A75107 /* UIViewController+STPopup.m in Sources */,
 				A291AEF42182AD0100ED6D74 /* UserHelpViewController.m in Sources */,
