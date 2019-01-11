@@ -20,6 +20,8 @@
 #import "RechargeViewController.h"
 #import "RechargeAlertViewController.h"
 #import <UMAnalytics/MobClick.h>
+#import "UIButton+Touch.h"
+#import "SVProgressHUD.h"
 
 @interface ReleaseDemandViewController ()<UITableViewDelegate,UITableViewDataSource>{
     NSMutableArray  *teacherLevelsArr;  //小学老师等级
@@ -230,7 +232,9 @@
             body2 = [NSString stringWithFormat:@"token=%@&images=%@&label=2&grade=%ld&subject=%ld&price=%.2f&start_time=%ld",kUserTokenValue,imgJsonStr,gradeInt,subjectInt,[selLevelModel.price doubleValue],timsp];
         }
         
-        [TCHttpRequest postMethodWithURL:kJobPublishAPI body:body2 success:^(id json) {
+        [SVProgressHUD setDefaultMaskType:SVProgressHUDMaskTypeClear];
+        [SVProgressHUD show];
+        [TCHttpRequest postMethodWithoutLoadingForURL:kJobPublishAPI body:body2 success:^(id json) {
             NSInteger status=[[json objectForKey:@"error"] integerValue];
             NSString *message=[json objectForKey:@"msg"];
             if (status==3) {
@@ -249,6 +253,7 @@
                 [ZYHelper sharedZYHelper].isUpdateHome = YES;
                 [ZYHelper sharedZYHelper].isUpdateUserInfo = YES;
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    [SVProgressHUD dismiss];
                     [weakSelf.view makeToast:@"作业辅导发布成功" duration:1.0 position:CSToastPositionCenter];
                 });
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -363,6 +368,7 @@
         [_confirmButton setTitleColor:[UIColor colorWithHexString:@"#FF7568"] forState:UIControlStateNormal];
         _confirmButton.titleLabel.font = [UIFont pingFangSCWithWeight:FontWeightStyleRegular size:16];
         [_confirmButton addTarget:self action:@selector(confirmReleaseDemandAction) forControlEvents:UIControlEventTouchUpInside];
+        _confirmButton.timeInterval = 3.0;
     }
     return _confirmButton;
 }

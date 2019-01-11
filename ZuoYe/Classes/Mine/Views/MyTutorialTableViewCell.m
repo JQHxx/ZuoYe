@@ -211,21 +211,21 @@
 
 #pragma mark 付款
 -(void)payOrderAction:(UIButton *)sender{
-    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:payOrderActionWithTutorial:)]) {
+    if (self.tutorial&&[self.delegate respondsToSelector:@selector(myTutorialTableViewCell:payOrderActionWithTutorial:)]) {
         [self.delegate myTutorialTableViewCell:self payOrderActionWithTutorial:self.tutorial];
     }
 }
 
 #pragma mark 重新连线
 -(void)connectTeacherAction:(UIButton *)sender{
-    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:connectTeacherWithTutorial:)]) {
+    if (self.tutorial&&[self.delegate respondsToSelector:@selector(myTutorialTableViewCell:connectTeacherWithTutorial:)]) {
         [self.delegate myTutorialTableViewCell:self connectTeacherWithTutorial: self.tutorial];
     }
 }
 
 #pragma mark 取消订单
 -(void)cancelOrderAction:(UIButton *)sender{
-    if ([self.delegate respondsToSelector:@selector(myTutorialTableViewCell:cancelOrderWithTutorial:)]) {
+    if (self.tutorial&&[self.delegate respondsToSelector:@selector(myTutorialTableViewCell:cancelOrderWithTutorial:)]) {
         [self.delegate myTutorialTableViewCell:self cancelOrderWithTutorial:self.tutorial];
     }
 }

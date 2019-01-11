@@ -207,22 +207,24 @@
         NSString *body = [NSString stringWithFormat:@"token=%@&jobid=%@&job_time=%ld",kUserTokenValue,model.jobid,[model.temp_time integerValue]];
         [TCHttpRequest postMethodWithURL:kJobGuideCompleteAPI body:body success:^(id json) {
             NSDictionary *data = [json objectForKey:@"data"];
-            TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:NO];
-            payVC.guidePrice = model.guide_price;
-            payVC.duration = [model.temp_time integerValue];
-            payVC.orderId = data[@"oid"];
-            payVC.label = 2;
-            payVC.backBlock = ^(id object) {
-                CommentViewController *commentVC = [[CommentViewController alloc] init];
-                commentVC.orderId = data[@"oid"];
-                commentVC.tid = model.tch_id;
-                [weakSelf.navigationController pushViewController:commentVC animated:YES];
-            };
-            
-            STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
-            popupVC.style = STPopupStyleBottomSheet;
-            popupVC.navigationBarHidden = YES;
-            [popupVC presentInViewController:weakSelf];
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                TutorialPayViewController *payVC = [[TutorialPayViewController alloc] initWithIsOrderIn:NO];
+                payVC.guidePrice = model.guide_price;
+                payVC.duration = [model.temp_time integerValue];
+                payVC.orderId = data[@"oid"];
+                payVC.label = 2;
+                payVC.backBlock = ^(id object) {
+                    CommentViewController *commentVC = [[CommentViewController alloc] init];
+                    commentVC.orderId = data[@"oid"];
+                    commentVC.tid = model.tch_id;
+                    [weakSelf.navigationController pushViewController:commentVC animated:YES];
+                };
+                
+                STPopupController *popupVC = [[STPopupController alloc] initWithRootViewController:payVC];
+                popupVC.style = STPopupStyleBottomSheet;
+                popupVC.navigationBarHidden = YES;
+                [popupVC presentInViewController:weakSelf];
+            });
         }];
     }];
     [alertController addAction:cancelAction];

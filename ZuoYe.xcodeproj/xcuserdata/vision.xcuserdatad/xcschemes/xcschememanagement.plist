@@ -6,12 +6,24 @@
 	<dict>
 		<key>ZuoYe.xcscheme</key>
 		<dict>
+			<key>isShown</key>
+			<true/>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>A22607A321E6F0860020AD52</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A22607AF21E6F0860020AD52</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>A26A07032114033B00AF3CCB</key>
 		<dict>
 			<key>primary</key>

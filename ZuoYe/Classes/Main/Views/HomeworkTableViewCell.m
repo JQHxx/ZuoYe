@@ -101,7 +101,7 @@
         tempStr = [NSString stringWithFormat:@"检查价格：%.2f元",[model.price doubleValue]];
     }else{
         self.orderImgView.hidden = self.orderLabel.hidden = NO;
-        self.orderLabel.text = [model.label integerValue]==3?@"实时":[[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:model.start_time format:@"MM/dd hh:mm"];
+        self.orderLabel.text = [model.label integerValue]==3?@"实时":[[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:model.start_time format:@"MM/dd HH:mm"];
         tempStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",[model.price doubleValue]];
     }
     NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:tempStr];

@@ -27,6 +27,6 @@
 @property (nonatomic ,   copy ) NSString    *trait;       //头像
 @property (nonatomic , strong ) NSNumber    *score;       //评分
 
-@property (nonatomic , copy) NSString    *third_id;       //云ID
+@property (nonatomic , copy ) NSString    *third_id;       //云ID
 
 @end

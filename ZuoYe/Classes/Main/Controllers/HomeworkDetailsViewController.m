@@ -38,7 +38,6 @@
     UIButton  *contactButton;
 }
 
-@property (nonatomic, strong) UIButton     *rightItem;
 @property (nonatomic ,strong) UIScrollView *rootScrollView;
 @property (nonatomic ,strong) UIView       *homeworkView;
 @property (nonatomic ,strong) iCarousel    *photosCarousel;
@@ -248,7 +247,7 @@
             }else{
                 tempStr = [NSString stringWithFormat:@"辅导价格：%.2f元/分钟",[model.price doubleValue]];
                 orderImgView.hidden = orderTimeLab.hidden = ![model.yuyue boolValue];
-                orderTimeLab.text = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:model.start_time format:@"MM/dd hh:mm"];
+                orderTimeLab.text = [[ZYHelper sharedZYHelper] timeWithTimeIntervalNumber:model.start_time format:@"MM/dd HH:mm"];
             }
             NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:tempStr];
             [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithHexString:@"#4A4A4A"] range:NSMakeRange(0, 5)];
@@ -310,9 +309,6 @@
 
 #pragma mark 初始化
 -(void)initHomeworkDetailsView{
-    if (isShowMore) {
-        [self.view addSubview:self.rightItem];
-    }
     
     [self.view addSubview:self.rootScrollView];
     [self.rootScrollView addSubview:self.homeworkView];
@@ -333,16 +329,6 @@
         _rootScrollView.showsVerticalScrollIndicator = NO;
     }
     return _rootScrollView;
-}
-
-#pragma mark 导航栏右按钮
--(UIButton *)rightItem{
-    if (!_rightItem) {
-        _rightItem = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-50, KStatusHeight+2, 40, 40)];
-        [_rightItem setImage:[UIImage drawImageWithName:@"more" size:CGSizeMake(30, 9)] forState:UIControlStateNormal];
-        [_rightItem addTarget:self action:@selector(rightNavigationItemAction) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _rightItem;
 }
 
 #pragma mark 作业信息

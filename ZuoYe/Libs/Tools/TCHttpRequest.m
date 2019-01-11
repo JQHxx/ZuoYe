@@ -141,7 +141,9 @@ singleton_implementation(TCHttpRequest)
     }
     
     NSURLSessionDataTask * task = [mySession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        [SVProgressHUD dismiss];
+         dispatch_async(dispatch_get_main_queue(), ^{
+             [SVProgressHUD dismiss];
+         });
         if (data != nil) {
             MyLog(@"html:%@",[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
             id json=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
@@ -209,7 +211,9 @@ singleton_implementation(TCHttpRequest)
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     NSURLSession *mySession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:queue];
     NSURLSessionDataTask * task = [mySession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        [SVProgressHUD dismiss];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [SVProgressHUD dismiss];
+        });
         if (data != nil) {
             MyLog(@"html:%@",[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
             id json=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];

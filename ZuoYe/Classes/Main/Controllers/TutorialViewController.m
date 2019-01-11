@@ -90,8 +90,8 @@
     [MobClick beginLogPageView:@"作业辅导"];
     
     [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnterForeground:) name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnterBackground:) name:UIApplicationWillResignActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelCurrentCoach) name:kOrderCancelNotification object:nil];
     if([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
         self.navigationController.interactivePopGestureRecognizer.enabled = NO;
@@ -136,6 +136,7 @@
             [NSUserDefaultsInfos removeObjectForKey:kCallingForID];
             [[NIMAVChatSDK sharedSDK].netCallManager hangup:self.callInfo.callID];
             [self.view makeToast:@"通话异常断开，请重新连接" duration:1.0 position:CSToastPositionCenter];
+            [self uploadTempGuideTime];
             kSelfWeak;
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [weakSelf backAction];
@@ -151,6 +152,7 @@
         if (control== NIMNetCallControlTypeBackground) {
             [self.timer setFireDate:[NSDate distantFuture]]; //关闭计时器
             [self.view makeToast:@"对方退到后台" duration:1.0 position:CSToastPositionCenter];
+            [self uploadTempGuideTime];
         }else if (control == NIMNetCallControlTypeFeedabck){
             [self.timer setFireDate:[NSDate distantPast]]; //开启计时器
             [self.view makeToast:@"对方回到前台" duration:1.0 position:CSToastPositionCenter];
@@ -280,6 +282,11 @@
     [[NIMAVChatSDK sharedSDK].netCallManager control:self.callInfo.callID type:NIMNetCallControlTypeBackground];
     [self.timer setFireDate:[NSDate distantFuture]]; //关闭计时器
     
+    [self uploadTempGuideTime];
+}
+
+#pragma mark 上传临时辅导时间
+-(void)uploadTempGuideTime{
     NSString *unSignStr = [NSString stringWithFormat:@"jobid=%@&temp_time=%ld&token=%@&key=%@",self.teacher.job_id,timeCount,kUserTokenValue,kZySecret];
     NSString *body = [NSString stringWithFormat:@"jobid=%@&temp_time=%ld&token=%@&sign=%@",self.teacher.job_id,timeCount,kUserTokenValue,[unSignStr MD5]];
     [TCHttpRequest postMethodWithoutLoadingForURL:kJobGuideTemptimeAPI body:body success:^(id json) {

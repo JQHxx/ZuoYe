@@ -149,13 +149,13 @@
     if (!kIsEmptyObject(teacher.guide_price)) {
         self.priceLabel.text = [NSString stringWithFormat:@"%.2f元/分钟",[teacher.guide_price doubleValue]];
     }
-    self.totalTimeLabel.text = [NSString stringWithFormat:@"%02ld分钟%02ld秒",[teacher.guide_time integerValue]/60,[teacher.guide_time integerValue]%60];
+    self.totalTimeLabel.text = [NSString stringWithFormat:@"%02ld分钟",[teacher.guide_time integerValue]/60];
     self.checkCountLabel.text = [NSString stringWithFormat:@"%ld次",[teacher.check_num integerValue]];
     
-    self.identityButton.selected = [teacher.is_ID_auth boolValue];
-    self.teacherButton.selected = [teacher.is_teach_auth boolValue];
-    self.educationButton.selected = [teacher.is_edu_auth boolValue];
-    self.technicalButton.selected = [teacher.is_skill_auth boolValue];
+    self.identityButton.selected = [teacher.is_ID_auth integerValue]==2;
+    self.teacherButton.selected = [teacher.is_teach_auth integerValue]==2;
+    self.educationButton.selected = [teacher.is_edu_auth integerValue]==2;
+    self.technicalButton.selected = [teacher.is_skill_auth integerValue]==2;
 }
 
 #pragma mark -- Private methods
